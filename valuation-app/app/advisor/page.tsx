@@ -21,17 +21,30 @@ interface Profile {
   monthly: string;
   alreadyInvested: boolean | null;
   experience: string;
-  // Étape 4 — Objectif & dividendes
+  // Étape 4 — Positions existantes (conditionnel)
+  existingHoldings: Array<{ symbol: string; name: string; weight: string }>;
+  // Étape 5 — Objectif & dividendes
   goal: string;
   wantsDividends: string;
   taxWrapper: string;
-  // Étape 5 — Répartition
+  // Étape 6 — Répartition
   allocationMix: string;
   geography: string;
   esgInterest: string;
-  // Étape 6 — Secteurs
+  // Étape 7 — Secteurs
   favoriteSectors: string[];
   excludedSectors: string[];
+}
+
+interface ForcedStock {
+  symbol: string;
+  name: string;
+  signal: string;
+  upside: number;
+  fairValue: number;
+  currentPrice: number;
+  currency: string;
+  confirmed: boolean;
 }
 
 interface Allocation {
@@ -58,7 +71,7 @@ interface PortfolioRecommendation {
   disclaimer: string;
 }
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 const RISK_COLOR: Record<string, string> = { Faible: "var(--accent-green)", Modéré: "#fbbf24", Élevé: "var(--accent-red)" };
 
 const ALL_SECTORS = [
@@ -81,10 +94,13 @@ const emptyProfile: Profile = {
   riskTolerance: "", reactionToDrop: "", involvement: "",
   horizon: "",
   capital: "", monthly: "0", alreadyInvested: null, experience: "",
+  existingHoldings: [],
   goal: "", wantsDividends: "", taxWrapper: "",
   allocationMix: "", geography: "Mondial", esgInterest: "Non concerné",
   favoriteSectors: [], excludedSectors: [],
 };
+
+const stepLabels = ["Vous", "Risque", "Durée", "Capital", "Positions", "Objectifs", "Répartition", "Secteurs"];
 
 export default function AdvisorPage() {
   const [step, setStep] = useState(0);
@@ -93,7 +109,19 @@ export default function AdvisorPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const set = (field: keyof Profile, value: string | string[] | boolean) =>
+  // États locaux pour les positions existantes
+  const [newExSymbol, setNewExSymbol] = useState("");
+  const [newExName, setNewExName] = useState("");
+  const [newExWeight, setNewExWeight] = useState("<10%");
+  const [exResolving, setExResolving] = useState(false);
+
+  // États locaux pour les actions imposées
+  const [forcedStocks, setForcedStocks] = useState<ForcedStock[]>([]);
+  const [forcedInput, setForcedInput] = useState("");
+  const [forcedLoading, setForcedLoading] = useState(false);
+  const [forcedError, setForcedError] = useState<string | null>(null);
+
+  const set = (field: keyof Profile, value: string | string[] | boolean | Array<{ symbol: string; name: string; weight: string }>) =>
     setProfile((p) => ({ ...p, [field]: value }));
 
   const toggleArr = (field: "favoriteSectors" | "excludedSectors", val: string) => {
@@ -101,24 +129,53 @@ export default function AdvisorPage() {
     set(field, cur.includes(val) ? cur.filter((x) => x !== val) : [...cur, val]);
   };
 
+  const handleAddForced = async () => {
+    if (!forcedInput || forcedLoading) return;
+    setForcedLoading(true);
+    setForcedError(null);
+    try {
+      const res = await fetch(`/api/stock/${forcedInput}`);
+      if (!res.ok) { setForcedError(`"${forcedInput}" introuvable sur Yahoo Finance.`); setForcedLoading(false); return; }
+      const d = await res.json();
+      if (forcedStocks.find(s => s.symbol === d.symbol)) { setForcedError("Cette action est déjà dans la liste."); setForcedLoading(false); return; }
+      setForcedStocks(fs => [...fs, {
+        symbol: d.symbol,
+        name: d.name,
+        signal: d.valuation?.signal ?? "HOLD",
+        upside: d.valuation?.upside ?? 0,
+        fairValue: d.valuation?.fairValue ?? d.currentPrice,
+        currentPrice: d.currentPrice,
+        currency: d.currency,
+        confirmed: false,
+      }]);
+      setForcedInput("");
+    } catch { setForcedError("Erreur lors de la récupération des données."); }
+    setForcedLoading(false);
+  };
+
   const submit = async () => {
     setLoading(true); setError(null);
     try {
+      const confirmedForced = forcedStocks.filter(s => s.confirmed);
       const res = await fetch("/api/advisor", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, monthly: parseFloat(profile.monthly) || 0 }),
+        body: JSON.stringify({
+          ...profile,
+          monthly: parseFloat(profile.monthly) || 0,
+          existingHoldings: profile.existingHoldings,
+          forcedStocks: confirmedForced.map(s => ({ symbol: s.symbol, name: s.name, signal: s.signal, upside: s.upside })),
+        }),
       });
       const data = await res.json();
       if (res.status === 401) setError("Vous devez être connecté pour générer un portefeuille.");
       else if (res.status === 403) setError("Accès non autorisé.");
       else if (data.error) setError("La génération a échoué. Réessayez dans quelques instants.");
-      else { setResult(data); setStep(TOTAL_STEPS); }
+      else { setResult(data); setStep(TOTAL_STEPS + 1); }
     } catch { setError("Erreur réseau. Vérifiez votre connexion et réessayez."); }
     setLoading(false);
   };
 
-  const progress = step < TOTAL_STEPS ? ((step + 1) / (TOTAL_STEPS + 1)) * 100 : 100;
-  const stepLabels = ["Vous", "Risque", "Durée", "Capital", "Objectifs", "Répartition", "Secteurs"];
+  const progress = step <= TOTAL_STEPS ? ((step + 1) / (TOTAL_STEPS + 1)) * 100 : 100;
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
@@ -129,19 +186,19 @@ export default function AdvisorPage() {
           <span style={{ fontSize: 13, color: "var(--accent-purple)", fontWeight: 500 }}>Conseiller IA</span>
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.5px", marginBottom: 8 }}>
-          {step < TOTAL_STEPS
+          {step <= TOTAL_STEPS
             ? (profile.firstName ? `Votre portefeuille idéal, ${profile.firstName}` : "Trouvez votre portefeuille idéal")
             : (result?.portfolioName ?? "Votre portefeuille")}
         </h1>
-        {step < TOTAL_STEPS && (
+        {step <= TOTAL_STEPS && (
           <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
-            {stepLabels[step]} · Étape {step + 1}/{TOTAL_STEPS}
+            {stepLabels[Math.min(step, stepLabels.length - 1)]} · Étape {step + 1}/{TOTAL_STEPS + 1}
           </p>
         )}
       </div>
 
       {/* Progress */}
-      {step < TOTAL_STEPS && (
+      {step <= TOTAL_STEPS && (
         <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", marginBottom: 40, overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${progress}%`, borderRadius: 2, background: "linear-gradient(90deg, #3b7bff, #7b5aff)", transition: "width 0.4s ease" }} />
         </div>
@@ -268,12 +325,85 @@ export default function AdvisorPage() {
             ].map((o) => <Card key={o.v} emoji={o.e} title={o.v} desc={o.d} selected={profile.experience === o.v} onClick={() => set("experience", o.v)} />)}
           </div>
 
-          <Nav onBack={() => setStep(2)} onNext={() => setStep(4)} nextDisabled={!profile.capital || profile.alreadyInvested === null || !profile.experience} />
+          <Nav onBack={() => setStep(2)}
+            onNext={() => profile.alreadyInvested === true ? setStep(4) : setStep(5)}
+            nextDisabled={!profile.capital || profile.alreadyInvested === null || !profile.experience} />
         </Section>
       )}
 
-      {/* ─── ÉTAPE 4 — Objectifs & dividendes ─── */}
+      {/* ─── ÉTAPE 4 — Positions existantes (conditionnel) ─── */}
       {step === 4 && (
+        <Section title="Vos positions actuelles" sub="Indiquez vos principales positions pour que l'IA construise un portefeuille complémentaire et diversifié.">
+
+          {/* Liste des positions déjà ajoutées */}
+          {profile.existingHoldings.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+              {profile.existingHoldings.map((h, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)" }}>
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>{h.symbol}</span>
+                    <span style={{ color: "var(--text-muted)", fontSize: 12, marginLeft: 8 }}>{h.name}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 12, color: "var(--text-secondary)", background: "rgba(59,123,255,0.1)", padding: "2px 8px", borderRadius: 6 }}>{h.weight}</span>
+                    <button onClick={() => set("existingHoldings", profile.existingHoldings.filter((_, j) => j !== i))}
+                      style={{ background: "rgba(255,71,87,0.1)", border: "none", color: "var(--accent-red)", borderRadius: 6, width: 24, height: 24, cursor: "pointer", fontSize: 14 }}>×</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Formulaire ajout */}
+          <div style={{ padding: 16, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px dashed var(--border)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+              <div>
+                <label style={labelSt}>Symbole (ex: AAPL, AI.PA)</label>
+                <input value={newExSymbol} onChange={(e) => setNewExSymbol(e.target.value.toUpperCase())}
+                  onBlur={async (e) => {
+                    const sym = e.target.value;
+                    if (!sym) return;
+                    setExResolving(true);
+                    try {
+                      const res = await fetch(`/api/stock/${sym}`);
+                      if (res.ok) { const d = await res.json(); if (d.name) setNewExName(d.name); }
+                    } catch {}
+                    setExResolving(false);
+                  }}
+                  placeholder="AAPL" style={inputSt} />
+              </div>
+              <div>
+                <label style={labelSt}>Part estimée du patrimoine</label>
+                <select value={newExWeight} onChange={(e) => setNewExWeight(e.target.value)} style={{ ...inputSt, appearance: "none" as const }}>
+                  {["<10%", "10-25%", "25-50%", ">50%"].map((w) => <option key={w}>{w}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <label style={labelSt}>Nom {exResolving ? "(chargement…)" : "(auto-rempli)"}</label>
+              <input value={newExName} onChange={(e) => setNewExName(e.target.value)} placeholder="Apple Inc." style={inputSt} />
+            </div>
+            <button
+              onClick={() => {
+                if (!newExSymbol) return;
+                set("existingHoldings", [...profile.existingHoldings, { symbol: newExSymbol, name: newExName || newExSymbol, weight: newExWeight }]);
+                setNewExSymbol(""); setNewExName(""); setNewExWeight("<10%");
+              }}
+              style={{ padding: "10px 20px", borderRadius: 9, border: "1px solid rgba(59,123,255,0.4)", background: "rgba(59,123,255,0.1)", color: "var(--accent-blue)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              + Ajouter cette position
+            </button>
+          </div>
+
+          <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 12 }}>
+            💡 Vous pouvez passer cette étape si vous ne souhaitez pas entrer vos positions.
+          </p>
+
+          <Nav onBack={() => setStep(3)} onNext={() => setStep(5)} nextLabel="Continuer" />
+        </Section>
+      )}
+
+      {/* ─── ÉTAPE 5 — Objectifs & dividendes ─── */}
+      {step === 5 && (
         <Section title="Vos objectifs" sub="Ce que vous voulez accomplir oriente toute la stratégie.">
           <Label req>Objectif principal</Label>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -312,12 +442,12 @@ export default function AdvisorPage() {
             ))}
           </div>
 
-          <Nav onBack={() => setStep(3)} onNext={() => setStep(5)} nextDisabled={!profile.goal || !profile.wantsDividends} />
+          <Nav onBack={() => profile.alreadyInvested === true ? setStep(4) : setStep(3)} onNext={() => setStep(6)} nextDisabled={!profile.goal || !profile.wantsDividends} />
         </Section>
       )}
 
-      {/* ─── ÉTAPE 5 — Répartition & géographie ─── */}
-      {step === 5 && (
+      {/* ─── ÉTAPE 6 — Répartition & géographie ─── */}
+      {step === 6 && (
         <Section title="Structure de votre portefeuille" sub="Définissez la composition et la géographie de vos investissements.">
           <Label req>Répartition actions / ETF souhaitée</Label>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -346,12 +476,12 @@ export default function AdvisorPage() {
             ].map((o) => <Card key={o.v} emoji={o.e} title={o.v} desc={o.d} selected={profile.esgInterest === o.v} onClick={() => set("esgInterest", o.v)} />)}
           </div>
 
-          <Nav onBack={() => setStep(4)} onNext={() => setStep(6)} nextDisabled={!profile.allocationMix || !profile.esgInterest} />
+          <Nav onBack={() => setStep(5)} onNext={() => setStep(7)} nextDisabled={!profile.allocationMix || !profile.esgInterest} />
         </Section>
       )}
 
-      {/* ─── ÉTAPE 6 — Secteurs favoris & exclus ─── */}
-      {step === 6 && (
+      {/* ─── ÉTAPE 7 — Secteurs favoris & exclus ─── */}
+      {step === 7 && (
         <Section title="Vos préférences sectorielles" sub="Choisissez les secteurs qui vous intéressent et ceux que vous souhaitez éviter.">
           <Label>Secteurs favoris (optionnel — jusqu'à 3)</Label>
           <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10 }}>Ces secteurs seront intégrés si compatibles avec votre profil de risque.</p>
@@ -391,20 +521,93 @@ export default function AdvisorPage() {
             ))}
           </div>
 
-          {error && (
-            <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(255,71,87,0.1)", border: "1px solid rgba(255,71,87,0.3)", color: "var(--accent-red)", fontSize: 14 }}>
-              {error}
-            </div>
-          )}
+          <Nav onBack={() => setStep(6)} onNext={() => setStep(8)} nextLabel="Étape suivante →" />
+        </Section>
+      )}
 
-          <Nav onBack={() => setStep(5)} onNext={submit}
-            nextLabel={loading ? "Génération en cours…" : "✨ Générer mon portefeuille"}
-            nextDisabled={loading} />
+      {/* ─── ÉTAPE 8 — Convictions personnelles & génération ─── */}
+      {step === 8 && !result && (
+        <Section title="Vos convictions personnelles" sub="Avez-vous des actions ou ETF que vous souhaitez absolument intégrer ? Nous vous donnerons un avis avant de les inclure.">
+
+          {/* Recherche */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            <input value={forcedInput} onChange={(e) => setForcedInput(e.target.value.toUpperCase())}
+              placeholder="Symbole (ex: NVDA, MC.PA…)" style={{ ...inputSt, flex: 1 }}
+              onKeyDown={(e) => e.key === "Enter" && handleAddForced()} />
+            <button onClick={handleAddForced} disabled={forcedLoading || !forcedInput}
+              style={{ padding: "10px 18px", borderRadius: 9, border: "none", background: forcedLoading ? "rgba(59,123,255,0.4)" : "linear-gradient(135deg, #3b7bff, #7b5aff)", color: "#fff", fontWeight: 600, cursor: "pointer" }}>
+              {forcedLoading ? "…" : "Analyser"}
+            </button>
+          </div>
+          {forcedError && <p style={{ color: "var(--accent-red)", fontSize: 13, marginBottom: 12 }}>{forcedError}</p>}
+
+          {/* Liste des actions analysées */}
+          {forcedStocks.map((s, i) => {
+            const isPos = s.upside >= 0;
+            const signalColors: Record<string, string> = {
+              STRONG_BUY: "#00d48a", BUY: "#00d48a", HOLD: "#fbbf24",
+              SELL: "#f97316", STRONG_SELL: "#ff4757",
+            };
+            const signalLabels: Record<string, string> = {
+              STRONG_BUY: "Fort potentiel", BUY: "Potentiel positif", HOLD: "Neutre",
+              SELL: "Surévalué", STRONG_SELL: "Fortement surévalué",
+            };
+            return (
+              <div key={i} style={{ padding: 16, borderRadius: 12, border: `1px solid ${s.confirmed ? "rgba(0,212,138,0.3)" : "var(--border)"}`, background: s.confirmed ? "rgba(0,212,138,0.04)" : "rgba(255,255,255,0.02)", marginBottom: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <div>
+                    <span style={{ fontWeight: 700, fontSize: 15 }}>{s.symbol}</span>
+                    <span style={{ color: "var(--text-muted)", fontSize: 12, marginLeft: 8 }}>{s.name}</span>
+                  </div>
+                  <button onClick={() => setForcedStocks(fs => fs.filter((_, j) => j !== i))}
+                    style={{ background: "rgba(255,71,87,0.1)", border: "none", color: "var(--accent-red)", borderRadius: 6, width: 24, height: 24, cursor: "pointer" }}>×</button>
+                </div>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" as const, marginBottom: 10 }}>
+                  <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: `${signalColors[s.signal] ?? "#fbbf24"}20`, color: signalColors[s.signal] ?? "#fbbf24" }}>
+                    {signalLabels[s.signal] ?? s.signal}
+                  </span>
+                  <span style={{ fontSize: 13, color: isPos ? "var(--accent-green)" : "var(--accent-red)", fontWeight: 600 }}>
+                    {isPos ? "+" : ""}{s.upside.toFixed(1)}% vs valeur estimée
+                  </span>
+                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    Valeur estimée : {s.fairValue.toFixed(2)} {s.currency} · Cours : {s.currentPrice.toFixed(2)} {s.currency}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setForcedStocks(fs => fs.map((x, j) => j === i ? { ...x, confirmed: true } : x))}
+                    disabled={s.confirmed}
+                    style={{ flex: 1, padding: "9px", borderRadius: 9, border: `1px solid rgba(0,212,138,${s.confirmed ? "0.5" : "0.3"})`, background: s.confirmed ? "rgba(0,212,138,0.15)" : "transparent", color: "var(--accent-green)", fontWeight: 600, fontSize: 13, cursor: s.confirmed ? "default" : "pointer" }}>
+                    {s.confirmed ? "✓ Inclus dans le portefeuille" : "✓ Oui, l'inclure"}
+                  </button>
+                  {s.confirmed && (
+                    <button onClick={() => setForcedStocks(fs => fs.map((x, j) => j === i ? { ...x, confirmed: false } : x))}
+                      style={{ padding: "9px 14px", borderRadius: 9, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontSize: 13, cursor: "pointer" }}>
+                      Retirer
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, marginBottom: 20 }}>
+            💡 Vous pouvez passer cette étape sans ajouter d'action.
+          </p>
+
+          {/* Bouton de génération */}
+          {error && <p style={{ color: "var(--accent-red)", fontSize: 14, marginBottom: 12 }}>{error}</p>}
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => setStep(7)} style={{ padding: "12px 20px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontSize: 14, cursor: "pointer" }}>← Retour</button>
+            <button onClick={submit} disabled={loading}
+              style={{ flex: 1, padding: "14px", borderRadius: 12, border: "none", background: loading ? "rgba(123,90,255,0.4)" : "linear-gradient(135deg, #3b7bff, #7b5aff)", color: "#fff", fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer" }}>
+              {loading ? "✨ Génération en cours…" : "✨ Générer mon portefeuille"}
+            </button>
+          </div>
         </Section>
       )}
 
       {/* ─── RÉSULTAT ─── */}
-      {step === TOTAL_STEPS && result && (
+      {result && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Métriques */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
@@ -495,7 +698,7 @@ export default function AdvisorPage() {
 
           <p style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center" }}>{result.disclaimer}</p>
 
-          <button onClick={() => { setStep(0); setResult(null); setProfile(emptyProfile); setError(null); }} style={{
+          <button onClick={() => { setStep(0); setResult(null); setProfile(emptyProfile); setError(null); setForcedStocks([]); setForcedInput(""); setForcedError(null); }} style={{
             padding: "12px", borderRadius: 10, border: "1px solid var(--border)",
             background: "transparent", color: "var(--text-secondary)", fontSize: 14, cursor: "pointer",
           }}>← Refaire le questionnaire</button>
@@ -592,4 +795,8 @@ const inputSt: React.CSSProperties = {
   width: "100%", padding: "12px 16px", borderRadius: 10,
   background: "var(--bg-card)", border: "1px solid var(--border)",
   color: "var(--text-primary)", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s",
+};
+
+const labelSt: React.CSSProperties = {
+  display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 6,
 };

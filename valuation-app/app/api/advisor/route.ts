@@ -46,6 +46,18 @@ PRÉFÉRENCES D'ALLOCATION :
 - Secteurs exclus : ${p.excludedSectors?.length ? p.excludedSectors.join(", ") : "aucun"}
 - Intérêt pour l'investissement responsable (ESG) : ${p.esgInterest}
 
+POSITIONS EXISTANTES À COMPLÉTER :
+${p.existingHoldings?.length
+  ? p.existingHoldings.map((h: { symbol: string; name: string; weight: string }) => `- ${h.symbol} (${h.name}) : environ ${h.weight} du patrimoine`).join("\n")
+  : "Aucune position existante signalée."}
+→ Construire un portefeuille qui COMPLÈTE et DIVERSIFIE ces positions existantes (éviter de recommander les mêmes actifs).
+
+ACTIONS IMPOSÉES PAR L'UTILISATEUR (à intégrer obligatoirement avec un poids approprié) :
+${p.forcedStocks?.length
+  ? p.forcedStocks.map((s: { symbol: string; name: string; signal: string; upside: number }) => `- ${s.symbol} (${s.name}) : signal ${s.signal}, upside estimé ${s.upside?.toFixed(1)}%`).join("\n")
+  : "Aucune action imposée."}
+→ Si des actions sont imposées, les inclure avec un poids entre 5% et 20% chacune, ajuster les autres lignes en conséquence.
+
 ═══ RÈGLES STRICTES ═══
 1. La somme des pourcentages = EXACTEMENT 100
 2. Entre 5 et 8 lignes d'allocation maximum
