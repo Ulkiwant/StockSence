@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
+import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 
 interface Holding {
   id: string;
@@ -495,6 +496,21 @@ export default function PortfolioPage() {
             );
           })}
         </div>
+      )}
+
+      {/* ── Scenario Analysis ── */}
+      {enriched.length > 0 && (
+        <ScenarioAnalysis
+          positions={enriched.map((h) => ({
+            symbol: h.symbol,
+            marketValue: h.marketValue,
+            asset_type: h.asset_type,
+            beta: undefined,
+            sector: h.sector,
+          }))}
+          totalValue={totals.value}
+          monthlyContribution={0}
+        />
       )}
 
       {/* ── AI Analysis ── */}

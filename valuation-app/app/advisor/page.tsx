@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 
 interface Profile {
   // Étape 0 — Identité
@@ -478,6 +479,19 @@ export default function AdvisorPage() {
               </div>
             </div>
           )}
+
+          {/* Scenario Analysis */}
+          <ScenarioAnalysis
+            positions={result.allocations.map((a: Allocation) => ({
+              symbol: a.symbol,
+              marketValue: (parseFloat(profile.capital) * a.percentage) / 100,
+              asset_type: a.type?.toLowerCase() === "etf" ? "etf" : "stock",
+              sector: undefined,
+            }))}
+            totalValue={parseFloat(profile.capital)}
+            monthlyContribution={parseFloat(profile.monthly) || 0}
+            riskLabel={profile.riskTolerance}
+          />
 
           <p style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center" }}>{result.disclaimer}</p>
 
