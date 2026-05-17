@@ -88,19 +88,9 @@ export default function StockCard({
             >
               {symbol.slice(0, 3)}
             </div>
-            <div style={{ fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>{symbol}</div>
-            <div
-              style={{
-                fontSize: 12,
-                color: "var(--text-secondary)",
-                marginTop: 2,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                maxWidth: 150,
-              }}
-            >
+            <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.3 }}>
               {name}
+              <span style={{ fontSize: 11, color: "var(--text-muted)", background: "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: 4, marginLeft: 6, fontWeight: 500 }}>{symbol}</span>
             </div>
           </div>
 

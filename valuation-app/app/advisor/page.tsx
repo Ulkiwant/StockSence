@@ -26,7 +26,7 @@ interface Profile {
   // Étape 5 — Objectif & dividendes
   goal: string;
   wantsDividends: string;
-  taxWrapper: string;
+  taxWrapper: string[];
   // Étape 6 — Répartition
   allocationMix: string;
   geography: string;
@@ -95,7 +95,7 @@ const emptyProfile: Profile = {
   horizon: "",
   capital: "", monthly: "0", alreadyInvested: null, experience: "",
   existingHoldings: [],
-  goal: "", wantsDividends: "", taxWrapper: "",
+  goal: "", wantsDividends: "", taxWrapper: [],
   allocationMix: "", geography: "Mondial", esgInterest: "Non concerné",
   favoriteSectors: [], excludedSectors: [],
 };
@@ -108,6 +108,9 @@ export default function AdvisorPage() {
   const [result, setResult] = useState<PortfolioRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // État pour l'import du portefeuille
+  const [importingPortfolio, setImportingPortfolio] = useState(false);
 
   // États locaux pour les positions existantes
   const [newExSymbol, setNewExSymbol] = useState("");
@@ -335,6 +338,40 @@ export default function AdvisorPage() {
       {step === 4 && (
         <Section title="Vos positions actuelles" sub="Indiquez vos principales positions pour que l'IA construise un portefeuille complémentaire et diversifié.">
 
+          {/* Bouton import depuis portefeuille */}
+          <button
+            onClick={async () => {
+              setImportingPortfolio(true);
+              try {
+                const res = await fetch("/api/portfolio");
+                const holdings = await res.json();
+                if (!Array.isArray(holdings) || holdings.length === 0) {
+                  setImportingPortfolio(false);
+                  return;
+                }
+                const total = holdings.reduce((s: number, h: any) => s + h.avg_price * h.quantity, 0);
+                const imported = holdings.map((h: any) => {
+                  const pct = total > 0 ? (h.avg_price * h.quantity / total) * 100 : 0;
+                  const weight = pct < 10 ? "<10%" : pct < 25 ? "10-25%" : pct < 50 ? "25-50%" : ">50%";
+                  return { symbol: h.symbol, name: h.name || h.symbol, weight };
+                });
+                set("existingHoldings", imported);
+              } catch {}
+              setImportingPortfolio(false);
+            }}
+            disabled={importingPortfolio}
+            style={{
+              width: "100%", padding: "12px", borderRadius: 10, marginBottom: 16,
+              border: "1px solid rgba(59,123,255,0.4)",
+              background: "rgba(59,123,255,0.08)",
+              color: "var(--accent-blue)", fontSize: 14, fontWeight: 600,
+              cursor: importingPortfolio ? "wait" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            }}
+          >
+            {importingPortfolio ? "⏳ Importation…" : "📂 Importer depuis mon portefeuille"}
+          </button>
+
           {/* Liste des positions déjà ajoutées */}
           {profile.existingHoldings.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
@@ -425,22 +462,34 @@ export default function AdvisorPage() {
             ].map((o) => <Card key={o.v} emoji={o.e} title={o.v === "oui" ? "Oui, dividendes prioritaires" : o.v === "optionnel" ? "Optionnel" : "Non, capitalisation"} desc={o.d} selected={profile.wantsDividends === o.v} onClick={() => set("wantsDividends", o.v)} />)}
           </div>
 
-          <Label>Enveloppe fiscale souhaitée</Label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <Label>Enveloppe(s) fiscale(s) souhaitée(s) (plusieurs possibles)</Label>
+          <ChipRow>
             {[
-              { v: "PEA", d: "Exonération après 5 ans, actions européennes" },
-              { v: "Compte-titres (CTO)", d: "Toutes zones, sans plafond" },
-              { v: "Assurance vie", d: "Avantage successoral, disponible après 8 ans" },
-              { v: "Je ne sais pas", d: "Claude choisira pour vous" },
-            ].map((w) => (
-              <button key={w.v} onClick={() => set("taxWrapper", w.v)} title={w.d} style={{
-                padding: "8px 16px", borderRadius: 8, cursor: "pointer", fontSize: 13, transition: "all 0.15s",
-                border: `1px solid ${profile.taxWrapper === w.v ? "var(--accent-blue)" : "var(--border)"}`,
-                background: profile.taxWrapper === w.v ? "rgba(59,123,255,0.12)" : "transparent",
-                color: profile.taxWrapper === w.v ? "var(--accent-blue)" : "var(--text-secondary)",
-              }}>{w.v}</button>
-            ))}
-          </div>
+              { v: "PEA", desc: "Actions européennes, exonéré après 5 ans" },
+              { v: "CTO", desc: "Tous marchés, sans plafond" },
+              { v: "Assurance-vie", desc: "Avantages succession et liquidité" },
+              { v: "PER", desc: "Retraite, déduction fiscale" },
+            ].map(({ v, desc }) => {
+              const selected = (profile.taxWrapper as string[]).includes(v);
+              return (
+                <Chip
+                  key={v}
+                  label={v}
+                  active={selected}
+                  color="purple"
+                  onClick={() => {
+                    const cur = profile.taxWrapper as string[];
+                    set("taxWrapper", selected ? cur.filter(x => x !== v) : [...cur, v]);
+                  }}
+                />
+              );
+            })}
+          </ChipRow>
+          <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+            {(profile.taxWrapper as string[]).length === 0
+              ? "Aucune sélection = l'IA choisira la plus adaptée"
+              : `Sélectionné : ${(profile.taxWrapper as string[]).join(" + ")}`}
+          </p>
 
           <Nav onBack={() => profile.alreadyInvested === true ? setStep(4) : setStep(3)} onNext={() => setStep(6)} nextDisabled={!profile.goal || !profile.wantsDividends} />
         </Section>
@@ -687,6 +736,7 @@ export default function AdvisorPage() {
           <ScenarioAnalysis
             positions={result.allocations.map((a: Allocation) => ({
               symbol: a.symbol,
+              name: a.name,
               marketValue: (parseFloat(profile.capital) * a.percentage) / 100,
               asset_type: a.type?.toLowerCase() === "etf" ? "etf" : "stock",
               sector: undefined,

@@ -37,7 +37,7 @@ HORIZON & CAPITAL :
 OBJECTIFS :
 - Objectif principal : ${p.goal}
 - Dividendes souhaités : ${p.wantsDividends === "oui" ? "Oui, revenu régulier prioritaire" : p.wantsDividends === "optionnel" ? "Optionnel si disponible" : "Non, privilégier la croissance"}
-- Enveloppe fiscale : ${p.taxWrapper || "Au choix"}
+- Enveloppe(s) fiscale(s) : ${Array.isArray(p.taxWrapper) && p.taxWrapper.length > 0 ? p.taxWrapper.join(" + ") : "Au choix"}
 
 PRÉFÉRENCES D'ALLOCATION :
 - Répartition souhaitée actions/ETF : ${p.allocationMix}

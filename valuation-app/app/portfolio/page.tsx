@@ -469,9 +469,10 @@ export default function PortfolioPage() {
                     color: h.asset_type === "etf" ? "var(--accent-purple)" : "var(--accent-blue)",
                   }}>{h.symbol.slice(0, 3)}</div>
                   <div>
-                    <Link href={`/stock/${h.symbol}`} style={{ fontWeight: 600, fontSize: 14 }}>{h.symbol}</Link>
+                    <Link href={`/stock/${h.symbol}`} style={{ fontWeight: 600, fontSize: 14 }}>{h.name}</Link>
                     <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>
-                      {h.name} · {h.asset_type === "etf" ? "ETF" : "Action"} · {h.currency}
+                      <span style={{ fontSize: 11, color: "var(--text-muted)", background: "rgba(255,255,255,0.05)", padding: "1px 6px", borderRadius: 4 }}>{h.symbol}</span>
+                      {" · "}{h.asset_type === "etf" ? "ETF" : "Action"} · {h.currency}
                     </div>
                   </div>
                 </div>
@@ -503,6 +504,7 @@ export default function PortfolioPage() {
         <ScenarioAnalysis
           positions={enriched.map((h) => ({
             symbol: h.symbol,
+            name: h.name,
             marketValue: h.marketValue,
             asset_type: h.asset_type,
             beta: undefined,

@@ -12,6 +12,7 @@ import {
 
 interface Position {
   symbol: string;
+  name?: string;
   marketValue: number;
   asset_type: string;
   beta?: number;
