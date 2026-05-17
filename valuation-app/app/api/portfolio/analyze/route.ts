@@ -15,10 +15,13 @@ export async function POST(req: NextRequest) {
   const { holdings } = await req.json();
   if (!holdings?.length) return Response.json({ error: "Portfolio vide" }, { status: 400 });
 
-  // Récupère les prix actuels pour calculer les P&L
-  const enriched = await Promise.allSettled(
+  // Si les holdings sont déjà enrichis (currentPrice fourni par le client), on évite
+  // le double-fetch Yahoo qui peut provoquer des timeouts sur un grand portefeuille.
+  // Sinon on enrichit uniquement les positions manquantes.
+  const positions: any[] = await Promise.all(
     holdings.map(async (h: any) => {
-      const details = await getStockDetails(h.symbol);
+      if (h.currentPrice != null && h.marketValue != null) return h; // déjà enrichi
+      const details = await getStockDetails(h.symbol).catch(() => null);
       const currentPrice = details?.currentPrice ?? h.avg_price;
       const pnl = (currentPrice - h.avg_price) * h.quantity;
       const pnlPct = ((currentPrice - h.avg_price) / h.avg_price) * 100;
@@ -27,11 +30,7 @@ export async function POST(req: NextRequest) {
     })
   );
 
-  const positions = enriched
-    .filter((r): r is PromiseFulfilledResult<any> => r.status === "fulfilled")
-    .map((r) => r.value);
-
-  const totalValue = positions.reduce((s, p) => s + p.marketValue, 0);
+  const totalValue = positions.reduce((s, p) => s + (p.marketValue ?? 0), 0);
   const totalCost = positions.reduce((s, p) => s + p.avg_price * p.quantity, 0);
   const totalPnl = totalValue - totalCost;
 
@@ -59,7 +58,7 @@ Réponds UNIQUEMENT en JSON avec cette structure :
   try {
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 1000,
+      max_tokens: 2000,
       messages: [{ role: "user", content: prompt }],
     });
     const text = message.content[0].type === "text" ? message.content[0].text : "";
