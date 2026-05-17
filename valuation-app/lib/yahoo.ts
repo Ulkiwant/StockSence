@@ -19,6 +19,7 @@ export interface StockQuote {
 }
 
 export interface StockDetails extends StockQuote {
+  quoteType: string;
   eps: number;
   forwardPE: number;
   trailingPE: number;
@@ -44,11 +45,12 @@ export async function searchStocks(query: string) {
     const raw = await (yahooFinance.search as any)(query, { quotesCount: 8 });
     const quotes = (raw?.quotes ?? []) as any[];
     return quotes
-      .filter((q: any) => q.quoteType === "EQUITY" && q.symbol)
+      .filter((q: any) => ["EQUITY", "ETF", "MUTUALFUND"].includes(q.quoteType) && q.symbol)
       .map((q: any) => ({
         symbol: q.symbol as string,
         name: (q.shortname || q.longname || q.symbol) as string,
         exchange: (q.exchange || "") as string,
+        quoteType: (q.quoteType || "EQUITY") as string,
       }));
   } catch {
     return [];
@@ -75,12 +77,13 @@ export async function getStockDetails(symbol: string): Promise<StockDetails | nu
     return {
       symbol: quote.symbol ?? symbol,
       name: quote.longName ?? quote.shortName ?? symbol,
+      quoteType: (quote.quoteType ?? "EQUITY") as string,
       currentPrice: quote.regularMarketPrice ?? 0,
       change: quote.regularMarketChange ?? 0,
       changePercent: (quote.regularMarketChangePercent ?? 0) / 100,
       marketCap: quote.marketCap ?? 0,
-      sector: ap?.sector ?? "Unknown",
-      industry: ap?.industry ?? "Unknown",
+      sector: ap?.sector ?? quote.sector ?? "Unknown",
+      industry: ap?.industry ?? quote.industry ?? "Unknown",
       currency: quote.currency ?? "USD",
       logoUrl: "",
       eps: ks?.trailingEps ?? 0,

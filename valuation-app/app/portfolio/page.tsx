@@ -84,6 +84,8 @@ export default function PortfolioPage() {
   const [addCurrency, setAddCurrency] = useState("USD");
   const [addType, setAddType] = useState("stock");
   const [addLoading, setAddLoading] = useState(false);
+  const [resolving, setResolving] = useState(false);
+  const [resolveError, setResolveError] = useState<string | null>(null);
 
   const loadHoldings = useCallback(async () => {
     setLoading(true);
@@ -129,6 +131,27 @@ export default function PortfolioPage() {
 
   useEffect(() => { if (holdings.length) loadHistory(period); }, [holdings, period, loadHistory]);
 
+  const resolveSymbol = async (sym: string) => {
+    if (!sym || sym.length < 1) return;
+    setResolving(true);
+    setResolveError(null);
+    try {
+      const res = await fetch(`/api/stock/${sym.toUpperCase()}`);
+      if (!res.ok) { setResolveError("Symbole introuvable"); setResolving(false); return; }
+      const d = await res.json();
+      if (d.name) setAddName(d.name);
+      if (d.currency) setAddCurrency(d.currency);
+      if (d.quoteType) {
+        const qt = String(d.quoteType).toUpperCase();
+        if (qt === "ETF" || qt === "MUTUALFUND") setAddType("etf");
+        else setAddType("stock");
+      }
+    } catch {
+      setResolveError("Erreur de résolution");
+    }
+    setResolving(false);
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addSymbol || !addQty || !addPRU) return;
@@ -139,6 +162,8 @@ export default function PortfolioPage() {
     });
     setShowAdd(false);
     setAddSymbol(""); setAddName(""); setAddQty(""); setAddPRU("");
+    setAddType("stock"); setAddCurrency("USD");
+    setResolveError(null);
     setAddLoading(false);
     setAnalysis(null);
     loadHoldings();
@@ -319,23 +344,48 @@ export default function PortfolioPage() {
           <div className="card" style={{ width: "100%", maxWidth: 440, padding: 28 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Ajouter une position</h2>
             <form onSubmit={handleAdd} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>Symbole *</label>
-                  <input value={addSymbol} onChange={(e) => setAddSymbol(e.target.value.toUpperCase())} required placeholder="AAPL" style={inputStyle} />
+
+              {/* Symbole avec auto-résolution */}
+              <div>
+                <label style={labelStyle}>Symbole *</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    value={addSymbol}
+                    onChange={(e) => { setAddSymbol(e.target.value.toUpperCase()); setResolveError(null); }}
+                    onBlur={(e) => resolveSymbol(e.target.value)}
+                    required
+                    placeholder="AAPL, IWDA.AS, CW8.PA…"
+                    style={{ ...inputStyle, paddingRight: 36 }}
+                  />
+                  {resolving && (
+                    <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--text-muted)" }}>⏳</div>
+                  )}
                 </div>
-                <div>
-                  <label style={labelStyle}>Type</label>
-                  <select value={addType} onChange={(e) => setAddType(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>
-                    <option value="stock">Action</option>
-                    <option value="etf">ETF</option>
-                    <option value="crypto">Crypto</option>
-                  </select>
+                {resolveError && <div style={{ fontSize: 11, color: "var(--accent-red)", marginTop: 4 }}>{resolveError} — vérifiez le symbole Yahoo Finance</div>}
+              </div>
+
+              {/* Type — mis en avant */}
+              <div>
+                <label style={labelStyle}>Type d'actif</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[
+                    { value: "stock", label: "📈 Action" },
+                    { value: "etf",   label: "🗂 ETF" },
+                    { value: "crypto", label: "₿ Crypto" },
+                  ].map((opt) => (
+                    <button key={opt.value} type="button" onClick={() => setAddType(opt.value)} style={{
+                      flex: 1, padding: "9px 8px", borderRadius: 9, border: `1px solid ${addType === opt.value ? "rgba(59,123,255,0.5)" : "var(--border)"}`,
+                      background: addType === opt.value ? "rgba(59,123,255,0.12)" : "rgba(255,255,255,0.03)",
+                      color: addType === opt.value ? "var(--accent-blue)" : "var(--text-secondary)",
+                      fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                    }}>{opt.label}</button>
+                  ))}
                 </div>
               </div>
+
               <div>
-                <label style={labelStyle}>Nom (optionnel)</label>
-                <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="Apple Inc." style={inputStyle} />
+                <label style={labelStyle}>Nom {resolving ? <span style={{ color: "var(--text-muted)" }}>(chargement…)</span> : "(auto-rempli ou manuel)"}</label>
+                <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="iShares Core MSCI World…" style={inputStyle} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
@@ -354,7 +404,7 @@ export default function PortfolioPage() {
                 </select>
               </div>
               <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-                <button type="button" onClick={() => setShowAdd(false)} style={{
+                <button type="button" onClick={() => { setShowAdd(false); setAddSymbol(""); setAddName(""); setAddQty(""); setAddPRU(""); setAddType("stock"); setAddCurrency("USD"); setResolveError(null); }} style={{
                   flex: 1, padding: "12px", borderRadius: 10, border: "1px solid var(--border)",
                   background: "transparent", color: "var(--text-secondary)", fontSize: 14, cursor: "pointer",
                 }}>Annuler</button>
