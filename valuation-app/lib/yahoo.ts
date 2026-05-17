@@ -148,6 +148,32 @@ export async function getHistoricalPrices(
   }
 }
 
+export interface NewsItem {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string; // ISO date string
+  summary: string;
+}
+
+export async function getStockNews(symbol: string): Promise<NewsItem[]> {
+  try {
+    const raw = await (yahooFinance.search as any)(symbol, { quotesCount: 0, newsCount: 6 });
+    const news = (raw?.news ?? []) as any[];
+    return news.map((n: any) => ({
+      title: n.title ?? "",
+      url: n.link ?? "",
+      source: n.publisher ?? "Yahoo Finance",
+      publishedAt: n.providerPublishTime
+        ? new Date(n.providerPublishTime * 1000).toISOString()
+        : new Date().toISOString(),
+      summary: n.summary ?? "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 const TRENDING_POOL = [
   "AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA",
   "JPM", "V", "JNJ", "UNH", "XOM", "WMT", "MA", "PG",

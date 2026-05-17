@@ -63,6 +63,7 @@ export default function Navbar() {
             <span style={{ fontSize: 12 }}>🎯</span> Conseiller
           </span>
         </NavLink>
+        <NavLink href="/faq" active={pathname.startsWith("/faq")}>FAQ</NavLink>
       </div>
 
       {/* Auth */}

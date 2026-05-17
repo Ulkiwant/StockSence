@@ -8,6 +8,14 @@ import WatchlistButton from "@/components/WatchlistButton";
 import StockChart from "@/components/StockChart";
 import FinanceTooltip from "@/components/FinanceTooltip";
 
+interface NewsItem {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+  summary: string;
+}
+
 interface StockData {
   symbol: string;
   name: string;
@@ -76,6 +84,14 @@ function pct(n: number) {
   return `${(n * 100).toFixed(1)}%`;
 }
 
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const h = Math.floor(diff / 3_600_000);
+  if (h < 1) return "à l'instant";
+  if (h < 24) return `il y a ${h}h`;
+  return `il y a ${Math.floor(h / 24)}j`;
+}
+
 function MetricRow({
   label,
   value,
@@ -116,6 +132,7 @@ export default function StockPage() {
   const [loadingAI, setLoadingAI] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [news, setNews] = useState<NewsItem[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -141,6 +158,13 @@ export default function StockPage() {
         setError(e.message);
         setLoading(false);
       });
+  }, [ticker]);
+
+  useEffect(() => {
+    fetch(`/api/stock/${ticker}/news`)
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d)) setNews(d); })
+      .catch(() => {});
   }, [ticker]);
 
   if (loading) {
@@ -503,6 +527,32 @@ export default function StockPage() {
               )}
             </div>
           )}
+
+          {/* News */}
+          <div className="card" style={{ padding: 24 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>📰 Actualités récentes</h2>
+            {news.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--text-muted)" }}>Aucune actualité disponible</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {news.slice(0, 5).map((item, i) => (
+                  <div key={i} style={{ borderBottom: i < Math.min(news.length, 5) - 1 ? "1px solid var(--border)" : "none", paddingBottom: i < Math.min(news.length, 5) - 1 ? 16 : 0 }}>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", textDecoration: "none", lineHeight: 1.5, display: "block", marginBottom: 4 }}
+                    >
+                      {item.title}
+                    </a>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                      {item.source} · {timeAgo(item.publishedAt)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

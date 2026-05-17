@@ -3,13 +3,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const ALLOWED_EMAIL = "quentin.celette@edu.em-lyon.com";
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
-  if (user.email !== ALLOWED_EMAIL) return Response.json({ error: "Forbidden" }, { status: 403 });
 
   const p = await req.json();
 
