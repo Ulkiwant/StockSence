@@ -1,11 +1,11 @@
 type Signal = "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL";
 
 const CONFIG: Record<Signal, { label: string; color: string; bg: string }> = {
-  STRONG_BUY: { label: "Fort achat", color: "#86efac", bg: "rgba(0,212,138,0.12)" },
+  STRONG_BUY: { label: "Fort achat", color: "#86efac", bg: "rgba(134,239,172,0.12)" },
   BUY:        { label: "Achat",      color: "#4ade80", bg: "rgba(74,222,128,0.1)" },
-  HOLD:       { label: "Conserver",  color: "#fbbf24", bg: "rgba(251,191,36,0.1)" },
+  HOLD:       { label: "Conserver",  color: "#fcd34d", bg: "rgba(251,191,36,0.1)" },
   SELL:       { label: "Vendre",     color: "#f97316", bg: "rgba(249,115,22,0.1)" },
-  STRONG_SELL:{ label: "Vente forte",color: "#ff4757", bg: "rgba(255,71,87,0.12)" },
+  STRONG_SELL:{ label: "Vente forte",color: "#fca5a5", bg: "rgba(252,165,165,0.12)" },
 };
 
 export default function SignalBadge({ signal, size = "md" }: { signal: Signal; size?: "sm" | "md" | "lg" }) {

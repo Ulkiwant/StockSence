@@ -266,8 +266,8 @@ export default function StockPage() {
           <div style={{
             position: "absolute", inset: 0,
             background: v.upside > 0
-              ? "radial-gradient(ellipse at top right, rgba(0,212,138,0.05) 0%, transparent 60%)"
-              : "radial-gradient(ellipse at top right, rgba(255,71,87,0.05) 0%, transparent 60%)",
+              ? "radial-gradient(ellipse at top right, rgba(134,239,172,0.05) 0%, transparent 60%)"
+              : "radial-gradient(ellipse at top right, rgba(252,165,165,0.05) 0%, transparent 60%)",
             pointerEvents: "none",
           }} />
           <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 8 }}>
@@ -293,7 +293,7 @@ export default function StockPage() {
               <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
               <circle
                 cx="50" cy="50" r="40" fill="none"
-                stroke={v.score >= 65 ? "#86efac" : v.score >= 40 ? "#fbbf24" : "#ff4757"}
+                stroke={v.score >= 65 ? "#86efac" : v.score >= 40 ? "#fcd34d" : "#fca5a5"}
                 strokeWidth="8"
                 strokeDasharray={`${(v.score / 100) * 251} 251`}
                 strokeLinecap="round"
@@ -379,9 +379,9 @@ export default function StockPage() {
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 marginBottom: 16, padding: "12px 16px", borderRadius: 12,
                 background: ai.recommendation === "ACHETER"
-                  ? "rgba(0,212,138,0.08)"
+                  ? "rgba(134,239,172,0.08)"
                   : ai.recommendation === "VENDRE"
-                  ? "rgba(255,71,87,0.08)"
+                  ? "rgba(252,165,165,0.08)"
                   : "rgba(251,191,36,0.08)",
               }}>
                 <div>
@@ -390,7 +390,7 @@ export default function StockPage() {
                     fontSize: 20, fontWeight: 800,
                     color: ai.recommendation === "ACHETER" ? "var(--accent-green)"
                       : ai.recommendation === "VENDRE" ? "var(--accent-red)"
-                      : "#fbbf24",
+                      : "#fcd34d",
                   }}>
                     {ai.recommendation}
                   </div>
@@ -468,7 +468,7 @@ export default function StockPage() {
               {v.strengths.map((s, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, fontSize: 13, alignItems: "flex-start" }}>
                   <span style={{
-                    width: 18, height: 18, borderRadius: 4, background: "rgba(0,212,138,0.12)",
+                    width: 18, height: 18, borderRadius: 4, background: "rgba(134,239,172,0.12)",
                     color: "var(--accent-green)", display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0, fontSize: 10, fontWeight: 700,
                   }}>✓</span>
@@ -478,7 +478,7 @@ export default function StockPage() {
               {v.risks.map((r, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, fontSize: 13, alignItems: "flex-start" }}>
                   <span style={{
-                    width: 18, height: 18, borderRadius: 4, background: "rgba(255,71,87,0.12)",
+                    width: 18, height: 18, borderRadius: 4, background: "rgba(252,165,165,0.12)",
                     color: "var(--accent-red)", display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0, fontSize: 10, fontWeight: 700,
                   }}>!</span>

@@ -35,7 +35,7 @@ function LoginForm() {
       {error && (
         <div style={{
           padding: "12px 16px", borderRadius: 10,
-          background: "rgba(255,71,87,0.1)", border: "1px solid rgba(255,71,87,0.3)",
+          background: "rgba(252,165,165,0.1)", border: "1px solid rgba(252,165,165,0.3)",
           color: "var(--accent-red)", fontSize: 14,
         }}>
           {error}

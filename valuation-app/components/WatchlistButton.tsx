@@ -59,12 +59,12 @@ export default function WatchlistButton({ symbol, name }: Props) {
         borderRadius: 10, cursor: loading ? "wait" : "pointer",
         border: `1px solid ${isWatched ? "rgba(251,191,36,0.4)" : "var(--border)"}`,
         background: isWatched ? "rgba(251,191,36,0.08)" : "var(--bg-card)",
-        color: isWatched ? "#fbbf24" : "var(--text-secondary)",
+        color: isWatched ? "#fcd34d" : "var(--text-secondary)",
         fontSize: 14, fontWeight: 500, transition: "all 0.2s",
       }}
     >
       <svg width="16" height="16" viewBox="0 0 24 24"
-        fill={isWatched ? "#fbbf24" : "none"} stroke="currentColor"
+        fill={isWatched ? "#fcd34d" : "none"} stroke="currentColor"
         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
       </svg>

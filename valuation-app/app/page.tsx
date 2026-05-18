@@ -218,7 +218,7 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <div style={{ marginTop: 10, padding: "6px 10px", borderRadius: 8, background: "rgba(0,212,138,0.06)", border: "1px solid rgba(0,212,138,0.15)", fontSize: 11, color: "var(--text-muted)", textAlign: "center" }}>
+            <div style={{ marginTop: 10, padding: "6px 10px", borderRadius: 8, background: "rgba(134,239,172,0.06)", border: "1px solid rgba(134,239,172,0.15)", fontSize: 11, color: "var(--text-muted)", textAlign: "center" }}>
               Exemple · Données fictives à titre illustratif
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function HomePage() {
                 transition: "border-color 0.2s, transform 0.2s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(0,212,138,0.3)";
+                (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(134,239,172,0.3)";
                 (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
               }}
               onMouseLeave={(e) => {
@@ -299,7 +299,7 @@ export default function HomePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40 }}>
             {STEPS.map((s, i) => (
               <div key={s.step} className={`reveal reveal-delay-${i + 1}`} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                <div style={{ fontSize: 56, fontWeight: 900, color: "rgba(0,212,138,0.2)", letterSpacing: "-3px" }}>{s.step}</div>
+                <div style={{ fontSize: 56, fontWeight: 900, color: "rgba(134,239,172,0.2)", letterSpacing: "-3px" }}>{s.step}</div>
                 <h3 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px" }}>{s.title}</h3>
                 <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.65 }}>{s.desc}</p>
               </div>
@@ -349,8 +349,8 @@ export default function HomePage() {
             <p style={{ fontSize: 16, color: "var(--text-secondary)", marginBottom: 40 }}>Simple. Gratuit pendant toute la beta.</p>
           </div>
           <div className="reveal reveal-delay-1" style={{
-            borderRadius: 20, border: "1px solid rgba(0,212,138,0.3)",
-            background: "rgba(0,212,138,0.04)", padding: "40px 36px",
+            borderRadius: 20, border: "1px solid rgba(134,239,172,0.3)",
+            background: "rgba(134,239,172,0.04)", padding: "40px 36px",
           }}>
             <div style={{ fontSize: 64, fontWeight: 900, color: "var(--accent-green)", letterSpacing: "-3px", lineHeight: 1 }}>0 €</div>
             <div style={{ marginTop: 8, fontSize: 15, color: "var(--text-muted)", marginBottom: 36 }}>Accès complet · Aucune carte bancaire</div>

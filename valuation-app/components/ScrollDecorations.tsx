@@ -14,16 +14,33 @@ const decos = [
   { id: "d10", side: "right", top: 1060, speed: 0.11 },
 ];
 
+// Fade starts at FADE_START px, fully invisible at FADE_END px
+const FADE_START = 300;
+const FADE_END   = 900;
+
 export default function ScrollDecorations() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
+
+      // Parallax on each element
       decos.forEach((d) => {
         const el = refs.current[d.id];
         if (el) el.style.transform = `translateY(${-y * d.speed}px)`;
       });
+
+      // Fade the whole container based on scroll position
+      if (containerRef.current) {
+        const opacity = y <= FADE_START
+          ? 1
+          : y >= FADE_END
+          ? 0
+          : 1 - (y - FADE_START) / (FADE_END - FADE_START);
+        containerRef.current.style.opacity = String(opacity);
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -35,6 +52,7 @@ export default function ScrollDecorations() {
 
   return (
     <div
+      ref={containerRef}
       aria-hidden
       style={{
         pointerEvents: "none",
@@ -42,6 +60,8 @@ export default function ScrollDecorations() {
         inset: 0,
         overflow: "hidden",
         zIndex: 0,
+        opacity: 1,
+        transition: "opacity 0.15s linear",
       }}
     >
       {/* ── GAUCHE ── */}

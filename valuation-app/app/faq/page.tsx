@@ -149,7 +149,7 @@ export default function FAQPage() {
         {aiError && (
           <div style={{
             marginTop: 20, padding: "12px 16px", borderRadius: 10,
-            background: "rgba(255,71,87,0.06)", border: "1px solid rgba(255,71,87,0.15)",
+            background: "rgba(252,165,165,0.06)", border: "1px solid rgba(252,165,165,0.15)",
             fontSize: 13, color: "var(--accent-red)",
           }}>
             {aiError}

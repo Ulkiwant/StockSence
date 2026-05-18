@@ -41,12 +41,12 @@ interface PortfolioAnalysis {
 const PERIODS = ["1mo", "3mo", "6mo", "1y"] as const;
 const PERIOD_LABELS: Record<string, string> = { "1mo": "1M", "3mo": "3M", "6mo": "6M", "1y": "1A" };
 const REC_COLORS: Record<string, string> = {
-  RENFORCER: "var(--accent-green)", CONSERVER: "#fbbf24",
+  RENFORCER: "var(--accent-green)", CONSERVER: "#fcd34d",
   ALLÉGER: "#f97316", VENDRE: "var(--accent-red)",
 };
 
 const CHART_COLORS = [
-  "#3b7bff", "#7b5aff", "#86efac", "#fbbf24", "#f97316",
+  "#3b7bff", "#7b5aff", "#86efac", "#fcd34d", "#f97316",
   "#ef4444", "#06b6d4", "#ec4899", "#a3e635", "#f59e0b",
 ];
 
@@ -281,8 +281,8 @@ export default function PortfolioPage() {
                 <AreaChart data={history} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="valueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={chartPerfUp ? "#86efac" : "#ff4757"} stopOpacity={0.18} />
-                      <stop offset="95%" stopColor={chartPerfUp ? "#86efac" : "#ff4757"} stopOpacity={0} />
+                      <stop offset="5%" stopColor={chartPerfUp ? "#86efac" : "#fca5a5"} stopOpacity={0.18} />
+                      <stop offset="95%" stopColor={chartPerfUp ? "#86efac" : "#fca5a5"} stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b7bff" stopOpacity={0.08} />
@@ -305,7 +305,7 @@ export default function PortfolioPage() {
                   />
                   <Area type="monotone" dataKey="cost" stroke="#3b7bff" strokeWidth={1.5}
                     strokeDasharray="4 4" fill="url(#costGrad)" dot={false} />
-                  <Area type="monotone" dataKey="value" stroke={chartPerfUp ? "#86efac" : "#ff4757"}
+                  <Area type="monotone" dataKey="value" stroke={chartPerfUp ? "#86efac" : "#fca5a5"}
                     strokeWidth={2} fill="url(#valueGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -493,7 +493,7 @@ export default function PortfolioPage() {
                 </div>
                 <button onClick={() => handleDelete(h.id)} style={{
                   width: 28, height: 28, borderRadius: 7, border: "none",
-                  background: "rgba(255,71,87,0.1)", color: "var(--accent-red)",
+                  background: "rgba(252,165,165,0.1)", color: "var(--accent-red)",
                   cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
                 }}>×</button>
               </div>
@@ -530,7 +530,7 @@ export default function PortfolioPage() {
               <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
                 <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
                 <circle cx="40" cy="40" r="32" fill="none"
-                  stroke={analysis.globalScore >= 65 ? "#86efac" : analysis.globalScore >= 40 ? "#fbbf24" : "#ff4757"}
+                  stroke={analysis.globalScore >= 65 ? "#86efac" : analysis.globalScore >= 40 ? "#fcd34d" : "#fca5a5"}
                   strokeWidth="7" strokeDasharray={`${(analysis.globalScore / 100) * 201} 201`} strokeLinecap="round" />
               </svg>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
@@ -579,17 +579,17 @@ export default function PortfolioPage() {
             )}
             {analysis.missingExposures?.length > 0 && (
               <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "#fbbf24", marginBottom: 8 }}>◎ Expositions manquantes</h3>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "#fcd34d", marginBottom: 8 }}>◎ Expositions manquantes</h3>
                 {analysis.missingExposures.map((s, i) => (
                   <div key={i} style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 5, display: "flex", gap: 6 }}>
-                    <span style={{ color: "#fbbf24" }}>+</span>{s}
+                    <span style={{ color: "#fcd34d" }}>+</span>{s}
                   </div>
                 ))}
               </div>
             )}
           </div>
           {analysis.mainRisk && (
-            <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 10, background: "rgba(255,71,87,0.06)", border: "1px solid rgba(255,71,87,0.15)" }}>
+            <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 10, background: "rgba(252,165,165,0.06)", border: "1px solid rgba(252,165,165,0.15)" }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent-red)" }}>⚠ Risque principal : </span>
               <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{analysis.mainRisk}</span>
             </div>

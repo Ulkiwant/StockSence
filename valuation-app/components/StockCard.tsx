@@ -62,8 +62,8 @@ export default function StockCard({
             height: 120,
             borderRadius: "50%",
             background: isUp
-              ? "radial-gradient(circle, rgba(0,212,138,0.06) 0%, transparent 70%)"
-              : "radial-gradient(circle, rgba(255,71,87,0.06) 0%, transparent 70%)",
+              ? "radial-gradient(circle, rgba(134,239,172,0.06) 0%, transparent 70%)"
+              : "radial-gradient(circle, rgba(252,165,165,0.06) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
@@ -177,8 +177,8 @@ export default function StockCard({
                     score >= 65
                       ? "linear-gradient(90deg, #86efac, #4ade80)"
                       : score >= 40
-                      ? "linear-gradient(90deg, #fbbf24, #f97316)"
-                      : "linear-gradient(90deg, #ff4757, #f97316)",
+                      ? "linear-gradient(90deg, #fcd34d, #f97316)"
+                      : "linear-gradient(90deg, #fca5a5, #f97316)",
                   transition: "width 0.8s ease",
                 }}
               />

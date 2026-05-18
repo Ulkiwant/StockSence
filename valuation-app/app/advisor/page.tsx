@@ -72,7 +72,7 @@ interface PortfolioRecommendation {
 }
 
 const TOTAL_STEPS = 8;
-const RISK_COLOR: Record<string, string> = { Faible: "var(--accent-green)", Modéré: "#fbbf24", Élevé: "var(--accent-red)" };
+const RISK_COLOR: Record<string, string> = { Faible: "var(--accent-green)", Modéré: "#fcd34d", Élevé: "var(--accent-red)" };
 
 const ALL_SECTORS = [
   { id: "tech", label: "🖥️ Technologie", sub: "IA, cloud, semi-conducteurs" },
@@ -384,7 +384,7 @@ export default function AdvisorPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 12, color: "var(--text-secondary)", background: "rgba(59,123,255,0.1)", padding: "2px 8px", borderRadius: 6 }}>{h.weight}</span>
                     <button onClick={() => set("existingHoldings", profile.existingHoldings.filter((_, j) => j !== i))}
-                      style={{ background: "rgba(255,71,87,0.1)", border: "none", color: "var(--accent-red)", borderRadius: 6, width: 24, height: 24, cursor: "pointer", fontSize: 14 }}>×</button>
+                      style={{ background: "rgba(252,165,165,0.1)", border: "none", color: "var(--accent-red)", borderRadius: 6, width: 24, height: 24, cursor: "pointer", fontSize: 14 }}>×</button>
                   </div>
                 </div>
               ))}
@@ -541,8 +541,8 @@ export default function AdvisorPage() {
               return (
                 <button key={s.id} onClick={() => !disabled && toggleArr("favoriteSectors", s.id)} style={{
                   padding: "12px 14px", borderRadius: 10, textAlign: "left", cursor: disabled ? "not-allowed" : "pointer",
-                  border: `1px solid ${active ? "rgba(0,212,138,0.5)" : "var(--border)"}`,
-                  background: active ? "rgba(0,212,138,0.08)" : disabled ? "rgba(255,255,255,0.01)" : "var(--bg-card)",
+                  border: `1px solid ${active ? "rgba(134,239,172,0.5)" : "var(--border)"}`,
+                  background: active ? "rgba(134,239,172,0.08)" : disabled ? "rgba(255,255,255,0.01)" : "var(--bg-card)",
                   opacity: disabled ? 0.4 : 1, transition: "all 0.15s",
                 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: active ? "var(--accent-green)" : "var(--text-primary)" }}>{s.label}</div>
@@ -561,8 +561,8 @@ export default function AdvisorPage() {
             {EXCLUDED_SECTORS.map((s) => (
               <button key={s} onClick={() => toggleArr("excludedSectors", s)} style={{
                 padding: "7px 14px", borderRadius: 8, cursor: "pointer", fontSize: 13, transition: "all 0.15s",
-                border: `1px solid ${profile.excludedSectors.includes(s) ? "rgba(255,71,87,0.5)" : "var(--border)"}`,
-                background: profile.excludedSectors.includes(s) ? "rgba(255,71,87,0.1)" : "transparent",
+                border: `1px solid ${profile.excludedSectors.includes(s) ? "rgba(252,165,165,0.5)" : "var(--border)"}`,
+                background: profile.excludedSectors.includes(s) ? "rgba(252,165,165,0.1)" : "transparent",
                 color: profile.excludedSectors.includes(s) ? "var(--accent-red)" : "var(--text-secondary)",
               }}>
                 {profile.excludedSectors.includes(s) ? "✕ " : ""}{s}
@@ -594,25 +594,25 @@ export default function AdvisorPage() {
           {forcedStocks.map((s, i) => {
             const isPos = s.upside >= 0;
             const signalColors: Record<string, string> = {
-              STRONG_BUY: "#86efac", BUY: "#86efac", HOLD: "#fbbf24",
-              SELL: "#f97316", STRONG_SELL: "#ff4757",
+              STRONG_BUY: "#86efac", BUY: "#86efac", HOLD: "#fcd34d",
+              SELL: "#f97316", STRONG_SELL: "#fca5a5",
             };
             const signalLabels: Record<string, string> = {
               STRONG_BUY: "Fort potentiel", BUY: "Potentiel positif", HOLD: "Neutre",
               SELL: "Surévalué", STRONG_SELL: "Fortement surévalué",
             };
             return (
-              <div key={i} style={{ padding: 16, borderRadius: 12, border: `1px solid ${s.confirmed ? "rgba(0,212,138,0.3)" : "var(--border)"}`, background: s.confirmed ? "rgba(0,212,138,0.04)" : "rgba(255,255,255,0.02)", marginBottom: 10 }}>
+              <div key={i} style={{ padding: 16, borderRadius: 12, border: `1px solid ${s.confirmed ? "rgba(134,239,172,0.3)" : "var(--border)"}`, background: s.confirmed ? "rgba(134,239,172,0.04)" : "rgba(255,255,255,0.02)", marginBottom: 10 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                   <div>
                     <span style={{ fontWeight: 700, fontSize: 15 }}>{s.symbol}</span>
                     <span style={{ color: "var(--text-muted)", fontSize: 12, marginLeft: 8 }}>{s.name}</span>
                   </div>
                   <button onClick={() => setForcedStocks(fs => fs.filter((_, j) => j !== i))}
-                    style={{ background: "rgba(255,71,87,0.1)", border: "none", color: "var(--accent-red)", borderRadius: 6, width: 24, height: 24, cursor: "pointer" }}>×</button>
+                    style={{ background: "rgba(252,165,165,0.1)", border: "none", color: "var(--accent-red)", borderRadius: 6, width: 24, height: 24, cursor: "pointer" }}>×</button>
                 </div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" as const, marginBottom: 10 }}>
-                  <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: `${signalColors[s.signal] ?? "#fbbf24"}20`, color: signalColors[s.signal] ?? "#fbbf24" }}>
+                  <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: `${signalColors[s.signal] ?? "#fcd34d"}20`, color: signalColors[s.signal] ?? "#fcd34d" }}>
                     {signalLabels[s.signal] ?? s.signal}
                   </span>
                   <span style={{ fontSize: 13, color: isPos ? "var(--accent-green)" : "var(--accent-red)", fontWeight: 600 }}>
@@ -625,7 +625,7 @@ export default function AdvisorPage() {
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => setForcedStocks(fs => fs.map((x, j) => j === i ? { ...x, confirmed: true } : x))}
                     disabled={s.confirmed}
-                    style={{ flex: 1, padding: "9px", borderRadius: 9, border: `1px solid rgba(0,212,138,${s.confirmed ? "0.5" : "0.3"})`, background: s.confirmed ? "rgba(0,212,138,0.15)" : "transparent", color: "var(--accent-green)", fontWeight: 600, fontSize: 13, cursor: s.confirmed ? "default" : "pointer" }}>
+                    style={{ flex: 1, padding: "9px", borderRadius: 9, border: `1px solid rgba(134,239,172,${s.confirmed ? "0.5" : "0.3"})`, background: s.confirmed ? "rgba(134,239,172,0.15)" : "transparent", color: "var(--accent-green)", fontWeight: 600, fontSize: 13, cursor: s.confirmed ? "default" : "pointer" }}>
                     {s.confirmed ? "✓ Inclus dans le portefeuille" : "✓ Oui, l'inclure"}
                   </button>
                   {s.confirmed && (
@@ -663,7 +663,7 @@ export default function AdvisorPage() {
             <MetricCard label="Rendement estimé" value={result.expectedReturn} color="var(--accent-green)" />
             <MetricCard label="Niveau de risque" value={`Risque ${result.riskLevel}`} color={RISK_COLOR[result.riskLevel] ?? "#888"} />
             {result.dividendYield && result.dividendYield !== "null" && (
-              <MetricCard label="Dividende estimé" value={result.dividendYield} color="#fbbf24" />
+              <MetricCard label="Dividende estimé" value={result.dividendYield} color="#fcd34d" />
             )}
           </div>
 
@@ -699,7 +699,7 @@ export default function AdvisorPage() {
                           <span style={{ fontSize: 10, color: "var(--text-muted)", background: "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: 4, marginLeft: 6, fontWeight: 500 }}>{a.symbol}</span>
                           <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 4 }}>{a.type}</span>
                           {a.dividendFrequency && a.dividendFrequency !== "Capitalisant" && (
-                            <span style={{ fontSize: 10, marginLeft: 6, color: "#fbbf24", background: "rgba(251,191,36,0.12)", padding: "1px 6px", borderRadius: 4 }}>
+                            <span style={{ fontSize: 10, marginLeft: 6, color: "#fcd34d", background: "rgba(251,191,36,0.12)", padding: "1px 6px", borderRadius: 4 }}>
                               💸 {a.dividendFrequency}
                             </span>
                           )}

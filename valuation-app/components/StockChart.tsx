@@ -45,7 +45,7 @@ export default function StockChart({ ticker }: { ticker: string }) {
   const isPositive =
     data.length > 1 && data[data.length - 1].close >= data[0].close;
 
-  const color = isPositive ? "#86efac" : "#ff4757";
+  const color = isPositive ? "#86efac" : "#fca5a5";
 
   const minPrice = Math.min(...data.map((d) => d.close)) * 0.99;
   const maxPrice = Math.max(...data.map((d) => d.close)) * 1.01;

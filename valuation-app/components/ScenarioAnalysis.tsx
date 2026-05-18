@@ -44,8 +44,8 @@ const SECTOR_BETA: Record<string, number> = {
 };
 
 const SCENARIOS = {
-  bear: { label: "Pessimiste", color: "#ff4757", emoji: "🐻", premium: -0.06 },
-  normal: { label: "Base", color: "#fbbf24", emoji: "📊", premium: 0.055 },
+  bear: { label: "Pessimiste", color: "#fca5a5", emoji: "🐻", premium: -0.06 },
+  normal: { label: "Base", color: "#fcd34d", emoji: "📊", premium: 0.055 },
   bull: { label: "Optimiste", color: "#86efac", emoji: "🐂", premium: 0.115 },
 } as const;
 
@@ -143,14 +143,14 @@ export default function ScenarioAnalysis({
   if (!positions.length || totalValue <= 0) return null;
 
   const scenarioBgColors: Record<ScenarioKey, string> = {
-    bear: "rgba(255,71,87,0.06)",
+    bear: "rgba(252,165,165,0.06)",
     normal: "rgba(251,191,36,0.06)",
-    bull: "rgba(0,212,138,0.06)",
+    bull: "rgba(134,239,172,0.06)",
   };
   const scenarioBorderColors: Record<ScenarioKey, string> = {
-    bear: "rgba(255,71,87,0.2)",
+    bear: "rgba(252,165,165,0.2)",
     normal: "rgba(251,191,36,0.2)",
-    bull: "rgba(0,212,138,0.2)",
+    bull: "rgba(134,239,172,0.2)",
   };
 
   return (
@@ -287,12 +287,12 @@ export default function ScenarioAnalysis({
           <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="scenGradBear" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ff4757" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#ff4757" stopOpacity={0} />
+                <stop offset="5%" stopColor="#fca5a5" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#fca5a5" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="scenGradNormal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
+                <stop offset="5%" stopColor="#fcd34d" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#fcd34d" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="scenGradBull" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#86efac" stopOpacity={0.15} />
@@ -343,7 +343,7 @@ export default function ScenarioAnalysis({
             <Area
               type="monotone"
               dataKey="bear"
-              stroke="#ff4757"
+              stroke="#fca5a5"
               strokeWidth={2}
               fill="url(#scenGradBear)"
               dot={false}
@@ -351,7 +351,7 @@ export default function ScenarioAnalysis({
             <Area
               type="monotone"
               dataKey="normal"
-              stroke="#fbbf24"
+              stroke="#fcd34d"
               strokeWidth={2}
               fill="url(#scenGradNormal)"
               dot={false}
