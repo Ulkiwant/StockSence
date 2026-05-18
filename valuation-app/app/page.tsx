@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import StockCard from "@/components/StockCard";
+import ScrollDecorations from "@/components/ScrollDecorations";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 interface TrendingStock {
   symbol: string;
@@ -73,6 +75,8 @@ export default function HomePage() {
   const [trending, setTrending] = useState<TrendingStock[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useScrollReveal();
+
   useEffect(() => {
     fetch("/api/trending")
       .then((r) => r.json())
@@ -81,13 +85,17 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
+
+      {/* Parallax decorations — fixed, behind everything */}
+      <ScrollDecorations />
 
       {/* ─────────────────────────────────────────
           1. HERO
       ───────────────────────────────────────── */}
       <section style={{
-        position: "relative", overflow: "hidden",
+        position: "relative", zIndex: 10,
+        overflow: "hidden",
         display: "flex", flexDirection: "column", alignItems: "center",
         justifyContent: "center", textAlign: "center",
         padding: "100px 24px 80px",
@@ -98,7 +106,7 @@ export default function HomePage() {
         <div style={{ position: "absolute", top: 60, right: "10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,123,255,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         {/* Live badge */}
-        <div style={{
+        <div className="reveal" style={{
           display: "inline-flex", alignItems: "center", gap: 8,
           padding: "6px 16px", borderRadius: 20, marginBottom: 28,
           border: "1px solid rgba(0,212,138,0.3)", background: "rgba(0,212,138,0.08)",
@@ -108,7 +116,7 @@ export default function HomePage() {
         </div>
 
         {/* Headline */}
-        <h1 style={{
+        <h1 className="reveal reveal-delay-1" style={{
           fontSize: "clamp(36px, 7vw, 72px)", fontWeight: 800,
           letterSpacing: "-2px", lineHeight: 1.07,
           maxWidth: 820, margin: "0 auto 24px",
@@ -117,7 +125,7 @@ export default function HomePage() {
           <span style={{ color: "var(--accent-green)" }}>vaut ce qu'elle coûte</span>
         </h1>
 
-        <p style={{
+        <p className="reveal reveal-delay-2" style={{
           fontSize: "clamp(16px, 2vw, 20px)", color: "var(--text-secondary)",
           maxWidth: 560, margin: "0 auto 40px", lineHeight: 1.65,
         }}>
@@ -126,12 +134,12 @@ export default function HomePage() {
         </p>
 
         {/* Search */}
-        <div style={{ width: "100%", maxWidth: 560, marginBottom: 32 }}>
+        <div className="reveal reveal-delay-2" style={{ width: "100%", maxWidth: 560, marginBottom: 32 }}>
           <SearchBar />
         </div>
 
         {/* CTAs */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginBottom: 36 }}>
+        <div className="reveal reveal-delay-3" style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginBottom: 36 }}>
           <Link href="/auth/signup" style={{
             padding: "14px 28px", borderRadius: 12,
             background: "var(--accent-green)", color: "#0a0b0d",
@@ -155,7 +163,7 @@ export default function HomePage() {
         </div>
 
         {/* Social proof micro */}
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center", fontSize: 13, color: "var(--text-muted)" }}>
+        <div className="reveal reveal-delay-4" style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center", fontSize: 13, color: "var(--text-muted)" }}>
           <span>⭐ 4.8/5 satisfaction beta</span>
           <span>·</span>
           <span>2 400+ analyses réalisées</span>
@@ -164,13 +172,13 @@ export default function HomePage() {
         </div>
 
         {/* Dashboard preview */}
-        <div style={{
+        <div className="reveal reveal-delay-4" style={{
           marginTop: 64, width: "100%", maxWidth: 960,
           borderRadius: 20, border: "1px solid var(--border)",
           background: "rgba(255,255,255,0.03)", backdropFilter: "blur(8px)",
           overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.5)",
         }}>
-          {/* If you have a screenshot: replace this block with <img src="/dashboard-preview.png" alt="StockSense dashboard" style={{ width: "100%", display: "block" }} /> */}
+          {/* Replace this block with: <img src="/dashboard-preview.png" alt="StockSense dashboard" style={{ width: "100%", display: "block" }} /> */}
           <div style={{ padding: "20px 20px 0", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57" }} />
             <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#febc2e" }} />
@@ -178,7 +186,6 @@ export default function HomePage() {
             <span style={{ marginLeft: 12, fontSize: 11, color: "var(--text-muted)" }}>stocksense.app/portfolio</span>
           </div>
           <div style={{ padding: 28 }}>
-            {/* Mini portfolio preview */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
               {[
                 { label: "Valeur totale", value: "24 870 €", color: "var(--text-primary)" },
@@ -221,12 +228,13 @@ export default function HomePage() {
           2. STATS
       ───────────────────────────────────────── */}
       <section style={{
+        position: "relative", zIndex: 10,
         borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
         padding: "48px 24px",
       }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 32, textAlign: "center" }}>
-          {STATS.map((s) => (
-            <div key={s.label}>
+          {STATS.map((s, i) => (
+            <div key={s.label} className={`reveal reveal-delay-${i + 1}`}>
               <div style={{ fontSize: 36, fontWeight: 800, color: "var(--accent-green)", letterSpacing: "-1px" }}>{s.value}</div>
               <div style={{ marginTop: 4, fontSize: 13, color: "var(--text-muted)" }}>{s.label}</div>
             </div>
@@ -237,8 +245,8 @@ export default function HomePage() {
       {/* ─────────────────────────────────────────
           3. FEATURES
       ───────────────────────────────────────── */}
-      <section style={{ padding: "96px 24px", maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 64 }}>
+      <section style={{ position: "relative", zIndex: 10, padding: "96px 24px", maxWidth: 1100, margin: "0 auto" }}>
+        <div className="reveal" style={{ textAlign: "center", marginBottom: 64 }}>
           <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-0.8px", marginBottom: 12 }}>
             Tout ce dont vous avez besoin
           </h2>
@@ -247,8 +255,9 @@ export default function HomePage() {
           </p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
-          {FEATURES.map((f) => (
+          {FEATURES.map((f, i) => (
             <div key={f.title}
+              className={`reveal reveal-delay-${(i % 3) + 1}`}
               style={{
                 padding: "28px 24px", borderRadius: 16,
                 border: "1px solid var(--border)",
@@ -276,16 +285,19 @@ export default function HomePage() {
           4. HOW IT WORKS
       ───────────────────────────────────────── */}
       <section id="how-it-works" style={{
+        position: "relative", zIndex: 10,
         padding: "96px 24px",
         background: "rgba(255,255,255,0.015)",
         borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
       }}>
         <div style={{ maxWidth: 860, margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-0.8px", marginBottom: 12 }}>Comment ça marche</h2>
-          <p style={{ fontSize: 16, color: "var(--text-secondary)", marginBottom: 64 }}>Trois étapes, moins de 30 secondes.</p>
+          <div className="reveal">
+            <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-0.8px", marginBottom: 12 }}>Comment ça marche</h2>
+            <p style={{ fontSize: 16, color: "var(--text-secondary)", marginBottom: 64 }}>Trois étapes, moins de 30 secondes.</p>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40 }}>
-            {STEPS.map((s) => (
-              <div key={s.step} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            {STEPS.map((s, i) => (
+              <div key={s.step} className={`reveal reveal-delay-${i + 1}`} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
                 <div style={{ fontSize: 56, fontWeight: 900, color: "rgba(0,212,138,0.2)", letterSpacing: "-3px" }}>{s.step}</div>
                 <h3 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px" }}>{s.title}</h3>
                 <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.65 }}>{s.desc}</p>
@@ -298,8 +310,8 @@ export default function HomePage() {
       {/* ─────────────────────────────────────────
           5. TRENDING STOCKS
       ───────────────────────────────────────── */}
-      <section style={{ maxWidth: 1100, margin: "0 auto", padding: "96px 24px" }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
+      <section style={{ position: "relative", zIndex: 10, maxWidth: 1100, margin: "0 auto", padding: "96px 24px" }}>
+        <div className="reveal" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
           <div>
             <h2 style={{ fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, letterSpacing: "-0.5px", marginBottom: 6 }}>Actions du jour</h2>
             <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>Sélection mise à jour chaque jour</p>
@@ -314,7 +326,11 @@ export default function HomePage() {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-            {trending.map((stock) => <StockCard key={stock.symbol} {...stock} />)}
+            {trending.map((stock, i) => (
+              <div key={stock.symbol} className={`reveal reveal-delay-${(i % 3) + 1}`}>
+                <StockCard {...stock} />
+              </div>
+            ))}
           </div>
         )}
       </section>
@@ -323,14 +339,17 @@ export default function HomePage() {
           6. PRICING
       ───────────────────────────────────────── */}
       <section style={{
+        position: "relative", zIndex: 10,
         padding: "96px 24px",
         background: "rgba(255,255,255,0.015)",
         borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)",
       }}>
         <div style={{ maxWidth: 440, margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-0.8px", marginBottom: 12 }}>Tarifs</h2>
-          <p style={{ fontSize: 16, color: "var(--text-secondary)", marginBottom: 40 }}>Simple. Gratuit pendant toute la beta.</p>
-          <div style={{
+          <div className="reveal">
+            <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-0.8px", marginBottom: 12 }}>Tarifs</h2>
+            <p style={{ fontSize: 16, color: "var(--text-secondary)", marginBottom: 40 }}>Simple. Gratuit pendant toute la beta.</p>
+          </div>
+          <div className="reveal reveal-delay-1" style={{
             borderRadius: 20, border: "1px solid rgba(0,212,138,0.3)",
             background: "rgba(0,212,138,0.04)", padding: "40px 36px",
           }}>
@@ -362,8 +381,8 @@ export default function HomePage() {
       {/* ─────────────────────────────────────────
           7. CONSEILLER CTA
       ───────────────────────────────────────── */}
-      <section style={{ maxWidth: 1100, margin: "0 auto", padding: "96px 24px 80px" }}>
-        <div style={{
+      <section style={{ position: "relative", zIndex: 10, maxWidth: 1100, margin: "0 auto", padding: "96px 24px 80px" }}>
+        <div className="reveal" style={{
           position: "relative", overflow: "hidden",
           padding: "60px 40px", borderRadius: 24,
           background: "linear-gradient(135deg, rgba(59,123,255,0.12) 0%, rgba(123,90,255,0.12) 100%)",
@@ -409,7 +428,7 @@ export default function HomePage() {
         </div>
 
         {/* Legal disclaimer */}
-        <p style={{
+        <p className="reveal" style={{
           fontSize: 12, color: "var(--text-muted)", textAlign: "center",
           maxWidth: 680, margin: "40px auto 0", lineHeight: 1.6, padding: "0 16px",
         }}>
