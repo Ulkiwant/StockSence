@@ -404,18 +404,18 @@ export default function HomePage() {
             <Link href="/advisor" style={{
               display: "inline-flex", alignItems: "center", gap: 10,
               padding: "16px 36px", borderRadius: 14,
-              background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
-              color: "#fff", fontWeight: 700, fontSize: 16,
-              boxShadow: "0 8px 32px rgba(59,123,255,0.35)",
+              background: "var(--cta-bg)",
+              color: "var(--cta-text)", fontWeight: 700, fontSize: 16,
+              boxShadow: "0 4px 24px rgba(134,239,172,0.20)",
               transition: "transform 0.2s, box-shadow 0.2s",
             }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
-                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 12px 40px rgba(59,123,255,0.45)";
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 32px rgba(134,239,172,0.28)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)";
-                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 32px rgba(59,123,255,0.35)";
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 24px rgba(134,239,172,0.20)";
               }}
             >
               ✨ Créer mon portefeuille gratuit

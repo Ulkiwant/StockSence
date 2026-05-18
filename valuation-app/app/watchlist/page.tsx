@@ -69,8 +69,8 @@ export default function WatchlistPage() {
           </p>
           <Link href="/" style={{
             display: "inline-flex", padding: "10px 24px", borderRadius: 10,
-            background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
-            color: "#fff", fontWeight: 600, fontSize: 14,
+            background: "var(--cta-bg)",
+            color: "var(--cta-text)", fontWeight: 600, fontSize: 14,
           }}>Rechercher des actions</Link>
         </div>
       ) : loading ? (

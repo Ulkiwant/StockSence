@@ -48,8 +48,8 @@ export default function SignupPage() {
           </p>
           <Link href="/auth/login" style={{
             display: "inline-flex", padding: "10px 24px", borderRadius: 10,
-            background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
-            color: "#fff", fontWeight: 600, fontSize: 14,
+            background: "var(--cta-bg)",
+            color: "var(--cta-text)", fontWeight: 600, fontSize: 14,
           }}>
             Retour à la connexion
           </Link>
@@ -69,9 +69,9 @@ export default function SignupPage() {
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 14,
-              background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
+              background: "var(--cta-bg)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 20, fontWeight: 800, color: "#fff",
+              fontSize: 20, fontWeight: 800, color: "var(--cta-text)",
             }}>S</div>
             <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px" }}>
               Stock<span className="gradient-text">Sense</span>
@@ -122,7 +122,7 @@ export default function SignupPage() {
             disabled={loading}
             style={{
               width: "100%", padding: "14px", borderRadius: 12, border: "none",
-              background: loading ? "rgba(59,123,255,0.4)" : "linear-gradient(135deg, #3b7bff, #7b5aff)",
+              background: loading ? "rgba(134,239,172,0.35)" : "var(--cta-bg)",
               color: "#fff", fontSize: 15, fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer", marginTop: 6,
             }}

@@ -215,8 +215,8 @@ export default function PortfolioPage() {
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={handleAnalyze} disabled={analyzing || !enriched.length} style={{
             display: "flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 10,
-            background: "linear-gradient(135deg, #3b7bff, #7b5aff)", border: "none",
-            color: "#fff", fontSize: 14, fontWeight: 600, cursor: analyzing || !enriched.length ? "not-allowed" : "pointer",
+            background: "var(--cta-bg)", border: "none",
+            color: "var(--cta-text)", fontSize: 14, fontWeight: 600, cursor: analyzing || !enriched.length ? "not-allowed" : "pointer",
             opacity: !enriched.length ? 0.4 : 1,
           }}>
             <span>✨</span>{analyzing ? "Analyse…" : "Analyser avec l'IA"}
@@ -414,8 +414,8 @@ export default function PortfolioPage() {
                 }}>Annuler</button>
                 <button type="submit" disabled={addLoading} style={{
                   flex: 2, padding: "12px", borderRadius: 10, border: "none",
-                  background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
-                  color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  background: "var(--cta-bg)",
+                  color: "var(--cta-text)", fontSize: 14, fontWeight: 600, cursor: "pointer",
                 }}>{addLoading ? "Ajout…" : "Ajouter la position"}</button>
               </div>
             </form>
@@ -435,8 +435,8 @@ export default function PortfolioPage() {
           <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 24 }}>Ajoutez vos premières positions pour suivre vos performances.</p>
           <button onClick={() => setShowAdd(true)} style={{
             padding: "12px 28px", borderRadius: 10, border: "none",
-            background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
-            color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+            background: "var(--cta-bg)",
+            color: "var(--cta-text)", fontSize: 14, fontWeight: 600, cursor: "pointer",
           }}>+ Ajouter une position</button>
         </div>
       ) : (
@@ -522,7 +522,7 @@ export default function PortfolioPage() {
       {analysis && (
         <div className="card" style={{ padding: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg, #3b7bff, #7b5aff)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✨</div>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: "var(--cta-bg)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✨</div>
             <h2 style={{ fontSize: 17, fontWeight: 700 }}>Analyse IA du portefeuille</h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 20, marginBottom: 24, alignItems: "center" }}>

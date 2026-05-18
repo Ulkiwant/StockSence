@@ -97,7 +97,7 @@ export default function FAQPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
           <div style={{
             width: 28, height: 28, borderRadius: 8,
-            background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
+            background: "var(--cta-bg)",
             display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14,
           }}>✨</div>
           <h2 style={{ fontSize: 16, fontWeight: 700 }}>Poser une question à l'IA</h2>
@@ -126,8 +126,8 @@ export default function FAQPage() {
           disabled={loading || !question.trim()}
           style={{
             marginTop: 12, padding: "10px 24px", borderRadius: 10,
-            background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
-            color: "#fff", fontWeight: 600, fontSize: 14, border: "none",
+            background: "var(--cta-bg)",
+            color: "var(--cta-text)", fontWeight: 600, fontSize: 14, border: "none",
             cursor: loading || !question.trim() ? "not-allowed" : "pointer",
             opacity: loading || !question.trim() ? 0.6 : 1,
             transition: "opacity 0.15s",

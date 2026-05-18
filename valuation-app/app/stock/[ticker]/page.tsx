@@ -193,8 +193,8 @@ export default function StockPage() {
             display: "inline-flex",
             padding: "10px 24px",
             borderRadius: 10,
-            background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
-            color: "#fff",
+            background: "var(--cta-bg)",
+            color: "var(--cta-text)",
             fontWeight: 600,
             fontSize: 14,
           }}
@@ -358,7 +358,7 @@ export default function StockPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
             <div style={{
               width: 28, height: 28, borderRadius: 8,
-              background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
+              background: "var(--cta-bg)",
               display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14,
             }}>
               ✨

@@ -31,19 +31,20 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      background: "rgba(10,11,13,0.9)", backdropFilter: "blur(20px)",
-      borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 50,
+      background: "rgba(17,17,16,0.88)", backdropFilter: "blur(20px)",
+      borderBottom: "1px solid var(--border-subtle)", position: "sticky", top: 0, zIndex: 50,
       padding: "0 20px", height: 64, display: "flex", alignItems: "center", gap: 16,
     }}>
       {/* Logo */}
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }}>
         <div style={{
           width: 32, height: 32, borderRadius: 10,
-          background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
+          background: "rgba(134,239,172,0.10)",
+          border: "1px solid rgba(134,239,172,0.22)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontWeight: 800, fontSize: 15, color: "#fff",
+          fontWeight: 800, fontSize: 15, color: "var(--accent)",
         }}>S</div>
-        <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px" }}>
+        <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", color: "var(--text-primary)" }}>
           Stock<span className="gradient-text">Sense</span>
         </span>
       </Link>
@@ -72,17 +73,23 @@ export default function Navbar() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
               width: 32, height: 32, borderRadius: "50%",
-              background: "linear-gradient(135deg, #3b7bff, #7b5aff)",
+              background: "rgba(134,239,172,0.12)",
+              border: "1px solid rgba(134,239,172,0.25)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 13, fontWeight: 700, color: "#fff", cursor: "default",
+              fontSize: 13, fontWeight: 700, color: "var(--accent)", cursor: "default",
             }} title={user.email}>
               {user.email?.[0]?.toUpperCase() ?? "?"}
             </div>
             <button onClick={handleSignOut} style={{
-              padding: "6px 12px", borderRadius: 8, border: "1px solid var(--border)",
-              background: "transparent", color: "var(--text-secondary)", fontSize: 13,
+              padding: "6px 14px", borderRadius: 8,
+              border: "1px solid var(--border-default)",
+              background: "rgba(255,255,255,0.03)",
+              color: "var(--text-secondary)", fontSize: 13,
               cursor: "pointer", transition: "all 0.15s",
-            }}>
+            }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)"; }}
+            >
               Déconnexion
             </button>
           </div>
@@ -90,12 +97,19 @@ export default function Navbar() {
           <div style={{ display: "flex", gap: 8 }}>
             <Link href="/auth/login" style={{
               padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500,
-              color: "var(--text-secondary)", border: "1px solid var(--border)", background: "transparent",
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border-default)",
+              background: "rgba(255,255,255,0.03)",
+              transition: "all 0.15s",
             }}>Connexion</Link>
             <Link href="/auth/signup" style={{
               padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-              color: "#fff", background: "linear-gradient(135deg, #3b7bff, #7b5aff)", border: "none",
-            }}>S'inscrire</Link>
+              color: "var(--cta-text)", background: "var(--cta-bg)", border: "none",
+              transition: "opacity 0.15s",
+            }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >S'inscrire</Link>
           </div>
         )}
       </div>
@@ -107,8 +121,9 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
   return (
     <Link href={href} style={{
       padding: "6px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
-      color: active ? "#fff" : "var(--text-secondary)",
-      background: active ? "rgba(255,255,255,0.08)" : "transparent",
+      color: active ? "var(--accent)" : "var(--text-secondary)",
+      background: active ? "rgba(134,239,172,0.08)" : "transparent",
+      border: active ? "1px solid rgba(134,239,172,0.15)" : "1px solid transparent",
       transition: "all 0.15s", whiteSpace: "nowrap",
     }}>
       {children}

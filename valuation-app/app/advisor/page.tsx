@@ -203,7 +203,7 @@ export default function AdvisorPage() {
       {/* Progress */}
       {step <= TOTAL_STEPS && (
         <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", marginBottom: 40, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${progress}%`, borderRadius: 2, background: "linear-gradient(90deg, #3b7bff, #7b5aff)", transition: "width 0.4s ease" }} />
+          <div style={{ height: "100%", width: `${progress}%`, borderRadius: 2, background: "linear-gradient(90deg, #86efac, #4ade80)", transition: "width 0.4s ease" }} />
         </div>
       )}
 
@@ -362,7 +362,7 @@ export default function AdvisorPage() {
             disabled={importingPortfolio}
             style={{
               width: "100%", padding: "12px", borderRadius: 10, marginBottom: 16,
-              border: "1px solid rgba(59,123,255,0.4)",
+              border: "1px solid rgba(134,239,172,0.35)",
               background: "rgba(59,123,255,0.08)",
               color: "var(--accent-blue)", fontSize: 14, fontWeight: 600,
               cursor: importingPortfolio ? "wait" : "pointer",
@@ -426,7 +426,7 @@ export default function AdvisorPage() {
                 set("existingHoldings", [...profile.existingHoldings, { symbol: newExSymbol, name: newExName || newExSymbol, weight: newExWeight }]);
                 setNewExSymbol(""); setNewExName(""); setNewExWeight("<10%");
               }}
-              style={{ padding: "10px 20px", borderRadius: 9, border: "1px solid rgba(59,123,255,0.4)", background: "rgba(59,123,255,0.1)", color: "var(--accent-blue)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              style={{ padding: "10px 20px", borderRadius: 9, border: "1px solid rgba(134,239,172,0.35)", background: "rgba(59,123,255,0.1)", color: "var(--accent-blue)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
               + Ajouter cette position
             </button>
           </div>
@@ -584,7 +584,7 @@ export default function AdvisorPage() {
               placeholder="Symbole (ex: NVDA, MC.PA…)" style={{ ...inputSt, flex: 1 }}
               onKeyDown={(e) => e.key === "Enter" && handleAddForced()} />
             <button onClick={handleAddForced} disabled={forcedLoading || !forcedInput}
-              style={{ padding: "10px 18px", borderRadius: 9, border: "none", background: forcedLoading ? "rgba(59,123,255,0.4)" : "linear-gradient(135deg, #3b7bff, #7b5aff)", color: "#fff", fontWeight: 600, cursor: "pointer" }}>
+              style={{ padding: "10px 18px", borderRadius: 9, border: "none", background: forcedLoading ? "rgba(134,239,172,0.35)" : "var(--cta-bg)", color: "var(--cta-text)", fontWeight: 600, cursor: "pointer" }}>
               {forcedLoading ? "…" : "Analyser"}
             </button>
           </div>
@@ -648,7 +648,7 @@ export default function AdvisorPage() {
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={() => setStep(7)} style={{ padding: "12px 20px", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontSize: 14, cursor: "pointer" }}>← Retour</button>
             <button onClick={submit} disabled={loading}
-              style={{ flex: 1, padding: "14px", borderRadius: 12, border: "none", background: loading ? "rgba(123,90,255,0.4)" : "linear-gradient(135deg, #3b7bff, #7b5aff)", color: "#fff", fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer" }}>
+              style={{ flex: 1, padding: "14px", borderRadius: 12, border: "none", background: loading ? "rgba(134,239,172,0.35)" : "var(--cta-bg)", color: "var(--cta-text)", fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer" }}>
               {loading ? "✨ Génération en cours…" : "✨ Générer mon portefeuille"}
             </button>
           </div>
@@ -834,8 +834,8 @@ function Nav({ onBack, onNext, nextLabel = "Continuer →", nextDisabled = false
       )}
       <button onClick={onNext} disabled={nextDisabled} style={{
         flex: 2, padding: "12px", borderRadius: 10, border: "none",
-        background: nextDisabled ? "rgba(59,123,255,0.3)" : "linear-gradient(135deg, #3b7bff, #7b5aff)",
-        color: "#fff", fontSize: 14, fontWeight: 600, cursor: nextDisabled ? "not-allowed" : "pointer",
+        background: nextDisabled ? "rgba(134,239,172,0.3)" : "var(--cta-bg)",
+        color: "var(--cta-text)", fontSize: 14, fontWeight: 600, cursor: nextDisabled ? "not-allowed" : "pointer",
       }}>{nextLabel}</button>
     </div>
   );
