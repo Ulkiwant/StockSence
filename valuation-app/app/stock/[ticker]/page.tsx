@@ -293,7 +293,7 @@ export default function StockPage() {
               <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
               <circle
                 cx="50" cy="50" r="40" fill="none"
-                stroke={v.score >= 65 ? "#00d48a" : v.score >= 40 ? "#fbbf24" : "#ff4757"}
+                stroke={v.score >= 65 ? "#86efac" : v.score >= 40 ? "#fbbf24" : "#ff4757"}
                 strokeWidth="8"
                 strokeDasharray={`${(v.score / 100) * 251} 251`}
                 strokeLinecap="round"

@@ -175,7 +175,7 @@ export default function StockCard({
                   borderRadius: 2,
                   background:
                     score >= 65
-                      ? "linear-gradient(90deg, #00d48a, #4ade80)"
+                      ? "linear-gradient(90deg, #86efac, #4ade80)"
                       : score >= 40
                       ? "linear-gradient(90deg, #fbbf24, #f97316)"
                       : "linear-gradient(90deg, #ff4757, #f97316)",

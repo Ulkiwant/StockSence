@@ -102,17 +102,17 @@ export default function HomePage() {
         minHeight: "90vh",
       }}>
         {/* Background glow orbs */}
-        <div style={{ position: "absolute", top: -120, left: "20%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,212,138,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: 60, right: "10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,123,255,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: -120, left: "20%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(134,239,172,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: 60, right: "10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,123,255,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         {/* Live badge */}
         <div className="reveal" style={{
           display: "inline-flex", alignItems: "center", gap: 8,
           padding: "6px 16px", borderRadius: 20, marginBottom: 28,
-          border: "1px solid rgba(0,212,138,0.3)", background: "rgba(0,212,138,0.08)",
+          border: "1px solid var(--border-accent)", background: "rgba(134,239,172,0.07)",
         }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent-green)", display: "inline-block", animation: "pulse 2s ease-in-out infinite" }} />
-          <span style={{ fontSize: 13, color: "var(--accent-green)", fontWeight: 500 }}>Données en temps réel · Beta gratuit</span>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent-solid)", display: "inline-block", animation: "pulse 2s ease-in-out infinite" }} />
+          <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 500 }}>Données en temps réel · Beta gratuit</span>
         </div>
 
         {/* Headline */}
@@ -142,21 +142,22 @@ export default function HomePage() {
         <div className="reveal reveal-delay-3" style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginBottom: 36 }}>
           <Link href="/auth/signup" style={{
             padding: "14px 28px", borderRadius: 12,
-            background: "var(--accent-green)", color: "#0a0b0d",
+            background: "var(--cta-bg)", color: "var(--cta-text)",
             fontWeight: 700, fontSize: 15, transition: "opacity 0.15s",
           }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.90")}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
           >
             Commencer gratuitement →
           </Link>
           <a href="#how-it-works" style={{
             padding: "14px 28px", borderRadius: 12,
-            border: "1px solid var(--border)", color: "var(--text-secondary)",
-            fontWeight: 500, fontSize: 15, transition: "border-color 0.15s",
+            border: "1px solid var(--border-default)", color: "var(--text-secondary)",
+            background: "rgba(255,255,255,0.04)",
+            fontWeight: 500, fontSize: 15, transition: "background 0.15s, border-color 0.15s",
           }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-hover)"; (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.07)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border-default)"; (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.04)"; }}
           >
             Voir comment ça marche
           </a>
@@ -364,10 +365,10 @@ export default function HomePage() {
             <Link href="/auth/signup" style={{
               display: "block", textAlign: "center",
               padding: "15px", borderRadius: 12,
-              background: "var(--accent-green)", color: "#0a0b0d",
+              background: "var(--cta-bg)", color: "var(--cta-text)",
               fontWeight: 700, fontSize: 15, transition: "opacity 0.15s",
             }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.90")}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
               Créer un compte gratuit

@@ -46,7 +46,7 @@ const REC_COLORS: Record<string, string> = {
 };
 
 const CHART_COLORS = [
-  "#3b7bff", "#7b5aff", "#00d48a", "#fbbf24", "#f97316",
+  "#3b7bff", "#7b5aff", "#86efac", "#fbbf24", "#f97316",
   "#ef4444", "#06b6d4", "#ec4899", "#a3e635", "#f59e0b",
 ];
 
@@ -281,8 +281,8 @@ export default function PortfolioPage() {
                 <AreaChart data={history} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="valueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={chartPerfUp ? "#00d48a" : "#ff4757"} stopOpacity={0.18} />
-                      <stop offset="95%" stopColor={chartPerfUp ? "#00d48a" : "#ff4757"} stopOpacity={0} />
+                      <stop offset="5%" stopColor={chartPerfUp ? "#86efac" : "#ff4757"} stopOpacity={0.18} />
+                      <stop offset="95%" stopColor={chartPerfUp ? "#86efac" : "#ff4757"} stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b7bff" stopOpacity={0.08} />
@@ -305,7 +305,7 @@ export default function PortfolioPage() {
                   />
                   <Area type="monotone" dataKey="cost" stroke="#3b7bff" strokeWidth={1.5}
                     strokeDasharray="4 4" fill="url(#costGrad)" dot={false} />
-                  <Area type="monotone" dataKey="value" stroke={chartPerfUp ? "#00d48a" : "#ff4757"}
+                  <Area type="monotone" dataKey="value" stroke={chartPerfUp ? "#86efac" : "#ff4757"}
                     strokeWidth={2} fill="url(#valueGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -530,7 +530,7 @@ export default function PortfolioPage() {
               <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
                 <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
                 <circle cx="40" cy="40" r="32" fill="none"
-                  stroke={analysis.globalScore >= 65 ? "#00d48a" : analysis.globalScore >= 40 ? "#fbbf24" : "#ff4757"}
+                  stroke={analysis.globalScore >= 65 ? "#86efac" : analysis.globalScore >= 40 ? "#fbbf24" : "#ff4757"}
                   strokeWidth="7" strokeDasharray={`${(analysis.globalScore / 100) * 201} 201`} strokeLinecap="round" />
               </svg>
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>

@@ -1,7 +1,7 @@
 type Signal = "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL";
 
 const CONFIG: Record<Signal, { label: string; color: string; bg: string }> = {
-  STRONG_BUY: { label: "Fort achat", color: "#00d48a", bg: "rgba(0,212,138,0.12)" },
+  STRONG_BUY: { label: "Fort achat", color: "#86efac", bg: "rgba(0,212,138,0.12)" },
   BUY:        { label: "Achat",      color: "#4ade80", bg: "rgba(74,222,128,0.1)" },
   HOLD:       { label: "Conserver",  color: "#fbbf24", bg: "rgba(251,191,36,0.1)" },
   SELL:       { label: "Vendre",     color: "#f97316", bg: "rgba(249,115,22,0.1)" },

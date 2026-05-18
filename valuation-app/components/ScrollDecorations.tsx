@@ -49,7 +49,7 @@ export default function ScrollDecorations() {
       {/* Dots triangle haut gauche */}
       <div ref={setRef("d1")} style={{ position: "absolute", left: 8, top: 30 }}>
         <svg width="80" height="180" viewBox="0 0 80 180" fill="none">
-          <g fill="#34d399">
+          <g fill="#86efac">
             {[
               [8,10,.28],[24,10,.22],[40,10,.16],[56,10,.10],[72,10,.06],
               [8,26,.28],[24,26,.22],[40,26,.16],[56,26,.10],
@@ -72,8 +72,8 @@ export default function ScrollDecorations() {
         <svg width="68" height="110" viewBox="0 0 68 110" fill="none">
           <defs>
             <linearGradient id="cL1" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="0%" stopColor="#86efac" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#86efac" stopOpacity="0" />
             </linearGradient>
           </defs>
           <polyline
@@ -87,8 +87,8 @@ export default function ScrollDecorations() {
       {/* Cercles concentriques gauche */}
       <div ref={setRef("d3")} style={{ position: "absolute", left: -30, top: 520 }}>
         <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
-          <circle cx="55" cy="55" r="48" stroke="#34d399" strokeWidth="1" strokeOpacity="0.16" fill="none" />
-          <circle cx="55" cy="55" r="36" stroke="#34d399" strokeWidth="0.5" strokeOpacity="0.08" fill="none" />
+          <circle cx="55" cy="55" r="48" stroke="#86efac" strokeWidth="1" strokeOpacity="0.16" fill="none" />
+          <circle cx="55" cy="55" r="36" stroke="#86efac" strokeWidth="0.5" strokeOpacity="0.08" fill="none" />
         </svg>
       </div>
 
@@ -97,12 +97,12 @@ export default function ScrollDecorations() {
         <svg width="60" height="160" viewBox="0 0 60 160" fill="none">
           <defs>
             <linearGradient id="gL2" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.14" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="0%" stopColor="#86efac" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="#86efac" stopOpacity="0" />
             </linearGradient>
             <linearGradient id="gLV" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.11" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="0%" stopColor="#86efac" stopOpacity="0.11" />
+              <stop offset="100%" stopColor="#86efac" stopOpacity="0" />
             </linearGradient>
           </defs>
           {[20,40,60,80,100,120,140].map((y) => (
@@ -117,7 +117,7 @@ export default function ScrollDecorations() {
       {/* Dots bas gauche */}
       <div ref={setRef("d5")} style={{ position: "absolute", left: 8, top: 1080 }}>
         <svg width="64" height="100" viewBox="0 0 64 100" fill="none">
-          <g fill="#34d399">
+          <g fill="#86efac">
             {[
               [8,10,.20],[24,10,.14],[40,10,.09],
               [8,26,.18],[24,26,.12],
@@ -138,12 +138,12 @@ export default function ScrollDecorations() {
         <svg width="60" height="200" viewBox="0 0 60 200" fill="none">
           <defs>
             <linearGradient id="gR1" x1="1" y1="0" x2="0" y2="0">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.14" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="0%" stopColor="#86efac" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="#86efac" stopOpacity="0" />
             </linearGradient>
             <linearGradient id="gRV" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.11" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="0%" stopColor="#86efac" stopOpacity="0.11" />
+              <stop offset="100%" stopColor="#86efac" stopOpacity="0" />
             </linearGradient>
           </defs>
           {[20,40,60,80,100,120,140,160,180].map((y) => (
@@ -160,8 +160,8 @@ export default function ScrollDecorations() {
         <svg width="68" height="110" viewBox="0 0 68 110" fill="none">
           <defs>
             <linearGradient id="cR1" x1="1" y1="0" x2="0" y2="0">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.20" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="0%" stopColor="#86efac" stopOpacity="0.20" />
+              <stop offset="100%" stopColor="#86efac" stopOpacity="0" />
             </linearGradient>
           </defs>
           <polyline
@@ -175,7 +175,7 @@ export default function ScrollDecorations() {
       {/* Dots droite */}
       <div ref={setRef("d8")} style={{ position: "absolute", right: 8, top: 440 }}>
         <svg width="80" height="160" viewBox="0 0 80 160" fill="none">
-          <g fill="#34d399">
+          <g fill="#86efac">
             {[
               [72,10,.26],[56,10,.20],[40,10,.14],[24,10,.09],[8,10,.05],
               [72,26,.24],[56,26,.18],[40,26,.12],[24,26,.08],
@@ -195,8 +195,8 @@ export default function ScrollDecorations() {
       {/* Cercles concentriques droite */}
       <div ref={setRef("d9")} style={{ position: "absolute", right: -30, top: 820 }}>
         <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
-          <circle cx="55" cy="55" r="48" stroke="#34d399" strokeWidth="1" strokeOpacity="0.14" fill="none" />
-          <circle cx="55" cy="55" r="34" stroke="#34d399" strokeWidth="0.5" strokeOpacity="0.07" fill="none" />
+          <circle cx="55" cy="55" r="48" stroke="#86efac" strokeWidth="1" strokeOpacity="0.14" fill="none" />
+          <circle cx="55" cy="55" r="34" stroke="#86efac" strokeWidth="0.5" strokeOpacity="0.07" fill="none" />
         </svg>
       </div>
 
@@ -205,8 +205,8 @@ export default function ScrollDecorations() {
         <svg width="68" height="90" viewBox="0 0 68 90" fill="none">
           <defs>
             <linearGradient id="cR2" x1="1" y1="0" x2="0" y2="0">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="0%" stopColor="#86efac" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#86efac" stopOpacity="0" />
             </linearGradient>
           </defs>
           <polyline

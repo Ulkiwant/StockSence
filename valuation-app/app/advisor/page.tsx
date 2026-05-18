@@ -594,7 +594,7 @@ export default function AdvisorPage() {
           {forcedStocks.map((s, i) => {
             const isPos = s.upside >= 0;
             const signalColors: Record<string, string> = {
-              STRONG_BUY: "#00d48a", BUY: "#00d48a", HOLD: "#fbbf24",
+              STRONG_BUY: "#86efac", BUY: "#86efac", HOLD: "#fbbf24",
               SELL: "#f97316", STRONG_SELL: "#ff4757",
             };
             const signalLabels: Record<string, string> = {
@@ -709,7 +709,7 @@ export default function AdvisorPage() {
                     <span style={{ fontSize: 18, fontWeight: 800 }}>{a.percentage}%</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.05)", overflow: "hidden", marginBottom: 4 }}>
-                    <div style={{ height: "100%", width: `${a.percentage}%`, borderRadius: 3, background: a.type === "ETF" ? "linear-gradient(90deg, #7b5aff, #3b7bff)" : "linear-gradient(90deg, #3b7bff, #00d48a)", transition: "width 0.6s ease" }} />
+                    <div style={{ height: "100%", width: `${a.percentage}%`, borderRadius: 3, background: a.type === "ETF" ? "linear-gradient(90deg, #7b5aff, #3b7bff)" : "linear-gradient(90deg, #3b7bff, #86efac)", transition: "width 0.6s ease" }} />
                   </div>
                   <p style={{ fontSize: 12, color: "var(--text-muted)" }}>{a.rationale}</p>
                 </div>

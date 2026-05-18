@@ -46,7 +46,7 @@ const SECTOR_BETA: Record<string, number> = {
 const SCENARIOS = {
   bear: { label: "Pessimiste", color: "#ff4757", emoji: "🐻", premium: -0.06 },
   normal: { label: "Base", color: "#fbbf24", emoji: "📊", premium: 0.055 },
-  bull: { label: "Optimiste", color: "#00d48a", emoji: "🐂", premium: 0.115 },
+  bull: { label: "Optimiste", color: "#86efac", emoji: "🐂", premium: 0.115 },
 } as const;
 
 type ScenarioKey = keyof typeof SCENARIOS;
@@ -295,8 +295,8 @@ export default function ScenarioAnalysis({
                 <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="scenGradBull" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#00d48a" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#00d48a" stopOpacity={0} />
+                <stop offset="5%" stopColor="#86efac" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#86efac" stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis
@@ -359,7 +359,7 @@ export default function ScenarioAnalysis({
             <Area
               type="monotone"
               dataKey="bull"
-              stroke="#00d48a"
+              stroke="#86efac"
               strokeWidth={2}
               fill="url(#scenGradBull)"
               dot={false}
