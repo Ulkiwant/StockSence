@@ -34,9 +34,12 @@
   --border-default:rgba(255, 255, 255, 0.11);
   --border-accent: rgba(134, 239, 172, 0.20);
 
-  /* ── CTA ── */
-  --cta-bg:   #fafaf9;
-  --cta-text: #111110;
+  /* ── CTA / Boutons primaires ── */
+  --cta-bg:          rgba(134, 239, 172, 0.13);
+  --cta-bg-hover:    rgba(134, 239, 172, 0.22);
+  --cta-border:      rgba(134, 239, 172, 0.32);
+  --cta-border-hover:rgba(134, 239, 172, 0.55);
+  --cta-text:        #86efac;
 }
 
 * {
@@ -97,6 +100,54 @@ a {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
+}
+
+/* ── Boutons ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid var(--cta-border);
+  background: var(--cta-bg);
+  color: var(--cta-text);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  text-decoration: none;
+}
+.btn-primary:hover {
+  background: var(--cta-bg-hover);
+  border-color: var(--cta-border-hover);
+  color: var(--accent-hover);
+}
+.btn-primary:disabled,
+.btn-primary[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  text-decoration: none;
+}
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
 }
 
 /* ── Scroll reveal ── */

@@ -834,7 +834,7 @@ function Nav({ onBack, onNext, nextLabel = "Continuer →", nextDisabled = false
       )}
       <button onClick={onNext} disabled={nextDisabled} style={{
         flex: 2, padding: "12px", borderRadius: 10, border: "none",
-        background: nextDisabled ? "rgba(134,239,172,0.3)" : "var(--cta-bg)",
+        background: nextDisabled ? "rgba(134,239,172,0.08)" : "var(--cta-bg)",
         color: "var(--cta-text)", fontSize: 14, fontWeight: 600, cursor: nextDisabled ? "not-allowed" : "pointer",
       }}>{nextLabel}</button>
     </div>
