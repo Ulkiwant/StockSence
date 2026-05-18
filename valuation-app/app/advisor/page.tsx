@@ -695,15 +695,15 @@ export default function AdvisorPage() {
                       }}>{a.symbol.slice(0, 4)}</div>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>
-                          {a.symbol}
-                          <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 6 }}>{a.type}</span>
+                          {a.name || a.symbol}
+                          <span style={{ fontSize: 10, color: "var(--text-muted)", background: "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: 4, marginLeft: 6, fontWeight: 500 }}>{a.symbol}</span>
+                          <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 4 }}>{a.type}</span>
                           {a.dividendFrequency && a.dividendFrequency !== "Capitalisant" && (
                             <span style={{ fontSize: 10, marginLeft: 6, color: "#fbbf24", background: "rgba(251,191,36,0.12)", padding: "1px 6px", borderRadius: 4 }}>
                               💸 {a.dividendFrequency}
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{a.name}</div>
                       </div>
                     </div>
                     <span style={{ fontSize: 18, fontWeight: 800 }}>{a.percentage}%</span>

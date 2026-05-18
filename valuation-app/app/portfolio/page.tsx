@@ -200,7 +200,7 @@ export default function PortfolioPage() {
   // Allocation donut data
   const totalVal = enriched.reduce((s, h) => s + h.marketValue, 0);
   const allocData = enriched
-    .map((h, i) => ({ symbol: h.symbol, pct: totalVal > 0 ? (h.marketValue / totalVal) * 100 : 0, color: CHART_COLORS[i % CHART_COLORS.length], value: h.marketValue, currency: h.currency }))
+    .map((h, i) => ({ symbol: h.symbol, name: h.name, pct: totalVal > 0 ? (h.marketValue / totalVal) * 100 : 0, color: CHART_COLORS[i % CHART_COLORS.length], value: h.marketValue, currency: h.currency }))
     .sort((a, b) => b.pct - a.pct);
 
   return (
@@ -323,11 +323,14 @@ export default function PortfolioPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
               {allocData.map((a) => (
                 <div key={a.symbol} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
                     <div style={{ width: 8, height: 8, borderRadius: 2, background: a.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{a.symbol}</span>
+                    <div style={{ minWidth: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name || a.symbol}</span>
+                      <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{a.symbol}</span>
+                    </div>
                   </div>
-                  <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{a.pct.toFixed(1)}%</span>
+                  <span style={{ fontSize: 12, color: "var(--text-secondary)", flexShrink: 0 }}>{a.pct.toFixed(1)}%</span>
                 </div>
               ))}
             </div>
@@ -546,12 +549,20 @@ export default function PortfolioPage() {
             <div style={{ marginBottom: 20 }}>
               <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommandations</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {analysis.recommendations.map((r, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)" }}>
-                    <span style={{ padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: `${REC_COLORS[r.type]}20`, color: REC_COLORS[r.type], flexShrink: 0 }}>{r.type}</span>
-                    <div><span style={{ fontWeight: 600, fontSize: 13 }}>{r.symbol}</span><span style={{ fontSize: 13, color: "var(--text-secondary)", marginLeft: 6 }}>{r.reason}</span></div>
-                  </div>
-                ))}
+                {analysis.recommendations.map((r, i) => {
+                  const holding = enriched.find(h => h.symbol === r.symbol);
+                  const displayName = holding?.name && holding.name !== r.symbol ? holding.name : r.symbol;
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)" }}>
+                      <span style={{ padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: `${REC_COLORS[r.type]}20`, color: REC_COLORS[r.type], flexShrink: 0 }}>{r.type}</span>
+                      <div>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>{displayName}</span>
+                        {holding?.name && holding.name !== r.symbol && <span style={{ fontSize: 11, color: "var(--text-muted)", background: "rgba(255,255,255,0.05)", padding: "1px 5px", borderRadius: 4, marginLeft: 6 }}>{r.symbol}</span>}
+                        <span style={{ fontSize: 13, color: "var(--text-secondary)", marginLeft: 6 }}>{r.reason}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
