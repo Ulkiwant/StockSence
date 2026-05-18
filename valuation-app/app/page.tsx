@@ -326,10 +326,8 @@ export default function HomePage() {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-            {trending.map((stock, i) => (
-              <div key={stock.symbol} className={`reveal reveal-delay-${(i % 3) + 1}`}>
-                <StockCard {...stock} />
-              </div>
+            {trending.map((stock) => (
+              <StockCard key={stock.symbol} {...stock} />
             ))}
           </div>
         )}
