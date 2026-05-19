@@ -163,3 +163,13 @@ a {
 .reveal-delay-2 { transition-delay: 0.20s; }
 .reveal-delay-3 { transition-delay: 0.30s; }
 .reveal-delay-4 { transition-delay: 0.40s; }
+
+/* ── Glossaire ── */
+.glossary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.glossary-card:hover { border-color: rgba(134, 239, 172, 0.20); }

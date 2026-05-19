@@ -65,6 +65,7 @@ export default function Navbar() {
           </span>
         </NavLink>
         <NavLink href="/faq" active={pathname.startsWith("/faq")}>FAQ</NavLink>
+        <NavLink href="/glossaire" active={pathname.startsWith("/glossaire")}>Glossaire</NavLink>
       </div>
 
       {/* Auth */}

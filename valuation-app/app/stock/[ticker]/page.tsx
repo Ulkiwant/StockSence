@@ -7,6 +7,9 @@ import SignalBadge from "@/components/SignalBadge";
 import WatchlistButton from "@/components/WatchlistButton";
 import StockChart from "@/components/StockChart";
 import FinanceTooltip from "@/components/FinanceTooltip";
+import { MetricTooltip, MetricDef } from "@/components/MetricTooltip";
+import { GlossaryDrawer } from "@/components/GlossaryDrawer";
+import { GLOSSARY } from "@/lib/glossary";
 
 interface NewsItem {
   title: string;
@@ -133,6 +136,7 @@ export default function StockPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [openDef, setOpenDef] = useState<MetricDef | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -492,15 +496,120 @@ export default function StockPage() {
           <div className="card" style={{ padding: 24 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Indicateurs financiers</h2>
             <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>Survolez pour les explications</p>
-            <MetricRow label="P/E" value={data.trailingPE > 0 ? data.trailingPE.toFixed(1) : "N/A"} tooltip="P/E" />
+
+            {/* MetricTooltip grid — métriques clés */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+              <MetricTooltip
+                label="P/E"
+                value={data.trailingPE > 0 ? data.trailingPE.toFixed(1) : "N/A"}
+                contextText={
+                  data.trailingPE <= 0 ? undefined
+                  : data.trailingPE < 15 ? "Bon marché"
+                  : data.trailingPE < 25 ? "Dans la moyenne"
+                  : "Au-dessus de la moyenne"
+                }
+                contextColor={
+                  data.trailingPE <= 0 ? undefined
+                  : data.trailingPE < 15 ? "green"
+                  : data.trailingPE < 25 ? "yellow"
+                  : "red"
+                }
+                def={{
+                  ...GLOSSARY.pe,
+                  currentPosition:
+                    data.trailingPE <= 0 ? 2
+                    : data.trailingPE < 10 ? 0
+                    : data.trailingPE < 18 ? 1
+                    : data.trailingPE < 25 ? 2
+                    : data.trailingPE < 35 ? 3
+                    : 4,
+                }}
+                onOpenGlossary={setOpenDef}
+              />
+              <MetricTooltip
+                label="DCF"
+                value={v.upside > 0 ? `+${v.upside}%` : `${v.upside}%`}
+                contextText={
+                  v.upside > 15 ? "Nettement sous-évalué"
+                  : v.upside > 5 ? "Légèrement sous-évalué"
+                  : v.upside > -5 ? "Prix juste"
+                  : v.upside > -15 ? "Légèrement surévalué"
+                  : "Nettement surévalué"
+                }
+                contextColor={v.upside > 5 ? "green" : v.upside > -5 ? "yellow" : "red"}
+                def={{
+                  ...GLOSSARY.dcf,
+                  currentPosition:
+                    v.upside > 15 ? 0
+                    : v.upside > 5 ? 1
+                    : v.upside > -5 ? 2
+                    : v.upside > -15 ? 3
+                    : 4,
+                }}
+                onOpenGlossary={setOpenDef}
+              />
+              <MetricTooltip
+                label="ROE"
+                value={data.returnOnEquity > 0 ? pct(data.returnOnEquity) : "N/A"}
+                contextText={
+                  data.returnOnEquity <= 0 ? undefined
+                  : data.returnOnEquity > 0.20 ? "Très bon"
+                  : data.returnOnEquity > 0.10 ? "Correct"
+                  : "Faible"
+                }
+                contextColor={
+                  data.returnOnEquity <= 0 ? undefined
+                  : data.returnOnEquity > 0.20 ? "green"
+                  : data.returnOnEquity > 0.10 ? "yellow"
+                  : "red"
+                }
+                def={{
+                  ...GLOSSARY.roe,
+                  currentPosition:
+                    data.returnOnEquity <= 0 ? 1
+                    : data.returnOnEquity > 0.25 ? 4
+                    : data.returnOnEquity > 0.15 ? 3
+                    : data.returnOnEquity > 0.10 ? 2
+                    : data.returnOnEquity > 0.05 ? 1
+                    : 0,
+                }}
+                onOpenGlossary={setOpenDef}
+              />
+              <MetricTooltip
+                label="Beta"
+                value={data.beta.toFixed(2)}
+                contextText={
+                  data.beta < 0.5 ? "Très stable"
+                  : data.beta < 1.0 ? "Stable"
+                  : data.beta < 1.5 ? "Marché"
+                  : "Volatil"
+                }
+                contextColor={
+                  data.beta < 0.5 ? "green"
+                  : data.beta < 1.0 ? "green"
+                  : data.beta < 1.5 ? "yellow"
+                  : "red"
+                }
+                def={{
+                  ...GLOSSARY.beta,
+                  currentPosition:
+                    data.beta < 0.5 ? 0
+                    : data.beta < 0.8 ? 1
+                    : data.beta < 1.2 ? 2
+                    : data.beta < 1.5 ? 3
+                    : 4,
+                }}
+                onOpenGlossary={setOpenDef}
+              />
+            </div>
+
+            {/* Reste des métriques en liste */}
             <MetricRow label="P/E prévisionnel" value={data.forwardPE > 0 ? data.forwardPE.toFixed(1) : "N/A"} />
             <MetricRow label="BPA" value={data.eps > 0 ? fmt(data.eps, data.currency) : "N/A"} tooltip="EPS" />
-            <MetricRow label="ROE" value={data.returnOnEquity > 0 ? pct(data.returnOnEquity) : "N/A"} tooltip="ROE" />
             <MetricRow label="Marge opérat." value={data.operatingMargin !== 0 ? pct(data.operatingMargin) : "N/A"} tooltip="Marge opérationnelle" />
             <MetricRow label="Croissance CA" value={data.revenueGrowth !== 0 ? pct(data.revenueGrowth) : "N/A"} />
             <MetricRow label="Dette/Fonds propres" value={data.debtToEquity > 0 ? data.debtToEquity.toFixed(2) : "N/A"} tooltip="Dette/Capitaux propres" />
             <MetricRow label="Prix/Valeur comptable" value={data.priceToBook > 0 ? data.priceToBook.toFixed(2) : "N/A"} />
-            <MetricRow label="Beta" value={data.beta.toFixed(2)} tooltip="Beta" />
             <MetricRow label="Dividende" value={data.dividendYield > 0 ? pct(data.dividendYield) : "Aucun"} tooltip="Dividende" />
             <MetricRow label="Capitalisation" value={data.marketCap > 0 ? fmtBig(data.marketCap) : "N/A"} tooltip="Capitalisation" />
           </div>
@@ -555,6 +664,8 @@ export default function StockPage() {
           </div>
         </div>
       </div>
+
+      <GlossaryDrawer def={openDef} onClose={() => setOpenDef(null)} />
     </div>
   );
 }
