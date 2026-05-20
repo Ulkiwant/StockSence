@@ -299,7 +299,7 @@ export default function HomePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40 }}>
             {STEPS.map((s, i) => (
               <div key={s.step} className={`reveal reveal-delay-${i + 1}`} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                <div style={{ fontSize: 56, fontWeight: 900, color: "rgba(134,239,172,0.25)", letterSpacing: "-3px" }}>{s.step}</div>
+                <div style={{ fontSize: 56, fontWeight: 900, color: "rgba(134,239,172,0.55)", letterSpacing: "-3px" }}>{s.step}</div>
                 <h3 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px" }}>{s.title}</h3>
                 <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.65 }}>{s.desc}</p>
               </div>
