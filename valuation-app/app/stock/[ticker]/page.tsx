@@ -335,7 +335,7 @@ export default function StockPage() {
           {showScoreInfo && (
             <div style={{
               position: "absolute",
-              bottom: "calc(100% + 10px)",
+              top: "calc(100% + 10px)",
               left: "50%",
               transform: "translateX(-50%)",
               width: 240,
@@ -349,12 +349,12 @@ export default function StockPage() {
             }}>
               {/* Flèche */}
               <div style={{
-                position: "absolute", bottom: -4, left: "50%",
+                position: "absolute", top: -4, left: "50%",
                 transform: "translateX(-50%) rotate(45deg)",
                 width: 8, height: 8,
                 background: "#2a2927",
-                borderRight: "1px solid rgba(255,255,255,0.12)",
-                borderBottom: "1px solid rgba(255,255,255,0.12)",
+                borderLeft: "1px solid rgba(255,255,255,0.12)",
+                borderTop: "1px solid rgba(255,255,255,0.12)",
               }} />
 
               <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
