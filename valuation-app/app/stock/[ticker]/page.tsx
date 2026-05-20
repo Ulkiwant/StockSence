@@ -98,9 +98,11 @@ export default function StockPage() {
   const [news, setNews]         = useState<NewsItem[]>([]);
   const [loading, setLoading]   = useState(true);
   const [loadingAI, setLoadingAI] = useState(false);
-  const [error, setError]       = useState<string | null>(null);
+  const [error, setError]         = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("Synthèse");
-  const [openDef, setOpenDef]   = useState<MetricDef | null>(null);
+  const [openDef, setOpenDef]     = useState<MetricDef | null>(null);
+  const [translations, setTranslations] = useState<string[] | null>(null);
+  const [translating, setTranslating]   = useState(false);
 
   useEffect(() => {
     setLoading(true); setError(null);
@@ -347,13 +349,13 @@ export default function StockPage() {
                 <div>
                   <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", marginBottom: 16 }}>L&apos;ANALYSE EN CLAIR</div>
 
-                  {/* Summary — serif italic punchline + rest */}
+                  {/* Summary — première phrase en gras, reste en normal */}
                   <p style={{ fontSize: 14, color: "var(--ink)", lineHeight: 1.80, marginBottom: 20 }}>
                     {ai.summary?.split(". ").map((s, i) =>
                       i === 0 ? (
-                        <em key={i} style={{ fontFamily: "var(--font-instrument, Georgia, serif)", fontStyle: "italic", fontWeight: 400, fontSize: 17 }}>
+                        <strong key={i} style={{ fontWeight: 600, fontSize: 15, color: "var(--ink)" }}>
                           {s}.{" "}
-                        </em>
+                        </strong>
                       ) : s
                     )}
                   </p>
@@ -495,7 +497,7 @@ export default function StockPage() {
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                   <Star size={14} strokeWidth={2} color="var(--accent)" />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>Veulez-vous être alerté ?</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>Voulez-vous être alerté ?</span>
                 </div>
                 <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6, marginBottom: 14 }}>
                   Recevez un email si le signal change ou si le prix franchit votre seuil.
@@ -509,6 +511,7 @@ export default function StockPage() {
                   Activer les alertes
                 </Link>
               </div>
+
             </div>
           </div>
         )}
@@ -555,28 +558,28 @@ export default function StockPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               {[
                 { section: "Valorisation", rows: [
-                  { label: "Capitalisation boursière", value: fmtBig(data.marketCap) },
-                  { label: "PER (trailing)", value: data.trailingPE?.toFixed(2) ?? "—" },
-                  { label: "PER (forward)", value: data.forwardPE?.toFixed(2) ?? "—" },
-                  { label: "Price-to-Book", value: data.priceToBook?.toFixed(2) ?? "—" },
+                  { label: "Capitalisation boursière", value: fmtBig(data.marketCap), tooltip: "Valeur totale de l'entreprise en bourse : cours × nombre d'actions." },
+                  { label: "PER (trailing)", value: data.trailingPE?.toFixed(2) ?? "—", tooltip: "Price-to-Earnings sur les 12 derniers mois. Indique combien l'investisseur paie pour 1 € de bénéfice." },
+                  { label: "PER (forward)", value: data.forwardPE?.toFixed(2) ?? "—", tooltip: "PER basé sur les bénéfices estimés pour l'année à venir. Reflète les anticipations du marché." },
+                  { label: "Price-to-Book", value: data.priceToBook?.toFixed(2) ?? "—", tooltip: "Rapport entre le cours boursier et la valeur comptable par action. <1 peut indiquer une sous-évaluation." },
                 ]},
                 { section: "Rentabilité", rows: [
-                  { label: "ROE (Retour capitaux propres)", value: data.returnOnEquity ? pct(data.returnOnEquity) : "—" },
-                  { label: "Marge opérationnelle", value: data.operatingMargin ? pct(data.operatingMargin) : "—" },
-                  { label: "BPA (EPS)", value: data.eps?.toFixed(2) ?? "—" },
-                  { label: "Croissance CA", value: data.revenueGrowth ? pct(data.revenueGrowth) : "—" },
+                  { label: "ROE (Retour capitaux propres)", value: data.returnOnEquity ? pct(data.returnOnEquity) : "—", tooltip: "Bénéfice net rapporté aux capitaux propres. Mesure l'efficacité à créer de la valeur pour les actionnaires." },
+                  { label: "Marge opérationnelle", value: data.operatingMargin ? pct(data.operatingMargin) : "—", tooltip: "Part du chiffre d'affaires qui reste après les coûts d'exploitation. Plus c'est élevé, plus l'entreprise est rentable." },
+                  { label: "BPA (EPS)", value: data.eps?.toFixed(2) ?? "—", tooltip: "Bénéfice par action : bénéfice net divisé par le nombre d'actions. Base du calcul du PER." },
+                  { label: "Croissance CA", value: data.revenueGrowth ? pct(data.revenueGrowth) : "—", tooltip: "Variation du chiffre d'affaires sur un an. Un chiffre positif indique une activité en expansion." },
                 ]},
                 { section: "Risque", rows: [
-                  { label: "Bêta", value: data.beta?.toFixed(2) ?? "—" },
-                  { label: "Dette / Capitaux propres", value: data.debtToEquity?.toFixed(2) ?? "—" },
-                  { label: "52 sem. haut", value: fmt(data.fiftyTwoWeekHigh, data.currency) },
-                  { label: "52 sem. bas", value: fmt(data.fiftyTwoWeekLow, data.currency) },
+                  { label: "Bêta", value: data.beta?.toFixed(2) ?? "—", tooltip: "Sensibilité au marché. Bêta > 1 = plus volatile que le marché. Bêta < 1 = plus stable." },
+                  { label: "Dette / Capitaux propres", value: data.debtToEquity?.toFixed(2) ?? "—", tooltip: "Niveau d'endettement. Un ratio élevé signifie que l'entreprise dépend davantage de la dette pour se financer." },
+                  { label: "52 sem. haut", value: fmt(data.fiftyTwoWeekHigh, data.currency), tooltip: "Prix le plus haut atteint sur les 52 dernières semaines." },
+                  { label: "52 sem. bas", value: fmt(data.fiftyTwoWeekLow, data.currency), tooltip: "Prix le plus bas atteint sur les 52 dernières semaines." },
                 ]},
                 { section: "Général", rows: [
-                  { label: "Dividende", value: data.dividendYield ? pct(data.dividendYield) : "Aucun" },
-                  { label: "Effectif", value: data.employees?.toLocaleString("fr-FR") ?? "—" },
-                  { label: "Secteur", value: data.sector ?? "—" },
-                  { label: "Industrie", value: data.industry ?? "—" },
+                  { label: "Dividende", value: data.dividendYield ? pct(data.dividendYield) : "Aucun", tooltip: "Rendement du dividende : dividende annuel rapporté au cours actuel." },
+                  { label: "Effectif", value: data.employees?.toLocaleString("fr-FR") ?? "—", tooltip: "Nombre total d'employés dans le groupe." },
+                  { label: "Secteur", value: data.sector ?? "—", tooltip: "Classification sectorielle de l'entreprise selon sa principale activité." },
+                  { label: "Industrie", value: data.industry ?? "—", tooltip: "Sous-secteur plus précis au sein de la classification sectorielle." },
                 ]},
               ].map(({ section, rows }) => (
                 <div key={section} style={{ background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden" }}>
@@ -589,7 +592,7 @@ export default function StockPage() {
                       padding: "11px 16px",
                       borderBottom: i < rows.length - 1 ? "1px solid var(--line)" : "none",
                     }}>
-                      <span style={{ fontSize: 13, color: "var(--muted)" }}>{r.label}</span>
+                      <span title={r.tooltip} style={{ fontSize: 13, color: "var(--muted)", cursor: "help", borderBottom: "1px dotted var(--line)" }}>{r.label}</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
                         {r.value}
                       </span>
@@ -611,26 +614,65 @@ export default function StockPage() {
                 <p>Aucune actualité disponible pour {ticker}.</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {news.map((n, i) => (
-                  <a key={i} href={n.url} target="_blank" rel="noopener noreferrer"
-                    style={{
-                      display: "block", padding: "16px 20px", borderRadius: 12,
-                      background: "var(--paper-2)", border: "1px solid var(--line)",
-                      textDecoration: "none", transition: "border-color 0.15s",
+              <>
+                {/* Translate button */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
+                  <button
+                    onClick={async () => {
+                      if (translations) { setTranslations(null); return; }
+                      setTranslating(true);
+                      try {
+                        const res = await fetch("/api/translate", {
+                          method: "POST", headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ texts: news.map((n) => n.title) }),
+                        });
+                        const data = await res.json();
+                        if (data.translations?.length) setTranslations(data.translations);
+                      } finally { setTranslating(false); }
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-hover)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      padding: "6px 14px", borderRadius: 9999, fontSize: 12, fontWeight: 500,
+                      border: "1.5px solid var(--line)",
+                      background: translations ? "var(--accent-soft)" : "transparent",
+                      color: translations ? "var(--accent)" : "var(--muted)",
+                      cursor: translating ? "wait" : "pointer", transition: "all 0.15s",
+                    }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 500 }}>{n.source}</span>
-                      <span style={{ fontSize: 11, color: "var(--muted)" }}>{timeAgo(n.publishedAt)}</span>
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", lineHeight: 1.4, marginBottom: 6 }}>{n.title}</div>
-                    {n.summary && <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>{n.summary}</p>}
-                  </a>
-                ))}
-              </div>
+                    {translating ? "Traduction…" : translations ? "Masquer la traduction" : "🇫🇷 Traduire en français"}
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {news.map((n, i) => (
+                    <a key={i} href={n.url} target="_blank" rel="noopener noreferrer"
+                      style={{
+                        display: "block", padding: "16px 20px", borderRadius: 12,
+                        background: "var(--paper-2)", border: "1px solid var(--line)",
+                        textDecoration: "none", transition: "border-color 0.15s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--border-hover)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                        <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 500 }}>{n.source}</span>
+                        <span style={{ fontSize: 11, color: "var(--muted)" }}>{timeAgo(n.publishedAt)}</span>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", lineHeight: 1.4 }}>{n.title}</div>
+                      {/* French translation */}
+                      {translations?.[i] && (
+                        <div style={{
+                          fontSize: 13, color: "var(--muted)", lineHeight: 1.5, marginTop: 6,
+                          paddingTop: 6, borderTop: "1px solid var(--line)",
+                          fontStyle: "italic",
+                        }}>
+                          {translations[i]}
+                        </div>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}

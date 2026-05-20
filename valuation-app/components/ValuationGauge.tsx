@@ -44,9 +44,9 @@ export default function ValuationGauge({ score, label, size = "md" }: ValuationG
   const color = getColor(animScore);
   const signalLabel = getSignalLabel(animScore);
 
-  // Needle angle: -90° (gauche) → +90° (droite)
-  const needleAngle = -90 + fraction * 180;
-  const needleLen   = r * 0.72;
+  // Needle angle: 180° (gauche) → 360° (droite) en passant par 270° (haut)
+  const needleAngle = 180 + fraction * 180;
+  const needleLen   = r * 0.68;
   const needleRad   = (needleAngle * Math.PI) / 180;
   const nx1 = cx + Math.cos(needleRad) * needleLen;
   const ny1 = cy + Math.sin(needleRad) * needleLen;
@@ -120,7 +120,7 @@ export default function ValuationGauge({ score, label, size = "md" }: ValuationG
         {/* Score */}
         <text
           x={cx}
-          y={cy - r * 0.05}
+          y={cy - r * 0.22}
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={fontSize}
@@ -134,13 +134,13 @@ export default function ValuationGauge({ score, label, size = "md" }: ValuationG
         {/* Signal label */}
         <text
           x={cx}
-          y={cy + fontSize * 0.72}
+          y={cy - r * 0.22 + fontSize * 0.95}
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={subSize}
           fontWeight={600}
           fill={color}
-          letterSpacing="0.03em"
+          letterSpacing="0.08em"
           style={{ textTransform: "uppercase", transition: "fill 0.3s ease" }}
         >
           {signalLabel}
