@@ -5,6 +5,7 @@ import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import StockCard from "@/components/StockCard";
 import ScrollDecorations from "@/components/ScrollDecorations";
+import DashboardPreview from "@/components/DashboardPreview";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 interface TrendingStock {
@@ -224,6 +225,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─────────────────────────────────────────
+          1b. DASHBOARD PREVIEW
+      ───────────────────────────────────────── */}
+      <DashboardPreview />
 
       {/* ─────────────────────────────────────────
           2. STATS

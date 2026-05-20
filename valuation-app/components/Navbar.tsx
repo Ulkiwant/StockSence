@@ -72,6 +72,16 @@ export default function Navbar() {
       <div style={{ flexShrink: 0, marginLeft: 8 }}>
         {user ? (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/parametres/alertes" style={{
+              padding: "6px 12px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+              color: pathname.startsWith("/parametres/alertes") ? "var(--accent)" : "var(--text-secondary)",
+              background: pathname.startsWith("/parametres/alertes") ? "rgba(134,239,172,0.08)" : "transparent",
+              border: pathname.startsWith("/parametres/alertes") ? "1px solid rgba(134,239,172,0.15)" : "1px solid transparent",
+              display: "flex", alignItems: "center", gap: 5, transition: "all 0.15s",
+              whiteSpace: "nowrap",
+            }}>
+              🔔 Alertes
+            </Link>
             <div style={{
               width: 32, height: 32, borderRadius: "50%",
               background: "rgba(134,239,172,0.12)",
