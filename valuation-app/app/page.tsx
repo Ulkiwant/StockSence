@@ -20,32 +20,32 @@ const FEATURES = [
   {
     icon: "🤖",
     title: "Valorisation IA",
-    desc: "Calcul automatique de la valeur intrinsèque via DCF, P/E, EV/EBITDA. Signal STRONG_BUY à STRONG_SELL instantané.",
+    desc: "Sachez en un instant si une action est à un bon prix — ou trop chère. Notre IA calcule la vraie valeur d'une entreprise et vous donne un signal clair : acheter, conserver ou éviter.",
   },
   {
     icon: "📊",
     title: "Suivi de portefeuille",
-    desc: "Tracking P&L en temps réel, répartition sectorielle, performance sur 1 mois à 5 ans.",
+    desc: "Visualisez la performance de tous vos investissements en un seul endroit. Gains, pertes, répartition — tout est mis à jour en temps réel.",
   },
   {
     icon: "🎯",
     title: "Conseiller patrimonial IA",
-    desc: "Questionnaire en 8 étapes. L'IA construit votre portefeuille personnalisé sans jargon financier.",
+    desc: "Répondez à quelques questions sur vos objectifs et votre appétit pour le risque. L'IA vous propose un portefeuille personnalisé, clé en main, sans jargon.",
   },
   {
     icon: "⭐",
     title: "Watchlist personnalisée",
-    desc: "Suivez vos actions favorites. Scores de valorisation mis à jour chaque jour.",
+    desc: "Gardez un œil sur les actions qui vous intéressent, regroupées en un seul endroit. Chaque jour, StockSense vous indique si elles sont à un prix intéressant.",
   },
   {
     icon: "📈",
-    title: "Métriques fondamentales",
-    desc: "P/E, PEG, EV/EBITDA, marge nette, croissance du CA — tout affiché clairement, sans tableau.",
+    title: "Indicateurs financiers",
+    desc: "Accédez aux indicateurs clés de la santé financière d'une entreprise. Chaque chiffre est expliqué simplement — pas besoin d'avoir fait une école de commerce.",
   },
   {
     icon: "🌍",
     title: "Multi-marchés",
-    desc: "NYSE, NASDAQ, Euronext Paris, London Stock Exchange, ETFs. Couverture internationale complète.",
+    desc: "Analysez des actions françaises, américaines, européennes et des fonds indiciels (ETF). Plus de 180 valeurs disponibles, des deux côtés de l'Atlantique.",
   },
 ];
 
@@ -57,9 +57,9 @@ const STATS = [
 ];
 
 const STEPS = [
-  { step: "01", title: "Recherchez une action", desc: "Entrez le nom ou le ticker — Apple, LVMH, Nvidia, ETF World..." },
-  { step: "02", title: "L'IA analyse", desc: "Valorisation multi-méthodes, score de risque, comparaison sectorielle automatique." },
-  { step: "03", title: "Décidez en confiance", desc: "Signal clair, explications en français, sans abonnement ni jargon financier." },
+  { step: "01", title: "Recherchez une action", desc: "Tapez le nom d'une entreprise — Apple, LVMH, Nvidia — ou d'un fonds indiciel. Quelques lettres suffisent pour la retrouver." },
+  { step: "02", title: "L'IA analyse", desc: "En quelques secondes, l'IA évalue si l'action est chère ou bon marché, mesure les risques et la compare à ses concurrents du même secteur." },
+  { step: "03", title: "Décidez en confiance", desc: "Vous obtenez une recommandation claire — acheter, conserver ou éviter — avec des explications en français, sans abonnement." },
 ];
 
 const PRICING_ITEMS = [
@@ -299,7 +299,7 @@ export default function HomePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40 }}>
             {STEPS.map((s, i) => (
               <div key={s.step} className={`reveal reveal-delay-${i + 1}`} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                <div style={{ fontSize: 56, fontWeight: 900, color: "rgba(134,239,172,0.2)", letterSpacing: "-3px" }}>{s.step}</div>
+                <div style={{ fontSize: 56, fontWeight: 900, color: "rgba(134,239,172,0.25)", letterSpacing: "-3px" }}>{s.step}</div>
                 <h3 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px" }}>{s.title}</h3>
                 <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.65 }}>{s.desc}</p>
               </div>
