@@ -443,7 +443,7 @@ export default function HomePage() {
             <h2 style={{ fontSize: "clamp(24px, 4vw, 38px)", fontWeight: 700, letterSpacing: "-0.8px", color: "#fff", marginBottom: 12 }}>
               Comment ça marche
             </h2>
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.50)" }}>Trois étapes, moins de 30 secondes.</p>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.72)" }}>Trois étapes, moins de 30 secondes.</p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 0 }}>
@@ -455,13 +455,13 @@ export default function HomePage() {
                 <div style={{ flex: 1 }}>
                   <div style={{
                     fontSize: 48, fontWeight: 800, letterSpacing: "-0.04em",
-                    color: "rgba(255,255,255,0.12)",
+                    color: "var(--accent)",
                     fontFamily: "var(--font-geist-mono, monospace)",
                     fontVariantNumeric: "tabular-nums",
                     marginBottom: 16,
                   }}>{step}</div>
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 10, letterSpacing: "-0.2px" }}>{title}</h3>
-                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.50)", lineHeight: 1.65 }}>{desc}</p>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.72)", lineHeight: 1.65 }}>{desc}</p>
                 </div>
               </div>
             ))}
