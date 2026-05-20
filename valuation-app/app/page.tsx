@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
+import { createClient } from "@/lib/supabase";
+import type { AuthChangeEvent, Session, UserResponse } from "@supabase/supabase-js";
 import StockCard from "@/components/StockCard";
 import ScrollDecorations from "@/components/ScrollDecorations";
 import DashboardPreview from "@/components/DashboardPreview";
@@ -75,8 +77,18 @@ const PRICING_ITEMS = [
 export default function HomePage() {
   const [trending, setTrending] = useState<TrendingStock[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<{ email?: string } | null>(null);
 
   useScrollReveal();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then((res: UserResponse) => setUser(res.data.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => setUser(session?.user ?? null)
+    );
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     fetch("/api/trending")
@@ -134,23 +146,37 @@ export default function HomePage() {
           et signal d'achat/vente — sans jargon, pour tout le monde.
         </p>
 
-        {/* Search */}
-        <div className="reveal reveal-delay-2" style={{ width: "100%", maxWidth: 560, marginBottom: 32 }}>
+        {/* Search — position relative + zIndex élevé pour que le dropdown passe au-dessus des CTAs */}
+        <div className="reveal reveal-delay-2" style={{ position: "relative", zIndex: 20, width: "100%", maxWidth: 560, marginBottom: 32 }}>
           <SearchBar />
         </div>
 
-        {/* CTAs */}
-        <div className="reveal reveal-delay-3" style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginBottom: 36 }}>
-          <Link href="/auth/signup" style={{
-            padding: "14px 28px", borderRadius: 12,
-            background: "var(--cta-bg)", color: "var(--cta-text)",
-            fontWeight: 700, fontSize: 15, transition: "opacity 0.15s",
-          }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.90")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-          >
-            Commencer gratuitement →
-          </Link>
+        {/* CTAs — zIndex inférieur à la zone search */}
+        <div className="reveal reveal-delay-3" style={{ position: "relative", zIndex: 10, display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginBottom: 36 }}>
+          {user ? (
+            /* Utilisateur connecté — pas de bouton d'inscription */
+            <Link href="/watchlist" style={{
+              padding: "14px 28px", borderRadius: 12,
+              background: "var(--cta-bg)", color: "var(--cta-text)",
+              fontWeight: 700, fontSize: 15, transition: "opacity 0.15s",
+            }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.90")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              Mes actions →
+            </Link>
+          ) : (
+            <Link href="/auth/signup" style={{
+              padding: "14px 28px", borderRadius: 12,
+              background: "var(--cta-bg)", color: "var(--cta-text)",
+              fontWeight: 700, fontSize: 15, transition: "opacity 0.15s",
+            }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.90")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              Commencer gratuitement →
+            </Link>
+          )}
           <a href="#how-it-works" style={{
             padding: "14px 28px", borderRadius: 12,
             border: "1px solid var(--border-default)", color: "var(--text-secondary)",
