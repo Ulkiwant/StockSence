@@ -1,21 +1,22 @@
 "use client";
+
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Search, X } from "lucide-react";
+import Brand from "./Brand";
 
 const STORAGE_KEY = "ss_onboarding_done";
 
 export default function OnboardingOverlay() {
   const [visible, setVisible] = useState(false);
-  const [query, setQuery] = useState("");
+  const [query, setQuery]     = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
+  const router   = useRouter();
 
   useEffect(() => {
-    // Show only once, only if user hasn't dismissed it
     if (typeof window !== "undefined" && !localStorage.getItem(STORAGE_KEY)) {
       setVisible(true);
-      // Small delay so the page has time to render behind the overlay
-      setTimeout(() => inputRef.current?.focus(), 300);
+      setTimeout(() => inputRef.current?.focus(), 350);
     }
   }, []);
 
@@ -36,133 +37,101 @@ export default function OnboardingOverlay() {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 9999,
-      background: "rgba(0,0,0,0.72)",
-      backdropFilter: "blur(6px)",
+      background: "rgba(10,22,40,0.55)",
+      backdropFilter: "blur(8px)",
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: "24px",
-      animation: "ob-fade-in 0.3s ease",
+      animation: "ob-fade-in 0.25s ease",
     }}>
-      {/* Skip button */}
-      <button
-        onClick={dismiss}
-        style={{
-          position: "absolute", top: 20, right: 24,
-          background: "rgba(255,255,255,0.07)",
-          border: "1px solid rgba(255,255,255,0.10)",
-          color: "var(--text-secondary)",
-          fontSize: 13, padding: "6px 14px", borderRadius: 8,
-          cursor: "pointer", transition: "background 0.15s",
-        }}
-        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
-        onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+      {/* Skip */}
+      <button onClick={dismiss} style={{
+        position: "absolute", top: 20, right: 20,
+        background: "rgba(255,255,255,0.15)",
+        border: "1px solid rgba(255,255,255,0.20)",
+        color: "#fff", fontSize: 12, padding: "6px 12px",
+        borderRadius: 9999, cursor: "pointer",
+        display: "flex", alignItems: "center", gap: 6,
+        transition: "background 0.15s",
+      }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.22)")}
+        onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
       >
-        Passer ✕
+        <X size={12} /> Passer
       </button>
 
       {/* Card */}
       <div style={{
-        background: "#1c1b1a",
-        border: "1px solid rgba(134,239,172,0.18)",
+        background: "var(--paper-2)",
+        border: "1.5px solid var(--line)",
         borderRadius: 20,
-        padding: "44px 40px 36px",
-        maxWidth: 480, width: "100%",
-        boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
-        animation: "ob-slide-up 0.35s cubic-bezier(0.22,1,0.36,1)",
-        position: "relative",
+        padding: "40px 36px 32px",
+        maxWidth: 460, width: "100%",
+        boxShadow: "0 40px 80px rgba(10,22,40,0.35)",
+        animation: "ob-slide-up 0.3s cubic-bezier(0.22,1,0.36,1)",
       }}>
-        {/* Glow */}
-        <div style={{
-          position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)",
-          width: 240, height: 120,
-          background: "radial-gradient(ellipse, rgba(134,239,172,0.12) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
-
-        <div style={{ position: "relative", textAlign: "center" }}>
-          {/* Logo badge */}
-          <div style={{
-            width: 52, height: 52, borderRadius: 16,
-            background: "rgba(134,239,172,0.10)",
-            border: "1px solid rgba(134,239,172,0.22)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 22, margin: "0 auto 20px",
-          }}>
-            📈
+        <div style={{ textAlign: "center" }}>
+          {/* Brand */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+            <Brand size="lg" />
           </div>
 
-          <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.4px", marginBottom: 8 }}>
-            Bienvenue sur StockSense 👋
+          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.3px", color: "var(--ink)", marginBottom: 6 }}>
+            Bienvenue sur StockSense
           </h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.65, marginBottom: 32 }}>
+          <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.65, marginBottom: 28 }}>
             Faites votre première analyse en 10 secondes.
           </p>
 
-          {/* Search input */}
+          {/* Search */}
           <div style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.10)",
-            borderRadius: 12,
-            display: "flex", alignItems: "center",
-            padding: "0 14px", gap: 10, marginBottom: 12,
-            transition: "border-color 0.2s",
+            background: "#fff", border: "1.5px solid var(--line)", borderRadius: 9999,
+            display: "flex", alignItems: "center", padding: "4px 8px 4px 16px", gap: 8, marginBottom: 12,
+            transition: "border-color 0.15s, box-shadow 0.15s",
           }}
-            onFocusCapture={e => (e.currentTarget.style.borderColor = "rgba(134,239,172,0.35)")}
-            onBlurCapture={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)")}
+            onFocusCapture={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(45,125,90,0.12)"; }}
+            onBlurCapture={(e)  => { e.currentTarget.style.borderColor = "var(--line)";   e.currentTarget.style.boxShadow = "none"; }}
           >
-            <span style={{ fontSize: 15, color: "var(--text-muted)" }}>🔍</span>
+            <Search size={15} strokeWidth={1.8} color="var(--muted)" style={{ flexShrink: 0 }} />
             <input
               ref={inputRef}
               type="text"
               value={query}
-              onChange={e => setQuery(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && analyze()}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && analyze()}
               placeholder="Essayez Apple, LVMH ou Nvidia…"
               style={{
-                flex: 1, height: 48, background: "transparent",
+                flex: 1, height: 44, background: "transparent",
                 border: "none", outline: "none",
-                fontSize: 14, color: "var(--text-primary)",
+                fontSize: 14, color: "var(--ink)", fontFamily: "inherit",
               }}
             />
+            <button onClick={analyze} disabled={!query.trim()}
+              style={{
+                padding: "8px 18px", borderRadius: 9999,
+                background: query.trim() ? "var(--accent)" : "var(--line)",
+                border: "none", color: "#fff", fontSize: 13, fontWeight: 600,
+                cursor: query.trim() ? "pointer" : "not-allowed",
+                transition: "background 0.15s", flexShrink: 0,
+              }}>
+              Analyser
+            </button>
           </div>
 
-          {/* CTA */}
-          <button
-            onClick={analyze}
-            disabled={!query.trim()}
-            style={{
-              width: "100%", padding: "13px",
-              borderRadius: 12,
-              background: query.trim() ? "var(--cta-bg)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${query.trim() ? "var(--cta-border)" : "rgba(255,255,255,0.08)"}`,
-              color: query.trim() ? "var(--cta-text)" : "var(--text-disabled)",
-              fontSize: 15, fontWeight: 700,
-              cursor: query.trim() ? "pointer" : "not-allowed",
-              transition: "all 0.18s",
-              marginBottom: 14,
-            }}
-          >
-            Analyser maintenant →
-          </button>
-
-          {/* Explore link */}
-          <button
-            onClick={dismiss}
-            style={{
-              background: "none", border: "none",
-              fontSize: 13, color: "var(--text-muted)",
-              cursor: "pointer", textDecoration: "underline",
-              textUnderlineOffset: 3,
-            }}
-          >
-            Explorer d&apos;abord le site →
+          {/* Explore */}
+          <button onClick={dismiss} style={{
+            background: "none", border: "none",
+            fontSize: 12, color: "var(--muted)", cursor: "pointer",
+            textDecoration: "underline", textUnderlineOffset: 3,
+          }}>
+            Explorer d&apos;abord le site
           </button>
         </div>
       </div>
 
       <style>{`
-        @keyframes ob-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ob-fade-in  { from { opacity: 0; } to { opacity: 1; } }
         @keyframes ob-slide-up {
-          from { opacity: 0; transform: translateY(24px); }
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>

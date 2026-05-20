@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import StockCard from "@/components/StockCard";
 import { createClient } from "@/lib/supabase";
+import { Star, ArrowRight } from "lucide-react";
+import Footer from "@/components/Footer";
 
 interface WatchItem { symbol: string; name: string; }
 interface StockData {
@@ -13,8 +15,8 @@ interface StockData {
 }
 
 export default function WatchlistPage() {
-  const [items, setItems] = useState<WatchItem[]>([]);
-  const [stocks, setStocks] = useState<StockData[]>([]);
+  const [items, setItems]     = useState<WatchItem[]>([]);
+  const [stocks, setStocks]   = useState<StockData[]>([]);
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const supabase = createClient();
@@ -46,48 +48,78 @@ export default function WatchlistPage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "48px 24px" }}>
-      <div style={{ marginBottom: 36 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.5px", marginBottom: 8 }}>Mes actions suivies</h1>
-        <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-          {items.length} action{items.length !== 1 ? "s" : ""}
-          {!loggedIn && <span style={{ marginLeft: 8, color: "var(--accent-blue)", fontSize: 13 }}>
-            · <Link href="/auth/login" style={{ color: "var(--accent-blue)" }}>Connectez-vous</Link> pour synchroniser sur tous vos appareils
-          </span>}
-        </p>
-      </div>
+    <div style={{ background: "var(--paper)", minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 28px 64px" }}>
 
-      {items.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "80px 24px", border: "1px dashed var(--border)", borderRadius: 20 }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>⭐</div>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Aucune action suivie</h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 24 }}>
-            Recherchez une action et cliquez sur « Suivre » pour l'ajouter ici.
+        {/* Header */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <Star size={20} strokeWidth={1.8} color="var(--accent)" />
+            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.4px", color: "var(--ink)" }}>
+              Mes actions suivies
+            </h1>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--muted)" }}>
+            {items.length} action{items.length !== 1 ? "s" : ""}
+            {!loggedIn && (
+              <span style={{ marginLeft: 10 }}>
+                ·{" "}
+                <Link href="/auth/login" style={{ color: "var(--accent)", fontWeight: 500 }}>
+                  Connectez-vous
+                </Link>{" "}
+                pour synchroniser sur tous vos appareils
+              </span>
+            )}
           </p>
-          <Link href="/" style={{
-            display: "inline-flex", padding: "10px 24px", borderRadius: 10,
-            background: "var(--cta-bg)",
-            color: "var(--cta-text)", fontWeight: 600, fontSize: 14,
-          }}>Rechercher des actions</Link>
         </div>
-      ) : loading ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {items.map((w) => <div key={w.symbol} className="skeleton" style={{ height: 220, borderRadius: 16 }} />)}
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {stocks.map((stock) => (
-            <StockCard key={stock.symbol} symbol={stock.symbol} name={stock.name}
-              currentPrice={stock.currentPrice} change={stock.change}
-              changePercent={stock.changePercent} currency={stock.currency}
-              signal={stock.valuation?.signal} fairValue={stock.valuation?.fairValue}
-              upside={stock.valuation?.upside} score={stock.valuation?.score} />
-          ))}
-        </div>
-      )}
+
+        {items.length === 0 ? (
+          <div style={{
+            textAlign: "center", padding: "80px 24px",
+            border: "1.5px dashed var(--line)", borderRadius: 18,
+            background: "var(--paper-2)",
+          }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%", background: "var(--accent-soft)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px",
+            }}>
+              <Star size={24} strokeWidth={1.5} color="var(--accent)" />
+            </div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", marginBottom: 8 }}>
+              Aucune action suivie
+            </h2>
+            <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 24 }}>
+              Recherchez une action et cliquez sur « Suivre » pour l&apos;ajouter ici.
+            </p>
+            <Link href="/" style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "10px 22px", borderRadius: 9999,
+              background: "var(--accent)", color: "#fff", fontWeight: 600, fontSize: 13,
+            }}>
+              Rechercher des actions <ArrowRight size={14} />
+            </Link>
+          </div>
+        ) : loading ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            {items.map((w) => <div key={w.symbol} className="skeleton" style={{ height: 200, borderRadius: 14 }} />)}
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            {stocks.map((stock) => (
+              <StockCard key={stock.symbol} symbol={stock.symbol} name={stock.name}
+                currentPrice={stock.currentPrice} change={stock.change}
+                changePercent={stock.changePercent} currency={stock.currency}
+                signal={stock.valuation?.signal} fairValue={stock.valuation?.fairValue}
+                upside={stock.valuation?.upside} score={stock.valuation?.score} />
+            ))}
+          </div>
+        )}
+      </div>
+      <Footer />
     </div>
   );
 }

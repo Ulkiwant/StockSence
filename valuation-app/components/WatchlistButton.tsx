@@ -3,16 +3,14 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase";
 import type { UserResponse } from "@supabase/supabase-js";
+import { Star } from "lucide-react";
 
-interface Props {
-  symbol: string;
-  name: string;
-}
+interface Props { symbol: string; name: string; }
 
 export default function WatchlistButton({ symbol, name }: Props) {
   const [isWatched, setIsWatched] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [loggedIn, setLoggedIn]   = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -23,12 +21,11 @@ export default function WatchlistButton({ symbol, name }: Props) {
           setIsWatched(list.some((w: { symbol: string }) => w.symbol === symbol));
         });
       } else {
-        // Fallback to localStorage for anonymous users
         const saved = JSON.parse(localStorage.getItem("watchlist") ?? "[]") as string[];
         setIsWatched(saved.includes(symbol));
       }
     });
-  }, [symbol]);
+  }, [symbol]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = async () => {
     setLoading(true);
@@ -40,7 +37,6 @@ export default function WatchlistButton({ symbol, name }: Props) {
       }
       setIsWatched(!isWatched);
     } else {
-      // localStorage fallback
       const saved = JSON.parse(localStorage.getItem("watchlist") ?? "[]") as string[];
       const next = isWatched ? saved.filter((s) => s !== symbol) : [...saved, symbol];
       localStorage.setItem("watchlist", JSON.stringify(next));
@@ -56,18 +52,20 @@ export default function WatchlistButton({ symbol, name }: Props) {
       title={isWatched ? "Retirer des favoris" : "Ajouter aux favoris"}
       style={{
         display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
-        borderRadius: 10, cursor: loading ? "wait" : "pointer",
-        border: `1px solid ${isWatched ? "rgba(251,191,36,0.4)" : "var(--border)"}`,
-        background: isWatched ? "rgba(251,191,36,0.08)" : "var(--bg-card)",
-        color: isWatched ? "#fcd34d" : "var(--text-secondary)",
-        fontSize: 14, fontWeight: 500, transition: "all 0.2s",
+        borderRadius: 9999, cursor: loading ? "wait" : "pointer",
+        border: `1.5px solid ${isWatched ? "rgba(184,142,0,0.35)" : "var(--line)"}`,
+        background: isWatched ? "rgba(251,191,36,0.10)" : "transparent",
+        color: isWatched ? "#9a7700" : "var(--muted)",
+        fontSize: 13, fontWeight: 500, transition: "all 0.15s",
       }}
+      onMouseEnter={(e) => { if (!isWatched) { e.currentTarget.style.background = "var(--paper-3)"; e.currentTarget.style.color = "var(--ink)"; } }}
+      onMouseLeave={(e) => { if (!isWatched) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--muted)"; } }}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24"
-        fill={isWatched ? "#fcd34d" : "none"} stroke="currentColor"
-        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-      </svg>
+      <Star
+        size={14} strokeWidth={1.8}
+        fill={isWatched ? "#9a7700" : "none"}
+        color={isWatched ? "#9a7700" : "currentColor"}
+      />
       {isWatched ? "Suivi" : "Suivre"}
     </button>
   );
