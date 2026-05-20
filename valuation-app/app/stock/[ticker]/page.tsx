@@ -137,6 +137,7 @@ export default function StockPage() {
   const [error, setError] = useState<string | null>(null);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [openDef, setOpenDef] = useState<MetricDef | null>(null);
+  const [showScoreInfo, setShowScoreInfo] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -290,8 +291,25 @@ export default function StockPage() {
         </div>
 
         {/* Score */}
-        <div className="card" style={{ padding: 24 }}>
-          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>Score global</div>
+        <div
+          className="card"
+          style={{ padding: 24, position: "relative", cursor: "default" }}
+          onMouseEnter={() => setShowScoreInfo(true)}
+          onMouseLeave={() => setShowScoreInfo(false)}
+        >
+          {/* Label + icône aide */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Score global</span>
+            <div style={{
+              width: 16, height: 16, borderRadius: "50%",
+              background: "rgba(134,239,172,0.10)",
+              border: "1px solid rgba(134,239,172,0.22)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 9, fontWeight: 700, color: "var(--accent)",
+            }}>?</div>
+          </div>
+
+          {/* Jauge circulaire */}
           <div style={{ position: "relative", width: 100, height: 100, margin: "0 auto" }}>
             <svg viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
               <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
@@ -312,6 +330,73 @@ export default function StockPage() {
               <span style={{ fontSize: 10, color: "var(--text-muted)" }}>/100</span>
             </div>
           </div>
+
+          {/* Tooltip explicatif */}
+          {showScoreInfo && (
+            <div style={{
+              position: "absolute",
+              bottom: "calc(100% + 10px)",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 240,
+              background: "#2a2927",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 14,
+              padding: "14px 16px",
+              zIndex: 50,
+              boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
+              pointerEvents: "none",
+            }}>
+              {/* Flèche */}
+              <div style={{
+                position: "absolute", bottom: -4, left: "50%",
+                transform: "translateX(-50%) rotate(45deg)",
+                width: 8, height: 8,
+                background: "#2a2927",
+                borderRight: "1px solid rgba(255,255,255,0.12)",
+                borderBottom: "1px solid rgba(255,255,255,0.12)",
+              }} />
+
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
+                Comment est calculé ce score ?
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.65, marginBottom: 10 }}>
+                C&apos;est une synthèse sur 100 qui combine plusieurs angles d&apos;analyse :
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {[
+                  { label: "Valorisation", desc: "L'action est-elle chère par rapport à ses bénéfices ?" },
+                  { label: "Santé financière", desc: "Rentabilité, endettement, croissance du chiffre d'affaires." },
+                  { label: "Comparaison sectorielle", desc: "Positionnement vs les entreprises du même secteur." },
+                  { label: "Momentum", desc: "Tendance récente du cours et de l'activité." },
+                ].map((item) => (
+                  <div key={item.label} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    <span style={{ color: "var(--accent)", fontSize: 10, fontWeight: 700, marginTop: 1, flexShrink: 0 }}>▸</span>
+                    <div>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-primary)" }}>{item.label} — </span>
+                      <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{item.desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{
+                marginTop: 10, paddingTop: 10,
+                borderTop: "1px solid rgba(255,255,255,0.06)",
+                display: "flex", gap: 12, justifyContent: "center",
+              }}>
+                {[
+                  { range: "65–100", label: "Attractif", color: "#86efac" },
+                  { range: "40–64", label: "Neutre", color: "#fcd34d" },
+                  { range: "0–39", label: "Prudence", color: "#fca5a5" },
+                ].map((s) => (
+                  <div key={s.range} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: s.color }}>{s.range}</div>
+                    <div style={{ fontSize: 9, color: "var(--text-disabled)" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 52 weeks */}
