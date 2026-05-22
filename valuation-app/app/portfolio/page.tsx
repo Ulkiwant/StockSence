@@ -235,9 +235,9 @@ export default function PortfolioPage() {
       {enriched.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 28 }}>
           {[
-            { label: "Valeur totale", value: fmt(totals.value), color: "var(--ink)" },
-            { label: "Investi", value: fmt(totals.cost), color: "var(--muted)" },
-            { label: "Plus/Moins-value", value: `${isUp ? "+" : ""}${fmt(totals.pnl)}`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
+            { label: "Valeur totale", value: fmt(totals.value, "EUR"), color: "var(--ink)" },
+            { label: "Investi", value: fmt(totals.cost, "EUR"), color: "var(--muted)" },
+            { label: "Plus/Moins-value", value: `${isUp ? "+" : ""}${fmt(totals.pnl, "EUR")}`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
             { label: "Performance globale", value: `${isUp ? "+" : ""}${totalPct.toFixed(2)}%`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
           ].map((card) => (
             <div key={card.label} style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: "18px 20px" }}>

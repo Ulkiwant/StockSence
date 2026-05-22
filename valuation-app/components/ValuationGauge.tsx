@@ -91,8 +91,8 @@ export default function ValuationGauge({ score, label, size = "md" }: ValuationG
   const subSize  = size === "sm" ? 10 : size === "lg" ? 15 : 12;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-      <svg width={dim} height={dim * 0.65} viewBox={`0 0 ${dim} ${dim * 0.65}`} overflow="visible">
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+      <svg width={dim} height={dim * 0.58} viewBox={`0 0 ${dim} ${dim * 0.58}`} overflow="visible">
         {/* Track */}
         <path d={trackPath} fill="none" stroke="var(--line)" strokeWidth={sw} strokeLinecap="round" />
         {/* Filled */}
@@ -116,39 +116,37 @@ export default function ValuationGauge({ score, label, size = "md" }: ValuationG
           style={{ transition: "stroke 0.3s ease" }}
         />
         <circle cx={cx} cy={cy} r={sw * 0.7} fill={color} style={{ transition: "fill 0.3s ease" }} />
-
-        {/* Score */}
-        <text
-          x={cx}
-          y={cy - r * 0.22}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={fontSize}
-          fontWeight={700}
-          fill={color}
-          style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.03em", transition: "fill 0.3s ease", fontFamily: "var(--font-geist-mono, monospace)" }}
-        >
-          {animScore > 0 ? "+" : ""}{Math.round(animScore)}
-        </text>
-
-        {/* Signal label */}
-        <text
-          x={cx}
-          y={cy - r * 0.22 + fontSize * 0.95}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize={subSize}
-          fontWeight={600}
-          fill={color}
-          letterSpacing="0.08em"
-          style={{ textTransform: "uppercase", transition: "fill 0.3s ease" }}
-        >
-          {signalLabel}
-        </text>
       </svg>
 
+      {/* Score + label displayed below the SVG so the needle never overlaps */}
+      <div style={{ textAlign: "center", marginTop: -4 }}>
+        <div style={{
+          fontSize: fontSize,
+          fontWeight: 700,
+          color,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.03em",
+          fontFamily: "var(--font-geist-mono, monospace)",
+          lineHeight: 1.1,
+          transition: "color 0.3s ease",
+        }}>
+          {animScore > 0 ? "+" : ""}{Math.round(animScore)}
+        </div>
+        <div style={{
+          fontSize: subSize,
+          fontWeight: 600,
+          color,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          marginTop: 2,
+          transition: "color 0.3s ease",
+        }}>
+          {signalLabel}
+        </div>
+      </div>
+
       {label && (
-        <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 0 }}>{label}</p>
+        <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>{label}</p>
       )}
     </div>
   );

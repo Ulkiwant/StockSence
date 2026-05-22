@@ -1,5 +1,6 @@
 "use client";
 import { useMemo } from "react";
+import { TrendingDown, TrendingUp, BarChart2 } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -44,10 +45,16 @@ const SECTOR_BETA: Record<string, number> = {
 };
 
 const SCENARIOS = {
-  bear: { label: "Pessimiste", color: "#fca5a5", emoji: "🐻", premium: -0.06 },
-  normal: { label: "Base", color: "#fcd34d", emoji: "📊", premium: 0.055 },
-  bull: { label: "Optimiste", color: "#86efac", emoji: "🐂", premium: 0.115 },
+  bear:   { label: "Pessimiste", color: "#c0392b", premium: -0.06 },
+  normal: { label: "Base",       color: "#b07d00", premium: 0.055 },
+  bull:   { label: "Optimiste",  color: "#2d7d5a", premium: 0.115 },
 } as const;
+
+const ScenarioIcon = ({ k, size = 16 }: { k: "bear" | "normal" | "bull"; size?: number }) => {
+  if (k === "bear")   return <TrendingDown  size={size} strokeWidth={2} />;
+  if (k === "bull")   return <TrendingUp    size={size} strokeWidth={2} />;
+  return <BarChart2 size={size} strokeWidth={2} />;
+};
 
 type ScenarioKey = keyof typeof SCENARIOS;
 
@@ -143,14 +150,14 @@ export default function ScenarioAnalysis({
   if (!positions.length || totalValue <= 0) return null;
 
   const scenarioBgColors: Record<ScenarioKey, string> = {
-    bear: "rgba(252,165,165,0.06)",
-    normal: "rgba(251,191,36,0.06)",
-    bull: "rgba(134,239,172,0.06)",
+    bear:   "rgba(192,57,43,0.06)",
+    normal: "rgba(176,125,0,0.06)",
+    bull:   "rgba(45,125,90,0.06)",
   };
   const scenarioBorderColors: Record<ScenarioKey, string> = {
-    bear: "rgba(252,165,165,0.2)",
-    normal: "rgba(251,191,36,0.2)",
-    bull: "rgba(134,239,172,0.2)",
+    bear:   "rgba(192,57,43,0.20)",
+    normal: "rgba(176,125,0,0.20)",
+    bull:   "rgba(45,125,90,0.20)",
   };
 
   return (
@@ -167,7 +174,8 @@ export default function ScenarioAnalysis({
         }}
       >
         <h2 style={{ fontSize: 17, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
-          📊 Analyse de scénarios{riskLabel ? ` — Profil ${riskLabel}` : ""}
+          <BarChart2 size={18} strokeWidth={2} color="var(--accent)" />
+          Analyse de scénarios{riskLabel ? ` — Profil ${riskLabel}` : ""}
         </h2>
         <span
           style={{
@@ -216,7 +224,9 @@ export default function ScenarioAnalysis({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>{sc.emoji}</span>
+                  <span style={{ color: sc.color, display: "flex" }}>
+                    <ScenarioIcon k={key} size={16} />
+                  </span>
                   <span style={{ fontWeight: 700, fontSize: 14, color: sc.color }}>
                     {sc.label}
                   </span>
@@ -287,16 +297,16 @@ export default function ScenarioAnalysis({
           <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="scenGradBear" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#fca5a5" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#fca5a5" stopOpacity={0} />
+                <stop offset="5%" stopColor="#c0392b" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#c0392b" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="scenGradNormal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#fcd34d" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#fcd34d" stopOpacity={0} />
+                <stop offset="5%" stopColor="#b07d00" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#b07d00" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="scenGradBull" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#86efac" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#86efac" stopOpacity={0} />
+                <stop offset="5%" stopColor="#2d7d5a" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#2d7d5a" stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis
@@ -322,9 +332,9 @@ export default function ScenarioAnalysis({
               labelStyle={{ color: "var(--text-muted)", marginBottom: 6, fontWeight: 600 }}
               formatter={(value: unknown, name: unknown) => {
                 const labels: Record<string, string> = {
-                  bear: "🐻 Pessimiste",
-                  normal: "📊 Base",
-                  bull: "🐂 Optimiste",
+                  bear:   "Pessimiste",
+                  normal: "Base",
+                  bull:   "Optimiste",
                 };
                 return [fmtShort(Number(value)), labels[String(name)] ?? String(name)];
               }}
@@ -333,9 +343,9 @@ export default function ScenarioAnalysis({
               wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
               formatter={(value: string) => {
                 const labels: Record<string, string> = {
-                  bear: "🐻 Pessimiste",
-                  normal: "📊 Base",
-                  bull: "🐂 Optimiste",
+                  bear:   "Pessimiste",
+                  normal: "Base",
+                  bull:   "Optimiste",
                 };
                 return labels[value] ?? value;
               }}
@@ -343,7 +353,7 @@ export default function ScenarioAnalysis({
             <Area
               type="monotone"
               dataKey="bear"
-              stroke="#fca5a5"
+              stroke="#c0392b"
               strokeWidth={2}
               fill="url(#scenGradBear)"
               dot={false}
@@ -351,7 +361,7 @@ export default function ScenarioAnalysis({
             <Area
               type="monotone"
               dataKey="normal"
-              stroke="#fcd34d"
+              stroke="#b07d00"
               strokeWidth={2}
               fill="url(#scenGradNormal)"
               dot={false}
@@ -359,7 +369,7 @@ export default function ScenarioAnalysis({
             <Area
               type="monotone"
               dataKey="bull"
-              stroke="#86efac"
+              stroke="#2d7d5a"
               strokeWidth={2}
               fill="url(#scenGradBull)"
               dot={false}
