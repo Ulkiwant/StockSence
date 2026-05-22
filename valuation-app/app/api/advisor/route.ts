@@ -13,6 +13,8 @@ export async function POST(req: NextRequest) {
 
   const prompt = `Tu es un conseiller financier expert en gestion de patrimoine privé. Génère un portefeuille personnalisé précis et actionnable.
 
+STYLE : Écris dans un français simple et accessible, comme si tu parlais à quelqu'un qui investit pour la première fois. Pas de jargon financier. Si tu dois utiliser un terme technique, explique-le brièvement entre parenthèses. Phrases courtes et percutantes.
+
 ═══ PROFIL COMPLET ═══
 
 IDENTITÉ :
@@ -40,7 +42,6 @@ OBJECTIFS :
 - Enveloppe(s) fiscale(s) : ${Array.isArray(p.taxWrapper) && p.taxWrapper.length > 0 ? p.taxWrapper.join(" + ") : "Au choix"}
 
 PRÉFÉRENCES D'ALLOCATION :
-- Répartition souhaitée actions/ETF : ${p.allocationMix}
 - Préférence géographique : ${p.geography}
 - Secteurs favoris : ${p.favoriteSectors?.length ? p.favoriteSectors.join(", ") : "aucun en particulier"}
 - Secteurs exclus : ${p.excludedSectors?.length ? p.excludedSectors.join(", ") : "aucun"}
@@ -61,7 +62,10 @@ ${p.forcedStocks?.length
 ═══ RÈGLES STRICTES ═══
 1. La somme des pourcentages = EXACTEMENT 100
 2. Entre 5 et 8 lignes d'allocation maximum
-3. Respecter la répartition actions/ETF demandée : "${p.allocationMix}"
+3. Répartition ETF/actions — détermine-la toi-même selon le profil de risque :
+   - Prudent → 75-100% ETF, 0-25% actions individuelles
+   - Équilibré → 50-70% ETF, 30-50% actions individuelles
+   - Dynamique → 30-50% ETF, 50-70% actions individuelles
 4. Si dividendes prioritaires → inclure des ETF/actions à dividendes (ex: SCHD, VYM, CW8.PA)
 5. Si ESG intéressé → privilégier des ETF ESG/SRI
 6. Intégrer les secteurs favoris si compatibles avec le profil de risque
@@ -71,25 +75,25 @@ ${p.forcedStocks?.length
 Réponds UNIQUEMENT avec ce JSON valide, sans texte avant ni après :
 {
   "portfolioName": "Nom court et accrocheur (3-5 mots)",
-  "summary": "2-3 phrases personnalisées avec le prénom si fourni, expliquant pourquoi ce portefeuille lui correspond",
+  "summary": "2-3 phrases simples et chaleureuses qui expliquent pourquoi ce portefeuille correspond à la personne. Pas de jargon.",
   "expectedReturn": "X-Y% par an",
   "riskLevel": "Faible",
   "dividendYield": "X.X% de rendement en dividendes estimé (ou null si non pertinent)",
-  "taxAdvice": "1 phrase sur l'enveloppe fiscale recommandée et pourquoi",
+  "taxAdvice": "1 phrase simple sur l'enveloppe recommandée et pourquoi c'est avantageux",
   "allocations": [
     {
       "symbol": "IWDA.AS",
       "name": "iShares Core MSCI World ETF",
       "type": "ETF",
       "percentage": 40,
-      "rationale": "Exposition mondiale diversifiée, cœur de portefeuille",
+      "rationale": "1 phrase très simple qui explique à quoi sert cet actif dans le portefeuille, sans termes techniques",
       "currency": "EUR",
       "dividendFrequency": "Capitalisant"
     }
   ],
-  "strategy": "2 phrases sur la stratégie et l'approche globale",
-  "rebalancing": "Fréquence et méthode recommandées",
-  "tips": ["conseil pratique 1", "conseil pratique 2", "conseil pratique 3"],
+  "strategy": "2 phrases simples et claires sur l'approche globale, sans acronymes",
+  "rebalancing": "1 phrase simple disant quand vérifier et ajuster son portefeuille",
+  "tips": ["conseil concret et simple formulé comme une action à faire, sans jargon"],
   "disclaimer": "Ceci n'est pas un conseil en investissement. Consultez un professionnel agréé."
 }`;
 

@@ -54,40 +54,52 @@ const QUESTIONS = [
   {
     field: "age",
     title: "Quel est votre âge ?",
-    subtitle: "Définit votre horizon d'investissement.",
+    subtitle: "Cela aide à calibrer votre horizon et les risques que vous pouvez prendre.",
     options: ["Moins de 30 ans", "30 — 45 ans", "45 — 60 ans", "Plus de 60 ans"],
   },
   {
+    field: "situation",
+    title: "Quelle est votre situation professionnelle ?",
+    subtitle: "Votre stabilité de revenus influence la stratégie recommandée.",
+    options: ["Salarié·e", "Indépendant·e / Freelance", "Étudiant·e", "Retraité·e"],
+  },
+  {
     field: "horizon",
-    title: "Pendant combien de temps pouvez-vous laisser cet argent investi ?",
-    subtitle: "Plus l'horizon est long, plus vous pouvez prendre de risques.",
+    title: "Combien de temps pouvez-vous laisser cet argent investi ?",
+    subtitle: "Plus vous attendez longtemps, plus vous pouvez accepter de variations.",
     options: ["Moins de 3 ans", "3 — 7 ans", "7 — 15 ans", "Plus de 15 ans"],
   },
   {
     field: "capital",
-    title: "Combien souhaitez-vous investir au total ?",
-    subtitle: "Montant initial que vous êtes prêt à investir aujourd'hui.",
+    title: "Quel montant voulez-vous investir maintenant ?",
+    subtitle: "Le capital de départ que vous êtes prêt à placer aujourd'hui.",
     type: "input",
+  },
+  {
+    field: "monthly",
+    title: "Ajoutez-vous de l'argent chaque mois ?",
+    subtitle: "Les versements réguliers sont très efficaces sur le long terme. Mettez 0 si vous n'en avez pas.",
+    type: "input-monthly",
   },
   {
     field: "reactionToDrop",
     title: "Si votre portefeuille perdait 30 % en un mois, vous feriez quoi ?",
-    subtitle: "Votre réaction émotionnelle conditionne votre profil de risque réel.",
+    subtitle: "Soyez honnête — il n'y a pas de mauvaise réponse.",
     options: [
-      "Je vends tout — la perte me panique",
+      "Je vends tout — ça me panique",
       "J'attends en espérant une remontée",
-      "Je reste serein et je maintiens",
-      "Je renforce — c'est une opportunité",
+      "Je reste calme et je maintiens",
+      "Je rachète — c'est une opportunité",
     ],
   },
   {
     field: "riskTolerance",
-    title: "Quel est votre profil de risque ?",
-    subtitle: "Un portefeuille bien calibré est plus efficace qu'un portefeuille trop ambitieux.",
+    title: "Comment décririez-vous votre rapport au risque ?",
+    subtitle: "Un portefeuille bien calibré vaut mieux qu'un portefeuille trop ambitieux.",
     options: [
-      "Conservateur — sécurité avant tout",
-      "Équilibré — performance et sécurité",
-      "Dynamique — croissance maximale",
+      "Prudent — je préfère la sécurité",
+      "Équilibré — un peu des deux",
+      "Dynamique — je vise la croissance",
     ],
   },
   {
@@ -96,33 +108,35 @@ const QUESTIONS = [
     subtitle: "Ce que vous voulez accomplir oriente toute la stratégie.",
     options: [
       "Faire fructifier mon capital",
-      "Générer des revenus réguliers",
+      "Toucher des revenus réguliers",
       "Préparer ma retraite",
-      "Protéger mon capital de l'inflation",
+      "Protéger mon argent de l'inflation",
     ],
   },
   {
-    field: "allocationMix",
-    title: "Quelle répartition ETF / actions souhaitez-vous ?",
-    subtitle: "Les ETF offrent une diversification automatique, les actions une conviction ciblée.",
+    field: "taxWrapper",
+    title: "Où allez-vous loger vos investissements ?",
+    subtitle: "L'enveloppe fiscale peut faire gagner beaucoup d'argent sur le long terme.",
     options: [
-      "100% ETF",
-      "70% ETF / 30% actions",
-      "50% ETF / 50% actions",
-      "100% actions",
+      "Je ne sais pas encore",
+      "PEA (actions européennes, fiscalité avantageuse)",
+      "CTO — Compte-Titres (tous actifs possibles)",
+      "Assurance-vie",
     ],
   },
 ];
 
 const STEP_LABELS = [
-  "Quel est votre âge",
-  "Pendant combien de temps pouvez-vous laisser cet argent investi",
-  "Combien souhaitez-vous investir au total",
-  "Si votre portefeuille perdait 30 % en un mois, vous feriez quoi",
-  "Quel est votre profil de risque",
-  "Quel est votre objectif principal",
-  "Quelle répartition ETF / actions souhaitez-vous",
-  "Vos convictions personnelles",
+  "Votre âge",
+  "Votre situation professionnelle",
+  "Votre horizon",
+  "Capital initial",
+  "Versement mensuel",
+  "Réaction face à une baisse",
+  "Profil de risque",
+  "Objectif principal",
+  "Enveloppe fiscale",
+  "Vos convictions",
 ];
 
 /* ── Main component ── */
@@ -131,6 +145,7 @@ export default function AdvisorPage() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [capitalInput, setCapitalInput] = useState("");
+  const [monthlyInput, setMonthlyInput] = useState("");
   const [result, setResult] = useState<PortfolioRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,10 +156,15 @@ export default function AdvisorPage() {
   const [forcedLoading, setForcedLoading] = useState(false);
   const [forcedError, setForcedError] = useState<string | null>(null);
 
-  const currentQuestion = step < 7 ? QUESTIONS[step] : null;
-  const currentAnswer = step < 7 ? answers[QUESTIONS[step]?.field ?? ""] ?? "" : "";
+  const currentQuestion = step < 9 ? QUESTIONS[step] : null;
+  const currentAnswer = step < 9 ? answers[QUESTIONS[step]?.field ?? ""] ?? "" : "";
   const isCapitalStep = currentQuestion?.type === "input";
-  const hasAnswer = isCapitalStep ? capitalInput.trim() !== "" : currentAnswer !== "";
+  const isMonthlyStep = currentQuestion?.type === "input-monthly";
+  const hasAnswer = isCapitalStep
+    ? capitalInput.trim() !== ""
+    : isMonthlyStep
+    ? true  // monthly is optional
+    : currentAnswer !== "";
 
   const confirmedForced = forcedStocks.filter((s) => s.confirmed);
 
@@ -154,9 +174,12 @@ export default function AdvisorPage() {
   };
 
   const handleNext = () => {
-    if (step < 7) {
+    if (step < 9) {
       if (isCapitalStep) {
         setAnswers((prev) => ({ ...prev, capital: capitalInput }));
+      }
+      if (isMonthlyStep) {
+        setAnswers((prev) => ({ ...prev, monthly: monthlyInput || "0" }));
       }
       setStep((s) => s + 1);
     }
@@ -208,13 +231,13 @@ export default function AdvisorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           age: answers.age,
+          situation: answers.situation,
           horizon: answers.horizon,
           capital: capitalInput || answers.capital,
+          monthly: parseFloat(monthlyInput || answers.monthly) || 0,
           reactionToDrop: answers.reactionToDrop,
           riskTolerance: answers.riskTolerance,
           goal: answers.goal,
-          allocationMix: answers.allocationMix,
-          monthly: 0,
           existingHoldings: [],
           forcedStocks: confirmedForced.map((s) => ({
             symbol: s.symbol,
@@ -225,10 +248,9 @@ export default function AdvisorPage() {
           geography: "Mondial",
           esgInterest: "Non concerné",
           wantsDividends: "optionnel",
-          taxWrapper: [],
+          taxWrapper: answers.taxWrapper ? [answers.taxWrapper] : [],
           favoriteSectors: [],
           excludedSectors: [],
-          situation: "Salarié(e)",
           family: "Célibataire sans enfant",
           hasEmergencyFund: true,
           involvement: "Semi-actif — je consulte 1 fois par mois",
@@ -243,7 +265,7 @@ export default function AdvisorPage() {
       else if (data.error) setError("La génération a échoué. Réessayez dans quelques instants.");
       else {
         setResult(data);
-        setStep(9);
+        setStep(10);
       }
     } catch {
       setError("Erreur réseau. Vérifiez votre connexion et réessayez.");
@@ -252,7 +274,7 @@ export default function AdvisorPage() {
   };
 
   // Result page
-  if (result && step === 9) {
+  if (result && step === 10) {
     const capitalNum = parseFloat(capitalInput || answers.capital) || 0;
     return (
       <div
@@ -267,14 +289,14 @@ export default function AdvisorPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {/* Metrics */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
-            <MetricCard label="Rendement estimé" value={result.expectedReturn} color="var(--signal-up)" />
+            <MetricCard label="Gain estimé par an" value={result.expectedReturn} color="var(--signal-up)" />
             <MetricCard
               label="Niveau de risque"
               value={`Risque ${result.riskLevel}`}
               color={RISK_COLOR[result.riskLevel] ?? "var(--muted)"}
             />
             {result.dividendYield && result.dividendYield !== "null" && (
-              <MetricCard label="Dividende estimé" value={result.dividendYield} color="var(--signal-neutral)" />
+              <MetricCard label="Revenus annuels estimés" value={result.dividendYield} color="var(--signal-neutral)" />
             )}
           </div>
 
@@ -321,7 +343,7 @@ export default function AdvisorPage() {
             }}
           >
             <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 18, color: "var(--ink)" }}>
-              Allocation recommandée
+              Votre répartition
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {result.allocations.map((a, i) => (
@@ -438,7 +460,7 @@ export default function AdvisorPage() {
                 }}
               >
                 <Lightbulb size={16} color="var(--accent)" />
-                Conseils pratiques
+                Ce que vous pouvez faire maintenant
               </h2>
               {result.tips.map((tip, i) => (
                 <div
@@ -464,7 +486,7 @@ export default function AdvisorPage() {
                 }}
               >
                 <RefreshCw size={13} color="var(--accent)" />
-                Rééquilibrage :{" "}
+                Quand vérifier :{" "}
                 <strong style={{ color: "var(--ink)" }}>{result.rebalancing}</strong>
               </div>
             </div>
@@ -480,7 +502,7 @@ export default function AdvisorPage() {
               sector: undefined,
             }))}
             totalValue={capitalNum}
-            monthlyContribution={0}
+            monthlyContribution={parseFloat(monthlyInput || answers.monthly) || 0}
             riskLabel={answers.riskTolerance ?? ""}
           />
 
@@ -492,6 +514,7 @@ export default function AdvisorPage() {
               setResult(null);
               setAnswers({});
               setCapitalInput("");
+              setMonthlyInput("");
               setError(null);
               setForcedStocks([]);
               setForcedInput("");
@@ -601,7 +624,7 @@ export default function AdvisorPage() {
               margin: 0,
             }}
           >
-            Huit questions, deux minutes. Notre IA construit une allocation personnalisée selon votre profil, votre
+            Dix questions, trois minutes. Notre IA construit une allocation personnalisée selon votre profil, votre
             horizon et vos objectifs. Sans engagement, sans collecte de données financières sensibles.
           </p>
         </div>
@@ -621,12 +644,12 @@ export default function AdvisorPage() {
               marginBottom: 12,
             }}
           >
-            ÉTAPE {step + 1} / 8
+            ÉTAPE {step + 1} / 10
           </div>
 
           {/* Progress segments */}
           <div style={{ display: "flex", flexDirection: "row", gap: 4 }}>
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <div
                 key={i}
                 style={{
@@ -642,7 +665,7 @@ export default function AdvisorPage() {
 
           {/* Checklist */}
           <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
-            {STEP_LABELS.slice(0, 4).map((label, i) => {
+            {STEP_LABELS.slice(0, 5).map((label, i) => {
               const isPast = i < step;
               const isCurrent = i === step;
               const isFuture = i > step;
@@ -728,7 +751,7 @@ export default function AdvisorPage() {
               );
             })}
 
-            {step >= 4 && (
+            {step >= 5 && (
               <span
                 style={{
                   fontSize: 11,
@@ -736,7 +759,7 @@ export default function AdvisorPage() {
                   marginLeft: 28,
                 }}
               >
-                + {8 - 4} questions supplémentaires
+                + {10 - 5} questions supplémentaires
               </span>
             )}
           </div>
@@ -754,8 +777,8 @@ export default function AdvisorPage() {
           overflowY: "auto",
         }}
       >
-        {/* Step 0–6: regular questions */}
-        {step < 7 && currentQuestion && (
+        {/* Step 0–8: regular questions */}
+        {step < 9 && currentQuestion && (
           <>
             {/* Question counter */}
             <div
@@ -767,7 +790,7 @@ export default function AdvisorPage() {
                 marginBottom: 20,
               }}
             >
-              QUESTION {step + 1} SUR 8
+              QUESTION {step + 1} SUR 9
             </div>
 
             {/* Question title */}
@@ -798,7 +821,14 @@ export default function AdvisorPage() {
 
             {/* Options area */}
             <div style={{ flex: 1 }}>
-              {isCapitalStep ? (
+              {isMonthlyStep ? (
+                <div>
+                  <CapitalInput value={monthlyInput} onChange={setMonthlyInput} placeholder="200 €/mois" />
+                  <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+                    Laissez vide ou mettez 0 si vous n'investissez pas régulièrement.
+                  </p>
+                </div>
+              ) : isCapitalStep ? (
                 /* Input question */
                 <CapitalInput value={capitalInput} onChange={setCapitalInput} />
               ) : (
@@ -846,8 +876,8 @@ export default function AdvisorPage() {
           </>
         )}
 
-        {/* Step 7: final convictions step */}
-        {step === 7 && (
+        {/* Step 9: final convictions step */}
+        {step === 9 && (
           <>
             {/* Question counter */}
             <div
@@ -859,7 +889,7 @@ export default function AdvisorPage() {
                 marginBottom: 20,
               }}
             >
-              QUESTION 8 SUR 8
+              QUESTION 10 SUR 10
             </div>
 
             <h2
@@ -1159,9 +1189,11 @@ function RadioOption({
 function CapitalInput({
   value,
   onChange,
+  placeholder = "10 000 €",
 }: {
   value: string;
   onChange: (v: string) => void;
+  placeholder?: string;
 }) {
   const [focused, setFocused] = useState(false);
   return (
@@ -1169,7 +1201,7 @@ function CapitalInput({
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="10 000 €"
+      placeholder={placeholder}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       style={{
