@@ -8,14 +8,16 @@ import type { AuthChangeEvent, Session, UserResponse } from "@supabase/supabase-
 import { Bell, LogOut, User, BarChart2 } from "lucide-react";
 import SearchBar from "./SearchBar";
 import Brand from "./Brand";
+import { useSettings } from "@/lib/settings";
+import type { Locale, Currency } from "@/lib/settings";
 
-const NAV_LINKS = [
-  { href: "/",          label: "Accueil",     exact: true  },
-  { href: "/watchlist", label: "Mes actions", exact: false },
-  { href: "/portfolio", label: "Portefeuille",exact: false },
-  { href: "/advisor",   label: "Conseiller",  exact: false },
-  { href: "/faq",       label: "FAQ",         exact: false },
-  { href: "/glossaire", label: "Glossaire",   exact: false },
+const NAV_LINK_KEYS = [
+  { href: "/",          key: "nav.home",      exact: true  },
+  { href: "/watchlist", key: "nav.watchlist",  exact: false },
+  { href: "/portfolio", key: "nav.portfolio",  exact: false },
+  { href: "/advisor",   key: "nav.advisor",    exact: false },
+  { href: "/faq",       key: "nav.faq",        exact: false },
+  { href: "/glossaire", key: "nav.glossary",   exact: false },
 ];
 
 export default function Navbar() {
@@ -23,6 +25,7 @@ export default function Navbar() {
   const router   = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<{ email?: string } | null>(null);
+  const { locale, currency, setLocale, setCurrency, t } = useSettings();
 
   useEffect(() => {
     supabase.auth.getUser().then((res: UserResponse) => setUser(res.data.user ?? null));
@@ -63,16 +66,47 @@ export default function Navbar() {
 
       {/* Nav pills */}
       <div style={{ display: "flex", gap: 2, marginLeft: "auto", flexShrink: 0 }}>
-        {NAV_LINKS.map(({ href, label, exact }) => {
+        {NAV_LINK_KEYS.map(({ href, key, exact }) => {
           const active = exact ? pathname === href : pathname.startsWith(href) && href !== "/";
           const isHome = exact && pathname === href;
           const isActive = href === "/" ? isHome : active;
           return (
             <NavLink key={href} href={href} active={isActive}>
-              {label}
+              {t(key)}
             </NavLink>
           );
         })}
+      </div>
+
+      {/* Language & Currency toggles */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        {/* Language toggle */}
+        <div style={{ display: "flex", border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden" }}>
+          {(["fr", "en"] as const).map((l: Locale) => (
+            <button key={l} onClick={() => setLocale(l)} style={{
+              padding: "3px 8px", fontSize: 11, fontWeight: 600,
+              background: locale === l ? "var(--ink)" : "transparent",
+              color: locale === l ? "#fff" : "var(--muted)",
+              border: "none", cursor: "pointer", textTransform: "uppercase",
+            }}>
+              {l}
+            </button>
+          ))}
+        </div>
+
+        {/* Currency toggle */}
+        <div style={{ display: "flex", border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden" }}>
+          {(["EUR", "USD"] as const).map((c: Currency) => (
+            <button key={c} onClick={() => setCurrency(c)} style={{
+              padding: "3px 8px", fontSize: 11, fontWeight: 600,
+              background: currency === c ? "var(--ink)" : "transparent",
+              color: currency === c ? "#fff" : "var(--muted)",
+              border: "none", cursor: "pointer",
+            }}>
+              {c === "EUR" ? "€" : "$"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Auth */}
@@ -138,7 +172,7 @@ export default function Navbar() {
             </div>
             <button
               onClick={handleSignOut}
-              title="Déconnexion"
+              title={t("nav.logout")}
               style={{
                 width: 34,
                 height: 34,
@@ -161,10 +195,10 @@ export default function Navbar() {
         ) : (
           <div style={{ display: "flex", gap: 8 }}>
             <Link href="/auth/login" className="btn-ghost" style={{ borderRadius: 9999, padding: "7px 16px", fontSize: 13 }}>
-              Connexion
+              {t("nav.login")}
             </Link>
             <Link href="/auth/signup" className="btn-primary" style={{ borderRadius: 9999, padding: "7px 16px", fontSize: 13 }}>
-              S&apos;inscrire
+              {t("nav.signup")}
             </Link>
           </div>
         )}

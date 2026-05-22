@@ -7,6 +7,7 @@ import { SearchModal } from "@/components/SearchModal";
 import { createClient } from "@/lib/supabase";
 import { Star, Plus } from "lucide-react";
 import Footer from "@/components/Footer";
+import { useSettings } from "@/lib/settings";
 
 interface WatchItem { symbol: string; name: string; }
 interface StockData {
@@ -16,6 +17,7 @@ interface StockData {
 }
 
 export default function WatchlistPage() {
+  const { t } = useSettings();
   const [items, setItems]     = useState<WatchItem[]>([]);
   const [stocks, setStocks]   = useState<StockData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +109,7 @@ export default function WatchlistPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
               <Star size={20} strokeWidth={1.8} color="var(--accent)" />
               <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.4px", color: "var(--ink)" }}>
-                Mes actions suivies
+                {t("watchlist.title")}
               </h1>
             </div>
             <p style={{ fontSize: 13, color: "var(--muted)" }}>
@@ -116,9 +118,9 @@ export default function WatchlistPage() {
                 <span style={{ marginLeft: 10 }}>
                   ·{" "}
                   <Link href="/auth/login" style={{ color: "var(--accent)", fontWeight: 500 }}>
-                    Connectez-vous
+                    {t("nav.login")}
                   </Link>{" "}
-                  pour synchroniser sur tous vos appareils
+                  {t("common.sign_in_sync")}
                 </span>
               )}
             </p>
@@ -146,7 +148,7 @@ export default function WatchlistPage() {
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--line)"; e.currentTarget.style.color = "var(--ink)"; }}
           >
             <Plus size={14} strokeWidth={2.5} />
-            Ajouter une action
+            {t("watchlist.add_btn")}
           </button>
         </div>
 
@@ -165,10 +167,10 @@ export default function WatchlistPage() {
               <Star size={24} strokeWidth={1.5} color="var(--accent)" />
             </div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", marginBottom: 8 }}>
-              Aucune action suivie
+              {t("watchlist.empty_title")}
             </h2>
             <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 24 }}>
-              Recherchez une action et cliquez sur « Suivre » pour l&apos;ajouter ici.
+              {t("watchlist.empty_desc")}
             </p>
             <button
               onClick={() => setSearchOpen(true)}
@@ -181,7 +183,7 @@ export default function WatchlistPage() {
               }}
             >
               <Plus size={14} strokeWidth={2.5} />
-              Rechercher des actions
+              {t("watchlist.add_btn")}
             </button>
           </div>
         ) : loading ? (

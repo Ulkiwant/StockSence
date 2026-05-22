@@ -14,6 +14,7 @@ import ValuationGauge from "@/components/ValuationGauge";
 import SignalPill from "@/components/SignalPill";
 import Footer from "@/components/Footer";
 import StockCard from "@/components/StockCard";
+import { useSettings } from "@/lib/settings";
 
 /* ── demo stocks for hero card ───────────────────────────────── */
 const DEMO_STOCKS = [
@@ -94,6 +95,7 @@ function useLiveSearch() {
 ══════════════════════════════════════════════════════════════════ */
 export default function HomePage() {
   const router = useRouter();
+  const { t, fmtPrice } = useSettings();
   const [user, setUser]       = useState<{ email?: string } | null>(null);
   const [trending, setTrending] = useState<TrendingStock[]>([]);
   const [trendLoading, setTrendLoading] = useState(true);
@@ -157,7 +159,7 @@ export default function HomePage() {
             marginBottom: 28,
           }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />
-            <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>Beta gratuit · Données en temps réel</span>
+            <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>{t("hero.badge")}</span>
           </div>
 
           {/* H1 */}
@@ -169,11 +171,11 @@ export default function HomePage() {
             color: "var(--ink)",
             marginBottom: 20,
           }}>
-            Une action vaut-elle{" "}
+            {t("hero.title1")}{" "}
             <span style={{ color: "var(--accent)", fontWeight: 800, fontStyle: "normal" }}>
-              vraiment
+              {t("hero.title_em")}
             </span>{" "}
-            son prix ?
+            {t("hero.title2")}
           </h1>
 
           <p style={{
@@ -184,8 +186,7 @@ export default function HomePage() {
             maxWidth: 480,
             marginBottom: 36,
           }}>
-            Valorisation fondamentale par l&apos;IA, score de risque et signal clair —
-            sans jargon, pour tout investisseur.
+            {t("hero.subtitle")}
           </p>
 
           {/* Search */}
@@ -206,7 +207,7 @@ export default function HomePage() {
                 value={search.query}
                 onChange={(e) => search.setQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && search.results[0]) handleSearchGo(search.results[0].symbol); }}
-                placeholder="Apple, LVMH, Nvidia, ETF..."
+                placeholder={t("hero.search_placeholder")}
                 style={{
                   flex: 1, background: "transparent", border: "none",
                   outline: "none", color: "var(--ink)", fontSize: 15, fontFamily: "inherit",
@@ -224,7 +225,7 @@ export default function HomePage() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-hover)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent)")}
               >
-                Analyser
+                {t("hero.analyze_btn")}
               </button>
             </div>
 
@@ -283,9 +284,9 @@ export default function HomePage() {
           {/* Stats */}
           <div style={{ display: "flex", gap: 0, flexWrap: "wrap" }}>
             {[
-              { value: "2 400+", label: "Analyses réalisées" },
-              { value: "180+",   label: "Actions couvertes" },
-              { value: "100%",   label: "Gratuit en beta" },
+              { value: "2 400+", label: t("hero.stats.analyses") },
+              { value: "180+",   label: t("hero.stats.stocks") },
+              { value: "100%",   label: t("hero.stats.free") },
             ].map((s, i) => (
               <div key={s.label} style={{ display: "flex" }}>
                 {i > 0 && <div style={{ width: 1, background: "var(--line)", margin: "0 24px", alignSelf: "stretch" }} />}
@@ -332,7 +333,7 @@ export default function HomePage() {
               fontSize: 34, fontWeight: 700, letterSpacing: "-0.04em",
               fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums",
             }}>
-              {activeDemo.price.toFixed(2)} <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.65)" }}>USD</span>
+              {fmtPrice(activeDemo.price, "USD")}
             </div>
             <div style={{
               fontSize: 13, marginTop: 2,
@@ -421,10 +422,10 @@ export default function HomePage() {
               fontSize: "clamp(24px, 4vw, 38px)", fontWeight: 700,
               letterSpacing: "-0.8px", color: "var(--ink)", marginBottom: 12,
             }}>
-              Six outils, un seul écran
+              {t("features.title")}
             </h2>
             <p style={{ fontSize: 16, color: "var(--muted)", maxWidth: 480, margin: "0 auto" }}>
-              Analyse, portefeuille, watchlist et conseiller — tout au même endroit.
+              {t("features.subtitle")}
             </p>
           </div>
 
@@ -537,7 +538,7 @@ export default function HomePage() {
               StockSense est un outil pédagogique — l&apos;accès restera accessible au plus grand nombre.
             </p>
             <Link href="/auth/signup" className="btn-primary" style={{ display: "inline-flex", gap: 8 }}>
-              Créer un compte gratuit <ArrowRight size={15} strokeWidth={2} />
+              {t("cta.btn_login")} <ArrowRight size={15} strokeWidth={2} />
             </Link>
           </div>
 
@@ -581,14 +582,13 @@ export default function HomePage() {
       <section style={{ background: "var(--accent-soft)", borderTop: "1px solid rgba(45,125,90,0.20)", padding: "88px 32px" }}>
         <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "clamp(22px, 4vw, 36px)", fontWeight: 700, letterSpacing: "-0.8px", color: "var(--ink)", marginBottom: 14 }}>
-            Vous ne savez pas par où commencer ?
+            {t("cta.title")}
           </h2>
           <p style={{ fontSize: 15, color: "var(--muted)", maxWidth: 480, margin: "0 auto 32px", lineHeight: 1.65 }}>
-            Répondez à 8 questions sur vos objectifs et obtenez un portefeuille
-            personnalisé, clé en main — sans jargon.
+            {t("cta.subtitle")}
           </p>
           <Link href="/advisor" className="btn-primary" style={{ display: "inline-flex", gap: 8, fontSize: 15, padding: "14px 28px" }}>
-            Créer mon portefeuille gratuit <ArrowRight size={16} strokeWidth={2} />
+            {t("cta.btn_start")} <ArrowRight size={16} strokeWidth={2} />
           </Link>
           <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 16 }}>
             Sans inscription · Résultat immédiat · 100% gratuit

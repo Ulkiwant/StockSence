@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
+import Providers from "@/components/Providers";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -35,9 +36,11 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}>
       <body style={{ background: "var(--paper)", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        <Navbar />
-        <OnboardingOverlay />
-        <main style={{ flex: 1 }}>{children}</main>
+        <Providers>
+          <Navbar />
+          <OnboardingOverlay />
+          <main style={{ flex: 1 }}>{children}</main>
+        </Providers>
       </body>
     </html>
   );

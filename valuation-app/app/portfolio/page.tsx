@@ -8,6 +8,7 @@ import {
 import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2 } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import SignalPill from "@/components/SignalPill";
+import { useSettings } from "@/lib/settings";
 
 interface Holding {
   id: string;
@@ -68,6 +69,7 @@ function fmtShort(n: number) {
 }
 
 export default function PortfolioPage() {
+  const { t, fmtPrice } = useSettings();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [enriched, setEnriched] = useState<EnrichedHolding[]>([]);
   const [analysis, setAnalysis] = useState<PortfolioAnalysis | null>(null);
@@ -235,10 +237,10 @@ export default function PortfolioPage() {
       {enriched.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 28 }}>
           {[
-            { label: "Valeur totale", value: fmt(totals.value, "EUR"), color: "var(--ink)" },
-            { label: "Investi", value: fmt(totals.cost, "EUR"), color: "var(--muted)" },
-            { label: "Plus/Moins-value", value: `${isUp ? "+" : ""}${fmt(totals.pnl, "EUR")}`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
-            { label: "Performance globale", value: `${isUp ? "+" : ""}${totalPct.toFixed(2)}%`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
+            { label: t("portfolio.total_value"), value: fmtPrice(totals.value, "EUR"), color: "var(--ink)" },
+            { label: t("portfolio.invested"), value: fmtPrice(totals.cost, "EUR"), color: "var(--muted)" },
+            { label: t("portfolio.pnl"), value: `${isUp ? "+" : ""}${fmtPrice(totals.pnl, "EUR")}`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
+            { label: t("portfolio.perf"), value: `${isUp ? "+" : ""}${totalPct.toFixed(2)}%`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
           ].map((card) => (
             <div key={card.label} style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: "18px 20px" }}>
               <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>{card.label}</div>
@@ -487,7 +489,7 @@ export default function PortfolioPage() {
                 <div style={{ textAlign: "right", fontSize: 13, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.quantity}</div>
                 <div style={{ textAlign: "right", fontSize: 13, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.avg_price.toFixed(2)}</div>
                 <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.currentPrice.toFixed(2)}</div>
-                <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{fmt(h.marketValue, h.currency)}</div>
+                <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{fmtPrice(h.marketValue, h.currency)}</div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: isPos ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
                     {isPos ? "+" : ""}{h.pnlPct.toFixed(1)}%
