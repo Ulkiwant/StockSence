@@ -17,12 +17,16 @@ import StockCard from "@/components/StockCard";
 
 /* ── demo stocks for hero card ───────────────────────────────── */
 const DEMO_STOCKS = [
-  { symbol: "AAPL",  name: "Apple Inc.",       market: "NASDAQ", price: 189.30, change: +1.24, score: 42, pe: 29.1, peg: 1.8,  evebitda: 22.4 },
-  { symbol: "LVMH",  name: "LVMH",             market: "Euronext",price: 768.10, change: -0.91, score: 28, pe: 21.3, peg: 1.4,  evebitda: 14.2 },
-  { symbol: "NVDA",  name: "Nvidia Corp.",      market: "NASDAQ", price: 875.40, change: +3.15, score: 65, pe: 62.4, peg: 1.1,  evebitda: 50.1 },
-  { symbol: "MSFT",  name: "Microsoft Corp.",   market: "NASDAQ", price: 415.60, change: +0.82, score: 55, pe: 34.2, peg: 2.1,  evebitda: 25.8 },
+  // Achat fort  (score ≥ 40)
+  { symbol: "AAPL",  name: "Apple Inc.",    market: "NASDAQ",   price: 189.30, change: +1.24, score:  55, pe: 29.1, peg: 1.8, evebitda: 22.4 },
+  // Achat       (15 ≤ score < 40)
+  { symbol: "MC.PA", name: "LVMH",          market: "Euronext", price: 768.10, change: -0.91, score:  25, pe: 21.3, peg: 1.4, evebitda: 14.2 },
+  // Neutre      (-15 < score < 15)
+  { symbol: "MSFT",  name: "Microsoft",     market: "NASDAQ",   price: 415.60, change: +0.82, score:   5, pe: 34.2, peg: 2.1, evebitda: 25.8 },
+  // Vente       (score ≤ -15)
+  { symbol: "TSLA",  name: "Tesla",         market: "NASDAQ",   price: 172.40, change: -2.10, score: -30, pe: 58.3, peg: 3.2, evebitda: 42.1 },
 ];
-const SUGGESTIONS = ["Apple", "LVMH", "Nvidia", "Microsoft"];
+const SUGGESTIONS = ["Apple", "LVMH", "Microsoft", "Tesla"];
 
 /* ── features ─────────────────────────────────────────────────── */
 const FEATURES = [
@@ -166,15 +170,16 @@ export default function HomePage() {
             marginBottom: 20,
           }}>
             Une action vaut-elle{" "}
-            <em style={{ fontFamily: "var(--font-instrument, Georgia, serif)", fontStyle: "italic", color: "var(--accent)" }}>
+            <span style={{ color: "var(--accent)", fontWeight: 800, fontStyle: "normal" }}>
               vraiment
-            </em>{" "}
+            </span>{" "}
             son prix ?
           </h1>
 
           <p style={{
             fontSize: 17,
-            color: "var(--muted)",
+            color: "var(--ink)",
+            opacity: 0.72,
             lineHeight: 1.7,
             maxWidth: 480,
             marginBottom: 36,
@@ -316,9 +321,9 @@ export default function HomePage() {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 15 }}>{activeDemo.name}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{activeDemo.symbol} · {activeDemo.market}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.70)" }}>{activeDemo.symbol} · {activeDemo.market}</div>
             </div>
-            <SignalPill score={activeDemo.score >= 40 ? "BUY" : activeDemo.score >= 15 ? "BUY" : activeDemo.score > -15 ? "HOLD" : "SELL"} />
+            <SignalPill score={activeDemo.score >= 40 ? "STRONG_BUY" : activeDemo.score >= 15 ? "BUY" : activeDemo.score > -15 ? "HOLD" : activeDemo.score > -40 ? "SELL" : "STRONG_SELL"} />
           </div>
 
           {/* Price */}
@@ -327,7 +332,7 @@ export default function HomePage() {
               fontSize: 34, fontWeight: 700, letterSpacing: "-0.04em",
               fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums",
             }}>
-              {activeDemo.price.toFixed(2)} <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)" }}>USD</span>
+              {activeDemo.price.toFixed(2)} <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.65)" }}>USD</span>
             </div>
             <div style={{
               fontSize: 13, marginTop: 2,
@@ -345,11 +350,9 @@ export default function HomePage() {
 
           {/* Editorial quote */}
           <p style={{
-            fontFamily: "var(--font-instrument, Georgia, serif)",
-            fontStyle: "italic",
             fontSize: 13,
-            color: "rgba(255,255,255,0.60)",
-            lineHeight: 1.55,
+            color: "rgba(255,255,255,0.80)",
+            lineHeight: 1.6,
             marginBottom: 20,
             paddingTop: 12,
             borderTop: "1px solid rgba(255,255,255,0.08)",
@@ -390,19 +393,19 @@ export default function HomePage() {
                 background: "rgba(255,255,255,0.06)", borderRadius: 10,
                 padding: "10px 12px", border: `1px solid ${m.color}33`,
               }}>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", marginBottom: 4, letterSpacing: "0.04em", textTransform: "uppercase" }}>{m.label}</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.65)", marginBottom: 4, letterSpacing: "0.04em", textTransform: "uppercase" }}>{m.label}</div>
                 <div style={{
                   fontSize: 20, fontWeight: 700, color: m.color,
                   fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.03em",
                   marginBottom: 4,
                 }}>{m.value}</div>
                 <div style={{ fontSize: 9, color: m.color, fontWeight: 600, marginBottom: 5, opacity: 0.9 }}>{m.hint}</div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", lineHeight: 1.4 }}>{m.desc}</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.58)", lineHeight: 1.4 }}>{m.desc}</div>
               </div>
             ))}
           </div>
 
-          <p style={{ fontSize: 10, color: "rgba(255,255,255,0.30)", marginTop: 14, textAlign: "center" }}>
+          <p style={{ fontSize: 10, color: "rgba(255,255,255,0.50)", marginTop: 14, textAlign: "center" }}>
             Données simulées à titre d&apos;illustration
           </p>
         </div>
