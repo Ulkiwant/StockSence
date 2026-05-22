@@ -57,7 +57,7 @@ export default function Navbar() {
       <Brand size="md" />
 
       {/* Search */}
-      <div style={{ flex: "0 0 auto", width: 180 }}>
+      <div style={{ flex: 1, maxWidth: 360 }}>
         <SearchBar compact />
       </div>
 
