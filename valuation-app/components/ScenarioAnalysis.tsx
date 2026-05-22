@@ -1,6 +1,6 @@
 "use client";
-import { useMemo } from "react";
-import { TrendingDown, TrendingUp, BarChart2 } from "lucide-react";
+import { useMemo, useState, useRef, useEffect } from "react";
+import { TrendingDown, TrendingUp, BarChart2, Info } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -78,6 +78,82 @@ function fmtEur(n: number): string {
     currency: "EUR",
     maximumFractionDigits: 0,
   }).format(n);
+}
+
+function BetaBadge({ beta }: { beta: number }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [open]);
+
+  const betaLabel =
+    beta < 0.8 ? "Portefeuille défensif — peu sensible aux turbulences du marché."
+    : beta < 1.1 ? "Portefeuille équilibré — évolue globalement comme le marché."
+    : "Portefeuille dynamique — amplifie les hausses et les baisses du marché.";
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-flex" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          fontSize: 12, padding: "4px 12px", borderRadius: 20,
+          background: open ? "rgba(59,123,255,0.18)" : "rgba(59,123,255,0.10)",
+          color: "var(--accent-blue)", fontWeight: 600,
+          border: "none", cursor: "pointer", transition: "background 0.15s",
+        }}
+      >
+        Beta portefeuille : {beta.toFixed(2)}
+        <Info size={13} strokeWidth={2} style={{ opacity: 0.7 }} />
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 8px)", right: 0,
+          width: 260, background: "var(--paper)",
+          border: "1.5px solid var(--line)",
+          borderRadius: 12, padding: "14px 16px",
+          boxShadow: "0 8px 24px rgba(10,22,40,0.10)",
+          zIndex: 100,
+        }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
+            Qu&apos;est-ce que le beta ?
+          </p>
+          <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.65, marginBottom: 10 }}>
+            Le beta mesure comment votre portefeuille réagit aux mouvements du marché.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {[
+              { range: "Beta < 0,8", label: "Défensif", desc: "Moins de risque, moins de gains potentiels" },
+              { range: "Beta ≈ 1,0", label: "Neutre", desc: "Suit globalement le marché" },
+              { range: "Beta > 1,2", label: "Dynamique", desc: "Plus de gains potentiels, plus de risque" },
+            ].map(({ range, label, desc }) => (
+              <div key={range} style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "7px 10px", borderRadius: 8,
+                background: "var(--paper-2)", border: "1px solid var(--line)",
+              }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent)", minWidth: 60 }}>{range}</span>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ink)" }}>{label}</div>
+                  <div style={{ fontSize: 10, color: "var(--muted)" }}>{desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600, marginTop: 10 }}>
+            Votre portefeuille : {betaLabel}
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ScenarioAnalysis({
@@ -177,18 +253,7 @@ export default function ScenarioAnalysis({
           <BarChart2 size={18} strokeWidth={2} color="var(--accent)" />
           Analyse de scénarios{riskLabel ? ` — Profil ${riskLabel}` : ""}
         </h2>
-        <span
-          style={{
-            fontSize: 12,
-            padding: "4px 12px",
-            borderRadius: 20,
-            background: "rgba(59,123,255,0.1)",
-            color: "var(--accent-blue)",
-            fontWeight: 600,
-          }}
-        >
-          Beta portefeuille : {portfolioBeta.toFixed(2)}
-        </span>
+        <BetaBadge beta={portfolioBeta} />
       </div>
 
       {/* 3 cartes de scénario */}
@@ -380,10 +445,9 @@ export default function ScenarioAnalysis({
 
       {/* Note de bas de page */}
       <p style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>
-        Projections basées sur le CAPM simplifié (beta portefeuille : {portfolioBeta.toFixed(2)}).
-        Ces estimations ne constituent pas un conseil en investissement.
-        Hypothèses : taux sans risque 3,5%, rendement excédentaire bear/base/bull = -6%/+5,5%/+11,5%.
-        {monthlyContribution > 0 && ` Versement mensuel inclus : ${fmtEur(monthlyContribution)}/mois.`}
+        Ces projections sont des estimations basées sur votre profil de risque et la composition de votre portefeuille.
+        Elles ne garantissent aucun rendement futur et ne constituent pas un conseil en investissement.
+        {monthlyContribution > 0 && ` Versements mensuels de ${fmtEur(monthlyContribution)} inclus dans le calcul.`}
       </p>
     </div>
   );
