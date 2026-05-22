@@ -361,22 +361,43 @@ export default function HomePage() {
               : "Le cours actuel intègre déjà des anticipations de croissance élevées."}
           </p>
 
-          {/* 3 metrics */}
+          {/* 3 metrics — coded color + novice description */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
             {[
-              { label: "PER", value: activeDemo.pe },
-              { label: "PEG", value: activeDemo.peg },
-              { label: "EV/EBITDA", value: activeDemo.evebitda },
+              {
+                label: "PER",
+                value: activeDemo.pe,
+                desc: "Prix / bénéfice — plus c'est bas, moins c'est cher",
+                color: activeDemo.pe < 20 ? "#6ee7b7" : activeDemo.pe < 30 ? "#fde68a" : "#fca5a5",
+                hint: activeDemo.pe < 20 ? "✓ Raisonnable" : activeDemo.pe < 30 ? "~ Dans la moyenne" : "↑ Élevé",
+              },
+              {
+                label: "PEG",
+                value: activeDemo.peg,
+                desc: "PER ajusté à la croissance — idéal < 1",
+                color: activeDemo.peg < 1 ? "#6ee7b7" : activeDemo.peg < 2 ? "#fde68a" : "#fca5a5",
+                hint: activeDemo.peg < 1 ? "✓ Attractif" : activeDemo.peg < 2 ? "~ Correct" : "↑ Élevé",
+              },
+              {
+                label: "EV/EBITDA",
+                value: activeDemo.evebitda,
+                desc: "Valeur de l'entreprise / profits bruts — comparer dans le même secteur",
+                color: activeDemo.evebitda < 12 ? "#6ee7b7" : activeDemo.evebitda < 20 ? "#fde68a" : "#fca5a5",
+                hint: activeDemo.evebitda < 12 ? "✓ Bas" : activeDemo.evebitda < 20 ? "~ Moyen" : "↑ Cher",
+              },
             ].map((m) => (
               <div key={m.label} style={{
                 background: "rgba(255,255,255,0.06)", borderRadius: 10,
-                padding: "10px 12px", border: "1px solid rgba(255,255,255,0.08)",
+                padding: "10px 12px", border: `1px solid ${m.color}33`,
               }}>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginBottom: 4, letterSpacing: "0.04em" }}>{m.label}</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", marginBottom: 4, letterSpacing: "0.04em", textTransform: "uppercase" }}>{m.label}</div>
                 <div style={{
-                  fontSize: 18, fontWeight: 700, color: "#fff",
+                  fontSize: 20, fontWeight: 700, color: m.color,
                   fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.03em",
+                  marginBottom: 4,
                 }}>{m.value}</div>
+                <div style={{ fontSize: 9, color: m.color, fontWeight: 600, marginBottom: 5, opacity: 0.9 }}>{m.hint}</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", lineHeight: 1.4 }}>{m.desc}</div>
               </div>
             ))}
           </div>

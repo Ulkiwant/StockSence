@@ -24,9 +24,9 @@ const COLS = [
   {
     title: "Société",
     links: [
-      { label: "Mentions légales",  href: "#" },
-      { label: "Confidentialité",   href: "#" },
-      { label: "Contact",           href: "#" },
+      { label: "Mentions légales",  href: "/mentions-legales" },
+      { label: "Confidentialité",   href: "/confidentialite" },
+      { label: "Contact",           href: "/contact" },
     ],
   },
 ];
