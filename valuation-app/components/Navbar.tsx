@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import type { AuthChangeEvent, Session, UserResponse } from "@supabase/supabase-js";
-import { Bell, LogOut, User, BarChart2 } from "lucide-react";
+import { Bell, LogOut, User, Settings, KeyRound, ChevronDown } from "lucide-react";
 import SearchBar from "./SearchBar";
 import Brand from "./Brand";
 import { useSettings } from "@/lib/settings";
@@ -25,6 +25,8 @@ export default function Navbar() {
   const router   = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const { locale, currency, setLocale, setCurrency, t } = useSettings();
 
   useEffect(() => {
@@ -37,9 +39,21 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    setMenuOpen(false);
     router.push("/");
     router.refresh();
   };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   return (
     <nav style={{
@@ -113,84 +127,121 @@ export default function Navbar() {
       <div style={{ flexShrink: 0, marginLeft: 6 }}>
         {user ? (
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {/* Bell */}
             <Link
               href="/parametres/alertes"
               title="Alertes email"
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
+                width: 34, height: 34, borderRadius: "50%",
                 border: "1px solid var(--line)",
                 background: pathname.startsWith("/parametres") ? "var(--accent-soft)" : "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                display: "flex", alignItems: "center", justifyContent: "center",
                 color: pathname.startsWith("/parametres") ? "var(--accent)" : "var(--muted)",
                 transition: "all 0.15s",
               }}
             >
               <Bell size={15} strokeWidth={1.8} />
             </Link>
-            <Link
-              href="/portfolio"
-              title="Portefeuille"
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
-                border: "1px solid var(--line)",
-                background: "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--muted)",
-                transition: "all 0.15s",
-              }}
-            >
-              <BarChart2 size={15} strokeWidth={1.8} />
-            </Link>
-            {/* Avatar */}
-            <div
-              title={user.email}
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
-                background: "var(--accent-soft)",
-                border: "1.5px solid var(--accent)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--accent)",
-                cursor: "default",
-                flexShrink: 0,
-              }}
-            >
-              {user.email?.[0]?.toUpperCase() ?? <User size={14} />}
+
+            {/* Avatar + dropdown */}
+            <div ref={menuRef} style={{ position: "relative" }}>
+              <button
+                onClick={() => setMenuOpen((o) => !o)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  padding: "3px 10px 3px 4px",
+                  borderRadius: 9999,
+                  background: menuOpen ? "var(--paper-3)" : "var(--accent-soft)",
+                  border: `1.5px solid ${menuOpen ? "var(--line)" : "var(--accent)"}`,
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                {/* Avatar circle */}
+                <div style={{
+                  width: 26, height: 26, borderRadius: "50%",
+                  background: "var(--accent)", color: "#fff",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 12, fontWeight: 700, flexShrink: 0,
+                }}>
+                  {user.email?.[0]?.toUpperCase() ?? <User size={12} />}
+                </div>
+                <ChevronDown
+                  size={13} strokeWidth={2.5}
+                  color="var(--accent)"
+                  style={{ transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.18s" }}
+                />
+              </button>
+
+              {/* Dropdown */}
+              {menuOpen && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 8px)", right: 0,
+                  width: 230,
+                  background: "var(--paper)",
+                  border: "1.5px solid var(--line)",
+                  borderRadius: 14,
+                  boxShadow: "0 8px 32px rgba(10,22,40,0.10)",
+                  overflow: "hidden",
+                  zIndex: 200,
+                }}>
+                  {/* Email header */}
+                  <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid var(--line)" }}>
+                    <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Connecté en tant que</div>
+                    <div style={{
+                      fontSize: 13, fontWeight: 600, color: "var(--ink)",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {user.email}
+                    </div>
+                  </div>
+
+                  {/* Menu items */}
+                  <div style={{ padding: "6px 0" }}>
+                    <DropdownLink
+                      href="/parametres/compte"
+                      icon={<Settings size={14} strokeWidth={1.8} />}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Mon compte
+                    </DropdownLink>
+                    <DropdownLink
+                      href="/parametres/compte#password"
+                      icon={<KeyRound size={14} strokeWidth={1.8} />}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Changer le mot de passe
+                    </DropdownLink>
+                    <DropdownLink
+                      href="/parametres/alertes"
+                      icon={<Bell size={14} strokeWidth={1.8} />}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Alertes email
+                    </DropdownLink>
+                  </div>
+
+                  {/* Separator + Sign out */}
+                  <div style={{ borderTop: "1px solid var(--line)", padding: "6px 0 4px" }}>
+                    <button
+                      onClick={handleSignOut}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center", gap: 10,
+                        padding: "9px 16px",
+                        background: "transparent", border: "none", cursor: "pointer",
+                        color: "#c0392b", fontSize: 13, fontWeight: 500,
+                        transition: "background 0.12s",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#fef2f2")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <LogOut size={14} strokeWidth={1.8} />
+                      {t("nav.logout")}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <button
-              onClick={handleSignOut}
-              title={t("nav.logout")}
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
-                border: "1px solid var(--line)",
-                background: "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--muted)",
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--paper-3)"; e.currentTarget.style.color = "var(--ink)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--muted)"; }}
-            >
-              <LogOut size={15} strokeWidth={1.8} />
-            </button>
           </div>
         ) : (
           <div style={{ display: "flex", gap: 8 }}>
@@ -204,6 +255,26 @@ export default function Navbar() {
         )}
       </div>
     </nav>
+  );
+}
+
+function DropdownLink({ href, icon, children, onClick }: { href: string; icon: React.ReactNode; children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "9px 16px",
+        color: "var(--ink)", fontSize: 13, fontWeight: 500,
+        transition: "background 0.12s",
+      }}
+      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--paper-2)")}
+      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+    >
+      <span style={{ color: "var(--muted)" }}>{icon}</span>
+      {children}
+    </Link>
   );
 }
 
