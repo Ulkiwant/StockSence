@@ -116,12 +116,19 @@ const QUESTIONS = [
   {
     field: "taxWrapper",
     title: "Où allez-vous loger vos investissements ?",
-    subtitle: "L'enveloppe fiscale peut faire gagner beaucoup d'argent sur le long terme.",
+    subtitle: "Vous pouvez en avoir plusieurs — cochez tout ce qui vous correspond.",
+    type: "multi",
     options: [
       "Je ne sais pas encore",
-      "PEA (actions européennes, fiscalité avantageuse)",
-      "CTO — Compte-Titres (tous actifs possibles)",
+      "PEA",
+      "CTO — Compte-Titres",
       "Assurance-vie",
+    ],
+    descriptions: [
+      "Pas de problème, on adaptera les recommandations à votre situation.",
+      "Idéal si vous investissez en Europe. Après 5 ans, vos gains sont quasi exonérés d'impôts. Plafond : 150 000 €.",
+      "Le plus flexible : actions du monde entier, ETF, obligations... Les gains sont taxés à 30 % (flat tax).",
+      "Parfait pour transmettre un capital ou préparer la retraite. Avantages fiscaux importants après 8 ans.",
     ],
   },
 ];
@@ -146,6 +153,7 @@ export default function AdvisorPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [capitalInput, setCapitalInput] = useState("");
   const [monthlyInput, setMonthlyInput] = useState("");
+  const [taxWrapperSelections, setTaxWrapperSelections] = useState<string[]>([]);
   const [result, setResult] = useState<PortfolioRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -160,10 +168,11 @@ export default function AdvisorPage() {
   const currentAnswer = step < 9 ? answers[QUESTIONS[step]?.field ?? ""] ?? "" : "";
   const isCapitalStep = currentQuestion?.type === "input";
   const isMonthlyStep = currentQuestion?.type === "input-monthly";
+  const isMultiStep = currentQuestion?.type === "multi";
   const hasAnswer = isCapitalStep
     ? capitalInput.trim() !== ""
-    : isMonthlyStep
-    ? true  // monthly is optional
+    : isMonthlyStep || isMultiStep
+    ? true  // optional steps
     : currentAnswer !== "";
 
   const confirmedForced = forcedStocks.filter((s) => s.confirmed);
@@ -171,6 +180,15 @@ export default function AdvisorPage() {
   const setAnswer = (val: string) => {
     if (!currentQuestion) return;
     setAnswers((prev) => ({ ...prev, [currentQuestion.field]: val }));
+  };
+
+  const toggleTaxWrapper = (val: string) => {
+    const EXCLUSIVE = "Je ne sais pas encore";
+    setTaxWrapperSelections((prev) => {
+      if (val === EXCLUSIVE) return prev.includes(EXCLUSIVE) ? [] : [EXCLUSIVE];
+      const without = prev.filter((v) => v !== EXCLUSIVE);
+      return without.includes(val) ? without.filter((v) => v !== val) : [...without, val];
+    });
   };
 
   const handleNext = () => {
@@ -248,7 +266,7 @@ export default function AdvisorPage() {
           geography: "Mondial",
           esgInterest: "Non concerné",
           wantsDividends: "optionnel",
-          taxWrapper: answers.taxWrapper ? [answers.taxWrapper] : [],
+          taxWrapper: taxWrapperSelections.filter((v) => v !== "Je ne sais pas encore"),
           favoriteSectors: [],
           excludedSectors: [],
           family: "Célibataire sans enfant",
@@ -515,6 +533,7 @@ export default function AdvisorPage() {
               setAnswers({});
               setCapitalInput("");
               setMonthlyInput("");
+              setTaxWrapperSelections([]);
               setError(null);
               setForcedStocks([]);
               setForcedInput("");
@@ -831,6 +850,19 @@ export default function AdvisorPage() {
               ) : isCapitalStep ? (
                 /* Input question */
                 <CapitalInput value={capitalInput} onChange={setCapitalInput} />
+              ) : isMultiStep ? (
+                /* Multi-select checkboxes with descriptions */
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {(currentQuestion.options ?? []).map((option, i) => (
+                    <CheckboxOption
+                      key={option}
+                      label={option}
+                      description={(currentQuestion as { descriptions?: string[] }).descriptions?.[i]}
+                      selected={taxWrapperSelections.includes(option)}
+                      onClick={() => toggleTaxWrapper(option)}
+                    />
+                  ))}
+                </div>
               ) : (
                 /* Radio options */
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1182,6 +1214,89 @@ function RadioOption({
       >
         {label}
       </span>
+    </button>
+  );
+}
+
+function CheckboxOption({
+  label,
+  description,
+  selected,
+  onClick,
+}: {
+  label: string;
+  description?: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "14px 18px",
+        borderRadius: 12,
+        width: "100%",
+        textAlign: "left",
+        cursor: "pointer",
+        border: `1.5px solid ${selected ? "var(--accent)" : "var(--line)"}`,
+        background: selected ? "var(--accent-soft)" : "#fff",
+        transition: "all 0.15s",
+        display: "flex",
+        flexDirection: "row",
+        gap: 14,
+        alignItems: "flex-start",
+      }}
+    >
+      {/* Checkbox square */}
+      <div
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: 5,
+          border: `2px solid ${selected ? "var(--accent)" : "var(--line)"}`,
+          background: selected ? "var(--accent)" : "transparent",
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "all 0.15s",
+          marginTop: 1,
+        }}
+      >
+        {selected && (
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+            <path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+      </div>
+
+      {/* Label + description */}
+      <div style={{ flex: 1 }}>
+        <span
+          style={{
+            fontSize: 15,
+            color: selected ? "var(--accent)" : "var(--ink)",
+            fontWeight: selected ? 600 : 500,
+            transition: "all 0.15s",
+            display: "block",
+          }}
+        >
+          {label}
+        </span>
+        {description && (
+          <span
+            style={{
+              fontSize: 12,
+              color: "var(--muted)",
+              lineHeight: 1.55,
+              display: "block",
+              marginTop: 3,
+            }}
+          >
+            {description}
+          </span>
+        )}
+      </div>
     </button>
   );
 }
