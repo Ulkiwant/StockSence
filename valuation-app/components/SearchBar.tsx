@@ -58,7 +58,7 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
         background: "#fff",
         border: "1.5px solid var(--line)",
         borderRadius: 9999,
-        padding: compact ? "7px 14px" : "12px 18px",
+        padding: compact ? "5px 12px" : "12px 18px",
         gap: 8,
         transition: "border-color 0.15s, box-shadow 0.15s",
       }}
