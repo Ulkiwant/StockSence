@@ -38,6 +38,8 @@ export interface StockDetails extends StockQuote {
   description: string;
   website: string;
   employees: number;
+  pegRatio: number;
+  enterpriseToEbitda: number;
 }
 
 export async function searchStocks(query: string) {
@@ -104,114 +106,11 @@ export async function getStockDetails(symbol: string): Promise<StockDetails | nu
       description: ap?.longBusinessSummary ?? "",
       website: ap?.website ?? "",
       employees: ap?.fullTimeEmployees ?? 0,
+      pegRatio: ks?.pegRatio ?? 0,
+      enterpriseToEbitda: ks?.enterpriseToEbitda ?? 0,
     };
   } catch (err) {
     console.error("Yahoo Finance error:", err);
     return null;
   }
-}
-
-function subDays(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().split("T")[0];
-}
-
-export async function getHistoricalPrices(
-  symbol: string,
-  period: "1mo" | "3mo" | "6mo" | "1y" | "5y"
-) {
-  try {
-    const periodMap: Record<string, string> = {
-      "1mo": subDays(30),
-      "3mo": subDays(90),
-      "6mo": subDays(180),
-      "1y": subDays(365),
-      "5y": subDays(365 * 5),
-    };
-
-    const result = await (yahooFinance.chart as any)(symbol, {
-      period1: periodMap[period],
-      interval: period === "5y" ? "1wk" : "1d",
-    }) as any;
-
-    const quotes: any[] = result?.quotes ?? [];
-    return quotes
-      .filter((r: any) => r.close != null)
-      .map((r: any) => ({
-        date: new Date(r.date).toISOString().split("T")[0],
-        close: r.close as number,
-        volume: (r.volume ?? 0) as number,
-      }));
-  } catch {
-    return [];
-  }
-}
-
-export interface NewsItem {
-  title: string;
-  url: string;
-  source: string;
-  publishedAt: string; // ISO date string
-  summary: string;
-}
-
-export async function getStockNews(symbol: string): Promise<NewsItem[]> {
-  try {
-    const raw = await (yahooFinance.search as any)(symbol, { quotesCount: 0, newsCount: 6 });
-    const news = (raw?.news ?? []) as any[];
-    return news.map((n: any) => ({
-      title: n.title ?? "",
-      url: n.link ?? "",
-      source: n.publisher ?? "Yahoo Finance",
-      publishedAt: n.providerPublishTime
-        ? new Date(n.providerPublishTime * 1000).toISOString()
-        : new Date().toISOString(),
-      summary: n.summary ?? "",
-    }));
-  } catch {
-    return [];
-  }
-}
-
-const TRENDING_POOL = [
-  "AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "TSLA",
-  "JPM", "V", "JNJ", "UNH", "XOM", "WMT", "MA", "PG",
-  "NFLX", "AMD", "INTC", "BABA", "NKE",
-];
-
-export async function getTrendingStocks(): Promise<StockQuote[]> {
-  // Deterministic daily seed for consistent rotation
-  const today = new Date();
-  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  let rng = seed;
-  const rand = () => {
-    rng = (rng * 1664525 + 1013904223) & 0xffffffff;
-    return (rng >>> 0) / 0xffffffff;
-  };
-
-  const shuffled = [...TRENDING_POOL].sort(() => rand() - 0.5);
-  const daily = shuffled.slice(0, 6);
-
-  const results = await Promise.allSettled(
-    daily.map(async (sym) => {
-      const q = await (yahooFinance.quote as any)(sym) as any;
-      return {
-        symbol: q.symbol ?? sym,
-        name: q.longName ?? q.shortName ?? sym,
-        currentPrice: q.regularMarketPrice ?? 0,
-        change: q.regularMarketChange ?? 0,
-        changePercent: (q.regularMarketChangePercent ?? 0) / 100,
-        marketCap: q.marketCap ?? 0,
-        sector: "",
-        industry: "",
-        currency: q.currency ?? "USD",
-        logoUrl: "",
-      } as StockQuote;
-    })
-  );
-
-  return results
-    .filter((r): r is PromiseFulfilledResult<StockQuote> => r.status === "fulfilled")
-    .map((r) => r.value);
 }
