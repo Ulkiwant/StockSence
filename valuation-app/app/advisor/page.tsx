@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X, Download, ChevronRight, Briefcase, Lightbulb, RefreshCw, Circle } from "lucide-react";
+import Link from "next/link";
+import { Check, X, ChevronRight, Briefcase, Lightbulb, RefreshCw, Circle, AlertTriangle, ExternalLink } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import SignalPill from "@/components/SignalPill";
 
@@ -523,6 +524,9 @@ export default function AdvisorPage() {
             monthlyContribution={parseFloat(monthlyInput || answers.monthly) || 0}
             riskLabel={answers.riskTolerance ?? ""}
           />
+
+          {/* ── Et maintenant ? ── */}
+          <NextStepsBlock answers={answers} />
 
           <p style={{ fontSize: 11, color: "var(--muted)", textAlign: "center" }}>{result.disclaimer}</p>
 
@@ -1333,6 +1337,215 @@ function CapitalInput({
         transition: "border-color 0.2s",
       }}
     />
+  );
+}
+
+/* ── Enveloppe fiscale recommendation ── */
+
+const BROKER_LINKS: Record<string, string> = {
+  "Boursorama":          "https://www.boursorama.com",
+  "Trade Republic":      "https://www.traderepublic.com/fr-fr",
+  "Fortuneo":            "https://www.fortuneo.fr",
+  "Bourse Direct":       "https://www.boursedirect.fr",
+  "Linxea":              "https://www.linxea.com",
+  "Boursorama Vie":      "https://www.boursorama.com/assurance-vie",
+  "Fortuneo Vie":        "https://www.fortuneo.fr/assurance-vie",
+  "Placement-direct":    "https://www.placement-direct.fr",
+  "Interactive Brokers": "https://www.interactivebrokers.co.uk/fr",
+  "Degiro":              "https://www.degiro.fr",
+};
+
+function getEnveloppeReco(answers: Record<string, string>): {
+  enveloppe: string | null;
+  badge: string;
+  message: string;
+  brokers: string[];
+  isAlert: boolean;
+} {
+  const age          = answers.age ?? "";
+  const horizon      = answers.horizon ?? "";
+  const riskTolerance = answers.riskTolerance ?? "";
+
+  // hasEmergencyFund n'est pas collecté dans le questionnaire — on laisse la logique prête
+  const hasEmergencyFund = true;
+
+  // Helpers
+  const ageUnder55   = age === "Moins de 30 ans" || age === "30 — 45 ans" || age === "45 — 60 ans";
+  const ageOver45    = age === "45 — 60 ans" || age === "Plus de 60 ans";
+  const horizonOver5 = horizon !== "Moins de 3 ans";
+  const riskIsPrudent = riskTolerance.toLowerCase().startsWith("prudent");
+
+  // Condition 0 — Épargne de précaution absente (priorité absolue)
+  if (!hasEmergencyFund) {
+    return {
+      enveloppe: null,
+      badge: "⚠️ Étape préalable",
+      message: "Avant d'investir, constitue d'abord une épargne de précaution de 3 à 6 mois de dépenses sur un Livret A ou LDDS. C'est ton filet de sécurité.",
+      brokers: [],
+      isAlert: true,
+    };
+  }
+
+  // Condition 1 — PEA recommandé
+  if (ageUnder55 && horizonOver5 && !riskIsPrudent) {
+    return {
+      enveloppe: "PEA",
+      badge: "✅ PEA recommandé",
+      message: "Le PEA est l'enveloppe idéale pour toi : tu n'as pas besoin de l'argent avant 5 ans et ton profil supporte un investissement en actions européennes. Après 5 ans, tes gains ne sont taxés qu'à 17,2 % au lieu de 30 %.",
+      brokers: ["Boursorama", "Trade Republic", "Fortuneo", "Bourse Direct"],
+      isAlert: false,
+    };
+  }
+
+  // Condition 2 — Assurance-vie recommandée
+  if (ageOver45 || !horizonOver5 || riskIsPrudent) {
+    return {
+      enveloppe: "Assurance-vie",
+      badge: "✅ Assurance-vie recommandée",
+      message: "L'assurance-vie correspond mieux à ton profil : elle offre plus de flexibilité sur la durée, un accès à des fonds sécurisés, et des avantages fiscaux importants après 8 ans — notamment pour la transmission.",
+      brokers: ["Linxea", "Boursorama Vie", "Fortuneo Vie", "Placement-direct"],
+      isAlert: false,
+    };
+  }
+
+  // Condition 3 — CTO (cas non couverts)
+  return {
+    enveloppe: "Compte-Titres Ordinaire",
+    badge: "✅ Compte-Titres recommandé",
+    message: "Un compte-titres te donne accès à toutes les bourses mondiales sans restriction. C'est la solution la plus flexible, idéale si tu veux investir sur des actions américaines ou si ton PEA est déjà ouvert.",
+    brokers: ["Interactive Brokers", "Degiro", "Boursorama", "Trade Republic"],
+    isAlert: false,
+  };
+}
+
+function NextStepsBlock({ answers }: { answers: Record<string, string> }) {
+  const reco = getEnveloppeReco(answers);
+
+  return (
+    <div style={{
+      background: "var(--paper-2)",
+      border: "1.5px solid var(--line)",
+      borderRadius: 16,
+      padding: 24,
+      borderTop: "3px solid var(--accent)",
+    }}>
+      {/* Titre */}
+      <h2 style={{
+        fontSize: 15, fontWeight: 700, color: "var(--ink)",
+        marginBottom: 4, display: "flex", alignItems: "center", gap: 8,
+      }}>
+        <ExternalLink size={16} color="var(--accent)" />
+        Et maintenant ? Voici comment passer à l&apos;action
+      </h2>
+      <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 20 }}>
+        Basé sur ton profil, voici l&apos;enveloppe fiscale la plus adaptée :
+      </p>
+
+      {/* Badge enveloppe ou alerte */}
+      {reco.isAlert ? (
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: 10,
+          padding: "12px 16px", borderRadius: 10,
+          background: "rgba(245,158,11,0.10)",
+          border: "1.5px solid rgba(245,158,11,0.30)",
+          marginBottom: 20,
+        }}>
+          <AlertTriangle size={16} color="#d97706" style={{ flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 13, color: "#92400e", marginBottom: 4 }}>
+              {reco.badge}
+            </div>
+            <p style={{ fontSize: 13, color: "#92400e", lineHeight: 1.65, margin: 0 }}>
+              {reco.message}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Badge */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "6px 14px", borderRadius: 9999,
+            background: "var(--accent-soft)",
+            border: "1.5px solid rgba(45,125,90,0.25)",
+            marginBottom: 14,
+          }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>
+              {reco.badge}
+            </span>
+          </div>
+
+          {/* Message explicatif */}
+          <p style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.7, marginBottom: 14 }}>
+            {reco.message}
+          </p>
+
+          {/* Lien glossaire */}
+          <Link
+            href="/glossaire#pea"
+            style={{
+              fontSize: 12, color: "var(--accent)", fontWeight: 600,
+              textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4,
+              marginBottom: 24,
+            }}
+          >
+            En savoir plus sur les enveloppes fiscales →
+          </Link>
+
+          {/* Courtiers */}
+          {reco.brokers.length > 0 && (
+            <div>
+              <p style={{
+                fontSize: 11, fontWeight: 700, color: "var(--muted)",
+                textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12,
+              }}>
+                Où ouvrir ton compte ?
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+                {reco.brokers.map((broker) => (
+                  <a
+                    key={broker}
+                    href={BROKER_LINKS[broker]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      padding: "8px 14px", borderRadius: 9999,
+                      border: "1.5px solid var(--line)",
+                      background: "var(--paper)",
+                      color: "var(--ink)", fontSize: 13, fontWeight: 500,
+                      textDecoration: "none", cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)";
+                      (e.currentTarget as HTMLElement).style.color = "var(--accent)";
+                      (e.currentTarget as HTMLElement).style.background = "var(--accent-soft)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "var(--line)";
+                      (e.currentTarget as HTMLElement).style.color = "var(--ink)";
+                      (e.currentTarget as HTMLElement).style.background = "var(--paper)";
+                    }}
+                  >
+                    {broker}
+                    <ExternalLink size={11} />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Disclaimer */}
+      <p style={{
+        fontSize: 11, color: "var(--muted)", lineHeight: 1.55,
+        borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 4,
+      }}>
+        StockSense ne perçoit aucune commission. Ces courtiers sont mentionnés à titre indicatif.
+      </p>
+    </div>
   );
 }
 
