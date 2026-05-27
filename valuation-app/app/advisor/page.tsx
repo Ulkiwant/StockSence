@@ -59,6 +59,12 @@ const QUESTIONS = [
     options: ["Moins de 30 ans", "30 — 45 ans", "45 — 60 ans", "Plus de 60 ans"],
   },
   {
+    field: "hasEmergencyFund",
+    title: "Avez-vous une épargne de précaution ?",
+    subtitle: "3 à 6 mois de dépenses disponibles immédiatement sur un Livret A ou LDDS. C'est la base avant tout investissement.",
+    options: ["Oui, j'ai une épargne de précaution", "Non, pas encore"],
+  },
+  {
     field: "situation",
     title: "Quelle est votre situation professionnelle ?",
     subtitle: "Votre stabilité de revenus influence la stratégie recommandée.",
@@ -136,6 +142,7 @@ const QUESTIONS = [
 
 const STEP_LABELS = [
   "Votre âge",
+  "Épargne de précaution",
   "Votre situation professionnelle",
   "Votre horizon",
   "Capital initial",
@@ -165,8 +172,8 @@ export default function AdvisorPage() {
   const [forcedLoading, setForcedLoading] = useState(false);
   const [forcedError, setForcedError] = useState<string | null>(null);
 
-  const currentQuestion = step < 9 ? QUESTIONS[step] : null;
-  const currentAnswer = step < 9 ? answers[QUESTIONS[step]?.field ?? ""] ?? "" : "";
+  const currentQuestion = step < 10 ? QUESTIONS[step] : null;
+  const currentAnswer = step < 10 ? answers[QUESTIONS[step]?.field ?? ""] ?? "" : "";
   const isCapitalStep = currentQuestion?.type === "input";
   const isMonthlyStep = currentQuestion?.type === "input-monthly";
   const isMultiStep = currentQuestion?.type === "multi";
@@ -193,7 +200,7 @@ export default function AdvisorPage() {
   };
 
   const handleNext = () => {
-    if (step < 9) {
+    if (step < 10) {
       if (isCapitalStep) {
         setAnswers((prev) => ({ ...prev, capital: capitalInput }));
       }
@@ -271,7 +278,7 @@ export default function AdvisorPage() {
           favoriteSectors: [],
           excludedSectors: [],
           family: "Célibataire sans enfant",
-          hasEmergencyFund: true,
+          hasEmergencyFund: answers.hasEmergencyFund !== "Non, pas encore",
           involvement: "Semi-actif — je consulte 1 fois par mois",
           alreadyInvested: true,
           experience: "Intermédiaire",
@@ -284,7 +291,7 @@ export default function AdvisorPage() {
       else if (data.error) setError("La génération a échoué. Réessayez dans quelques instants.");
       else {
         setResult(data);
-        setStep(10);
+        setStep(11);
       }
     } catch {
       setError("Erreur réseau. Vérifiez votre connexion et réessayez.");
@@ -293,7 +300,7 @@ export default function AdvisorPage() {
   };
 
   // Result page
-  if (result && step === 10) {
+  if (result && step === 11) {
     const capitalNum = parseFloat(capitalInput || answers.capital) || 0;
     return (
       <div
@@ -667,12 +674,12 @@ export default function AdvisorPage() {
               marginBottom: 12,
             }}
           >
-            ÉTAPE {step + 1} / 10
+            ÉTAPE {step + 1} / 11
           </div>
 
           {/* Progress segments */}
           <div style={{ display: "flex", flexDirection: "row", gap: 4 }}>
-            {Array.from({ length: 10 }).map((_, i) => (
+            {Array.from({ length: 11 }).map((_, i) => (
               <div
                 key={i}
                 style={{
@@ -800,8 +807,8 @@ export default function AdvisorPage() {
           overflowY: "auto",
         }}
       >
-        {/* Step 0–8: regular questions */}
-        {step < 9 && currentQuestion && (
+        {/* Step 0–9: regular questions */}
+        {step < 10 && currentQuestion && (
           <>
             {/* Question counter */}
             <div
@@ -813,7 +820,7 @@ export default function AdvisorPage() {
                 marginBottom: 20,
               }}
             >
-              QUESTION {step + 1} SUR 9
+              QUESTION {step + 1} SUR 10
             </div>
 
             {/* Question title */}
@@ -912,8 +919,8 @@ export default function AdvisorPage() {
           </>
         )}
 
-        {/* Step 9: final convictions step */}
-        {step === 9 && (
+        {/* Step 10: final convictions step */}
+        {step === 10 && (
           <>
             {/* Question counter */}
             <div
@@ -925,7 +932,7 @@ export default function AdvisorPage() {
                 marginBottom: 20,
               }}
             >
-              QUESTION 10 SUR 10
+              QUESTION 11 SUR 11
             </div>
 
             <h2
@@ -1362,12 +1369,12 @@ function getEnveloppeReco(answers: Record<string, string>): {
   brokers: string[];
   isAlert: boolean;
 } {
-  const age          = answers.age ?? "";
-  const horizon      = answers.horizon ?? "";
+  const age           = answers.age ?? "";
+  const horizon       = answers.horizon ?? "";
   const riskTolerance = answers.riskTolerance ?? "";
 
-  // hasEmergencyFund n'est pas collecté dans le questionnaire — on laisse la logique prête
-  const hasEmergencyFund = true;
+  // Collecté à l'étape 1 du questionnaire
+  const hasEmergencyFund = answers.hasEmergencyFund !== "Non, pas encore";
 
   // Helpers
   const ageUnder55   = age === "Moins de 30 ans" || age === "30 — 45 ans" || age === "45 — 60 ans";
@@ -1482,7 +1489,7 @@ function NextStepsBlock({ answers }: { answers: Record<string, string> }) {
 
           {/* Lien glossaire */}
           <Link
-            href="/glossaire#pea"
+            href="/glossaire#enveloppes-fiscales"
             style={{
               fontSize: 12, color: "var(--accent)", fontWeight: 600,
               textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4,
