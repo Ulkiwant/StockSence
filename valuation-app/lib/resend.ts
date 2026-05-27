@@ -20,4 +20,4 @@ export const resend = {
   },
 };
 
-export const FROM_EMAIL = "Rendly <alertes@rendly.fr>";
+export const FROM_EMAIL = "Rently <alertes@rently.fr>";

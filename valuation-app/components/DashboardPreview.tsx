@@ -91,7 +91,7 @@ export default function DashboardPreview() {
             display: "flex", alignItems: "center", paddingLeft: 10,
             fontSize: 10, color: "var(--text-disabled)", fontFamily: "monospace",
           }}>
-            rendly.fr/stock/AAPL
+            rently.fr/stock/AAPL
           </div>
         </div>
 
@@ -307,7 +307,7 @@ export default function DashboardPreview() {
           textAlign: "center",
           fontSize: 10, color: "var(--text-disabled)",
         }}>
-          Données simulées à titre d&apos;illustration · Rendly beta
+          Données simulées à titre d&apos;illustration · Rently beta
         </div>
       </div>
 

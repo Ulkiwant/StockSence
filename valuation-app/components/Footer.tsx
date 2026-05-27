@@ -90,7 +90,7 @@ export default function Footer() {
           gap: 12,
         }}>
           <p style={{ fontSize: 12, color: "var(--muted)" }}>
-            © {new Date().getFullYear()} Rendly. {t("footer.copyright")}
+            © {new Date().getFullYear()} Rently. {t("footer.copyright")}
           </p>
           <p style={{ fontSize: 12, color: "var(--muted)" }}>
             {t("footer.indicative")}
