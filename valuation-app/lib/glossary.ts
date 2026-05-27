@@ -108,7 +108,7 @@ export const GLOSSARY: Record<string, MetricDef> = {
     howToRead:
       "Si le DCF donne 210 € et l'action vaut 185 €, elle est sous-évaluée de ~12% → signal positif. Si l'action vaut 240 €, elle est survalorisée → signal négatif.",
     example:
-      "🔢 Valeur DCF calculée : 210 €\nPrix actuel : 185 €\nMarge de sécurité : +12% → StockSense affiche ✓ OK.",
+      "🔢 Valeur DCF calculée : 210 €\nPrix actuel : 185 €\nMarge de sécurité : +12% → Rendly affiche ✓ OK.",
     benchmarks: [
       { label: "Sous-évalué", color: "green" },
       { label: "", color: "green" },

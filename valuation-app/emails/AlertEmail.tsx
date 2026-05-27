@@ -9,8 +9,8 @@ export interface AlertEmailProps {
   alertType: "signal_change" | "price_variation";
   before: string;             // ex: "HOLD" ou "212,40 $"
   after: string;              // ex: "STRONG BUY" ou "223,80 $"
-  stockUrl: string;           // ex: "https://stocksense.app/stock/AAPL"
-  unsubscribeUrl: string;     // ex: "https://stocksense.app/parametres/alertes?unsubscribe=..."
+  stockUrl: string;           // ex: "https://rendly.fr/stock/AAPL"
+  unsubscribeUrl: string;     // ex: "https://rendly.fr/parametres/alertes?unsubscribe=..."
 }
 
 export function AlertEmail({
@@ -34,7 +34,7 @@ export function AlertEmail({
           {/* Header */}
           <Section style={{ background: "#1c1b1a", borderRadius: "16px 16px 0 0", padding: "28px 32px 20px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
             <Heading style={{ color: "#fafaf9", fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: "-0.3px" }}>
-              📈 StockSense
+              📈 Rendly
             </Heading>
           </Section>
 
@@ -95,7 +95,7 @@ export function AlertEmail({
           {/* Footer */}
           <Section style={{ background: "#161615", borderRadius: "0 0 16px 16px", padding: "16px 32px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             <Text style={{ color: "#57534e", fontSize: 11, margin: "0 0 4px", lineHeight: 1.6 }}>
-              Vous recevez cet email car vous avez activé des alertes sur StockSense.
+              Vous recevez cet email car vous avez activé des alertes sur Rendly.
             </Text>
             <Link href={unsubscribeUrl} style={{ color: "#78716c", fontSize: 11 }}>
               Gérer mes alertes · Se désinscrire
@@ -110,6 +110,6 @@ export function AlertEmail({
 
 // Ligne d'objet de l'email — utilisée par la route API
 export function alertSubject(ticker: string, alertType: "signal_change" | "price_variation", after: string): string {
-  if (alertType === "signal_change") return `[StockSense] ${ticker} vient de passer en ${after}`;
-  return `[StockSense] ${ticker} a varié de ${after}`;
+  if (alertType === "signal_change") return `[Rendly] ${ticker} vient de passer en ${after}`;
+  return `[Rendly] ${ticker} a varié de ${after}`;
 }

@@ -52,7 +52,7 @@ export default function FAQPage() {
           Questions fréquentes
         </h1>
         <p style={{ fontSize: 15, color: "var(--muted)", marginBottom: 36, lineHeight: 1.65 }}>
-          Tout ce que vous devez savoir sur StockSense et ses fonctionnalités.
+          Tout ce que vous devez savoir sur Rendly et ses fonctionnalités.
         </p>
 
         {/* Accordion */}
