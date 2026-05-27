@@ -46,11 +46,11 @@ const STEPS = [
   {
     n: "2", label: "Recommandation",
     title: "Reçois un portefeuille prêt à acheter.",
-    desc: "Une sélection d'actions et d'ETF avec les pourcentages exacts, des explications en clair, et la performance attendue.",
+    desc: "Une sélection d'actions et de fonds avec les pourcentages exacts, des explications en clair, et la performance attendue.",
     vis: [
-      { k: "ETF Monde", v: "45 %", color: "#14201A" },
-      { k: "Actions de qualité", v: "35 %", color: "#14201A" },
-      { k: "Obligations", v: "20 %", color: "#14201A" },
+      { k: "Fonds diversifié mondial", v: "45 %", color: "#14201A" },
+      { k: "Grandes entreprises",      v: "35 %", color: "#14201A" },
+      { k: "Placements défensifs",     v: "20 %", color: "#14201A" },
     ],
   },
   {
@@ -58,8 +58,8 @@ const STEPS = [
     title: "On t'alerte quand quelque chose bouge.",
     desc: "Variations notables, opportunités, rééquilibrages : tu reçois une notification simple, lisible, sans bruit inutile.",
     vis: [
-      { k: "AAPL · achat conseillé", v: "+12 %", color: "#2F7D52" },
-      { k: "SAN.PA · à surveiller", v: "−4 %", color: "#B84A3E" },
+      { k: "Apple · achat conseillé", v: "+12 %", color: "#2F7D52" },
+      { k: "Sanofi · à surveiller",  v: "−4 %",  color: "#B84A3E" },
       { k: "Rééquilibrage suggéré", v: "2 lignes", color: "#14201A" },
     ],
   },
@@ -90,7 +90,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Combien faut-il pour commencer ?",
-    a: "À partir de 50 € grâce aux ETF fractionnés. Nos simulations partent souvent de 1 000 € car c'est un montant illustratif courant — mais le service marche à toute échelle.",
+    a: "À partir de 50 € grâce aux investissements fractionnés. Nos simulations partent souvent de 1 000 € car c'est un montant illustratif courant — mais le service marche à toute échelle.",
   },
   {
     q: "D'où viennent vos données ?",
@@ -188,8 +188,17 @@ export default function HomePage() {
 
   /* ── computed ── */
   const portfolioFv = Math.round(1000 * Math.pow(1.07, horizon));
-  const livretFv    = Math.round(1000 * Math.pow(1.003, horizon));
+  const livretFv    = Math.round(1000 * Math.pow(1.024, horizon)); // Livret A taux actuel 2,4 %
   const aapl        = liveStocks[0]; // Apple as showcase stock
+
+  /* ── computed analysis scores (live from API data) ── */
+  const overallScore   = Math.round(50 + aapl.gaugeScore / 2);
+  const valScore       = aapl.pe  > 0 ? Math.min(95, Math.max(20, Math.round(100 - (aapl.pe  - 8) * 1.8))) : 55;
+  const growScore      = aapl.peg > 0 ? Math.min(95, Math.max(20, Math.round(100 - aapl.peg  * 18)))        : 55;
+  const solidScore     = Math.min(95, Math.max(40, overallScore + 6));
+  const momentumScore  = Math.min(95, Math.max(40, overallScore + (aapl.change >= 0 ? 5 : -5)));
+  const grade          = overallScore >= 80 ? "A+" : overallScore >= 72 ? "A" : overallScore >= 62 ? "A−" : overallScore >= 52 ? "B+" : overallScore >= 42 ? "B" : overallScore >= 32 ? "B−" : "C";
+  const verdictTitle   = (({ STRONG_BUY: "Excellente opportunité d'achat", BUY: "Bonne opportunité à long terme", HOLD: "Valorisation correcte, à surveiller", SELL: "Légèrement surévalué", STRONG_SELL: "Fortement surévalué" } as Record<string,string>)[aapl.signal]) ?? "Analyse en cours…";
 
   /* ── auth ── */
   useEffect(() => {
@@ -373,13 +382,13 @@ export default function HomePage() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18"/>
                   </svg>
-                  Livret A · 0,3 %/an
+                  Livret A · 2,4 %/an
                 </div>
                 <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 34, lineHeight: 1.1, letterSpacing: "-0.01em" }}>
                   {livretFv.toLocaleString("fr-FR")} €
                 </div>
                 <div style={{ fontSize: 12, color: "#7A7768", marginTop: 4 }}>
-                  +{(livretFv - 1000).toLocaleString("fr-FR")} € · gain réel quasi nul
+                  +{(livretFv - 1000).toLocaleString("fr-FR")} € · gain réel limité
                 </div>
               </div>
 
@@ -414,12 +423,13 @@ export default function HomePage() {
               <path d="M0,50 L40,48 L80,46 L120,42 L160,40 L200,36 L240,30 L280,28 L320,22 L360,18 L400,12 L460,6 L460,60 L0,60 Z"
                 fill="url(#sparkGrad)"/>
               <path d="M0,55 L460,52" fill="none" stroke="#9C9583" strokeWidth="1.5" strokeDasharray="3 4"/>
-              <text x="6" y="52" fontFamily="var(--font-geist-mono,monospace)" fontSize="9" fill="#7A7768">Livret A</text>
+              <rect x="4" y="43" width="58" height="12" rx="3" fill="#F6F2E8" opacity="0.9"/>
+              <text x="7" y="52" fontFamily="var(--font-geist-mono,monospace)" fontSize="8.5" fill="#3A3E33" fontWeight="600">Livret A · 2,4%</text>
             </svg>
 
             {/* Chips */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
-              {[["AAPL", "+8.2%"], ["MC.PA", "+6.4%"], ["ETF World", "+7.1%"], ["SAN.PA", "+4.9%"], ["OR.PA", "+5.6%"]].map(([sym, pct]) => (
+              {[["Apple", "+8.2%"], ["LVMH", "+6.4%"], ["Fonds Monde", "+7.1%"], ["Sanofi", "+4.9%"], ["L'Oréal", "+5.6%"]].map(([sym, pct]) => (
                 <span key={sym} style={{ fontSize: 12, background: "#EFE9DC", border: "1px solid #D9D1BD", borderRadius: 9999, padding: "5px 10px", color: "#3A3E33", display: "inline-flex", alignItems: "center", gap: 6 }}>
                   {sym} <span style={{ color: "#2F7D52", fontWeight: 600 }}>{pct}</span>
                 </span>
@@ -436,7 +446,7 @@ export default function HomePage() {
         <div className="home-stats-grid" style={{ maxWidth: 1240, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 30 }}>
           {[
             { value: "2 400", suffix: "+", label: "Analyses réalisées par nos algorithmes" },
-            { value: "180",         suffix: "+", label: "Actions couvertes — CAC 40, S&P 500, Nasdaq" },
+            { value: "180",         suffix: "+", label: "Actions suivies — en France, aux États-Unis et en Europe" },
             { value: "2 min", suffix: "",  label: "Pour obtenir un premier portefeuille" },
             { value: "100",        suffix: "%", label: "Gratuit pendant toute la phase beta" },
           ].map((s) => (
@@ -584,9 +594,9 @@ export default function HomePage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
                 {[
-                  { color: "#1F5C3E", label: "ETF Monde",       pct: "45 %" },
-                  { color: "#2F7D52", label: "Actions qualité",  pct: "35 %" },
-                  { color: "#C9A24E", label: "Obligations",      pct: "20 %" },
+                  { color: "#1F5C3E", label: "Fonds mondial",        pct: "45 %" },
+                  { color: "#2F7D52", label: "Grandes entreprises",  pct: "35 %" },
+                  { color: "#C9A24E", label: "Placements défensifs", pct: "20 %" },
                 ].map((item) => (
                   <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
                     <span style={{ width: 10, height: 10, borderRadius: 3, background: item.color, flexShrink: 0 }} />
@@ -755,15 +765,15 @@ export default function HomePage() {
               <div style={{ background: "#F6F2E8", border: "1px solid #D9D1BD", borderRadius: 18, padding: 22, display: "flex", flexDirection: "column", gap: 16 }}>
                 {/* Badge + title */}
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: "conic-gradient(#2F7D52 0% 78%,#D9D1BD 78% 100%)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
+                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: `conic-gradient(#2F7D52 0% ${overallScore}%,#D9D1BD ${overallScore}% 100%)`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
                     <div style={{ position: "absolute", inset: 6, background: "#F6F2E8", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 22, color: "#1F5C3E" }}>A−</span>
+                      <span style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 22, color: "#1F5C3E" }}>{grade}</span>
                     </div>
                   </div>
                   <div>
                     <div style={{ fontSize: 13, color: "#7A7768", fontWeight: 500 }}>Note StockSense</div>
                     <div style={{ fontFamily: "var(--font-instrument,serif)", fontWeight: 400, fontSize: 24, marginTop: 2 }}>
-                      Bonne opportunité à long terme
+                      {verdictTitle}
                     </div>
                   </div>
                 </div>
@@ -771,10 +781,10 @@ export default function HomePage() {
                 {/* Score bars */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
-                    { label: "Solidité financière", val: 86, color: "#1F5C3E" },
-                    { label: "Croissance",           val: 72, color: "#2F7D52" },
-                    { label: "Valorisation",         val: 58, color: "#C9A24E" },
-                    { label: "Élan de marché",       val: 78, color: "#1F5C3E" },
+                    { label: "Solidité financière", val: solidScore,    color: "#1F5C3E" },
+                    { label: "Croissance",           val: growScore,     color: "#2F7D52" },
+                    { label: "Valorisation",         val: valScore,      color: "#C9A24E" },
+                    { label: "Élan de marché",       val: momentumScore, color: "#1F5C3E" },
                   ].map((score) => (
                     <div key={score.label} style={{ display: "grid", gridTemplateColumns: "130px 1fr 36px", gap: 12, alignItems: "center", fontSize: 13 }}>
                       <span style={{ color: "#3A3E33" }}>{score.label}</span>
