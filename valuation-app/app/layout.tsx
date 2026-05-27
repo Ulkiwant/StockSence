@@ -24,8 +24,8 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Rendly — Investir simplement, sans jargon",
-  description: "Rendly analyse tes actions, construit ton portefeuille et te dit quoi faire — en français, sans jargon financier.",
+  title: "Rently — Investir simplement, sans jargon",
+  description: "Rently analyse tes actions, construit ton portefeuille et te dit quoi faire — en français, sans jargon financier.",
 };
 
 export default function RootLayout({

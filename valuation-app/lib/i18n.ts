@@ -26,7 +26,7 @@ export const translations = {
     "footer.legal": "Mentions légales",
     "footer.privacy": "Confidentialité",
     "footer.contact": "Contact",
-    "footer.disclaimer": "Rendly est un outil d'analyse pédagogique. Les informations présentées ne constituent pas des conseils en investissement au sens de l'AMF. Investir comporte des risques de perte en capital.",
+    "footer.disclaimer": "Rently est un outil d'analyse pédagogique. Les informations présentées ne constituent pas des conseils en investissement au sens de l'AMF. Investir comporte des risques de perte en capital.",
     "footer.copyright": "Tous droits réservés.",
     "footer.indicative": "Données à titre indicatif — pas de conseil financier",
 
@@ -129,7 +129,7 @@ export const translations = {
     "footer.legal": "Legal notice",
     "footer.privacy": "Privacy",
     "footer.contact": "Contact",
-    "footer.disclaimer": "Rendly is an educational analysis tool. The information presented does not constitute investment advice within the meaning of AMF regulations. Investing involves risk of capital loss.",
+    "footer.disclaimer": "Rently is an educational analysis tool. The information presented does not constitute investment advice within the meaning of AMF regulations. Investing involves risk of capital loss.",
     "footer.copyright": "All rights reserved.",
     "footer.indicative": "Data for informational purposes only — not financial advice",
 

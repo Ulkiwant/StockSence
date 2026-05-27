@@ -3,7 +3,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Glossaire financier | Rendly",
+  title: "Glossaire financier | Rently",
   description: "Définitions simples des termes financiers : PER, DCF, ETF, EV/EBITDA, PEG, marge nette... Comprendre la bourse sans jargon.",
 };
 
@@ -23,7 +23,7 @@ export default function GlossairePage() {
           Glossaire financier
         </h1>
         <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, maxWidth: 520, marginBottom: 40 }}>
-          Tous les termes utilisés sur Rendly, expliqués simplement —
+          Tous les termes utilisés sur Rently, expliqués simplement —
           sans supposer que vous avez fait une école de commerce.
         </p>
 

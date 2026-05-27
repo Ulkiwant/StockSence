@@ -10,7 +10,7 @@ type LogoProps = {
   className?: string;
 };
 
-/** Diamant taillé brut — marque Rendly */
+/** Diamant taillé brut — marque Rently */
 function DiamondMark({ size }: { size: number }) {
   return (
     <svg
@@ -50,7 +50,7 @@ export function Logo({
       <span
         className={className}
         style={{ display: "inline-flex", color }}
-        aria-label="Rendly"
+        aria-label="Rently"
       >
         <DiamondMark size={size} />
       </span>
@@ -64,7 +64,7 @@ export function Logo({
     <span
       className={className}
       style={{ display: "inline-flex", alignItems: "center", gap, color, lineHeight: 1 }}
-      aria-label="Rendly"
+      aria-label="Rently"
     >
       <DiamondMark size={markSize} />
       <span
@@ -76,7 +76,7 @@ export function Logo({
           letterSpacing: "-0.025em",
         }}
       >
-        Rendly
+        Rently
       </span>
     </span>
   );

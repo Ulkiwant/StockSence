@@ -2,8 +2,8 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Politique de confidentialité | Rendly",
-  description: "Politique de confidentialité de Rendly — données collectées, cookies, droits RGPD.",
+  title: "Politique de confidentialité | Rently",
+  description: "Politique de confidentialité de Rently — données collectées, cookies, droits RGPD.",
 };
 
 const H2_STYLE = {
@@ -50,7 +50,7 @@ export default function ConfidentialitePage() {
           borderRadius: 12, padding: "16px 20px", marginBottom: 36,
           fontSize: 13, color: "var(--muted)", lineHeight: 1.7,
         }}>
-          Rendly s'engage à protéger votre vie privée. Cette politique explique quelles données nous
+          Rently s'engage à protéger votre vie privée. Cette politique explique quelles données nous
           collectons, pourquoi, et comment nous les protégeons. <strong style={{ color: "var(--ink)" }}>
           Nous ne vendons aucune donnée personnelle à des tiers.</strong>
         </div>
@@ -72,7 +72,7 @@ export default function ConfidentialitePage() {
           </ul>
           <p style={P_STYLE}>
             <strong style={{ color: "var(--ink)" }}>Nous ne collectons pas</strong> : numéros de carte bancaire,
-            données biométriques, données de navigation hors Rendly, ni données sensibles au sens du RGPD.
+            données biométriques, données de navigation hors Rently, ni données sensibles au sens du RGPD.
           </p>
         </div>
 
@@ -116,7 +116,7 @@ export default function ConfidentialitePage() {
         <div style={SECTION}>
           <h2 style={H2_STYLE}>4. Cookies et traceurs</h2>
           <p style={P_STYLE}>
-            Rendly utilise uniquement des cookies <strong style={{ color: "var(--ink)" }}>strictement nécessaires</strong> au fonctionnement :
+            Rently utilise uniquement des cookies <strong style={{ color: "var(--ink)" }}>strictement nécessaires</strong> au fonctionnement :
           </p>
           <ul style={{ paddingLeft: 20, display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
             <li style={{ fontSize: 14, color: "var(--muted)" }}><strong style={{ color: "var(--ink)" }}>Session d'authentification</strong> — cookie Supabase pour maintenir votre connexion</li>
@@ -135,7 +135,7 @@ export default function ConfidentialitePage() {
             Vos données sont conservées pendant la durée d'activité de votre compte, plus un délai légal
             de 3 ans après la suppression. Vous pouvez demander la suppression immédiate de votre compte
             et de toutes vos données en nous contactant à{" "}
-            <a href="mailto:contact@rendly.fr" style={{ color: "var(--accent)" }}>contact@rendly.fr</a>.
+            <a href="mailto:contact@rently.fr" style={{ color: "var(--accent)" }}>contact@rently.fr</a>.
           </p>
         </div>
 
@@ -162,8 +162,8 @@ export default function ConfidentialitePage() {
           </div>
           <p style={{ ...P_STYLE, marginTop: 16 }}>
             Pour exercer ces droits, contactez-nous :{" "}
-            <a href="mailto:contact@rendly.fr" style={{ color: "var(--accent)", fontWeight: 500 }}>
-              contact@rendly.fr
+            <a href="mailto:contact@rently.fr" style={{ color: "var(--accent)", fontWeight: 500 }}>
+              contact@rently.fr
             </a>. Vous disposez également du droit d'introduire une réclamation auprès de la{" "}
             <strong style={{ color: "var(--ink)" }}>CNIL</strong> (Commission Nationale de l'Informatique et des Libertés).
           </p>

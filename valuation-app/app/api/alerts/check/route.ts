@@ -4,7 +4,7 @@ import { resend, FROM_EMAIL } from "@/lib/resend";
 import { AlertEmail, alertSubject } from "@/emails/AlertEmail";
 import { render as renderAsync } from "@react-email/render";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://rendly.fr";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://rently.fr";
 
 // ─── Sécurité : header secret requis (appelé par cron Vercel) ────────────────
 function authorized(req: NextRequest) {
