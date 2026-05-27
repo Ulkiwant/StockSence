@@ -38,6 +38,8 @@ export interface StockDetails extends StockQuote {
   description: string;
   website: string;
   employees: number;
+  pegRatio: number;
+  enterpriseToEbitda: number;
 }
 
 export async function searchStocks(query: string) {
@@ -104,6 +106,8 @@ export async function getStockDetails(symbol: string): Promise<StockDetails | nu
       description: ap?.longBusinessSummary ?? "",
       website: ap?.website ?? "",
       employees: ap?.fullTimeEmployees ?? 0,
+      pegRatio: ks?.pegRatio ?? 0,
+      enterpriseToEbitda: ks?.enterpriseToEbitda ?? 0,
     };
   } catch (err) {
     console.error("Yahoo Finance error:", err);

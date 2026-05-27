@@ -11,12 +11,26 @@ import ValuationGauge from "@/components/ValuationGauge";
 import SignalPill from "@/components/SignalPill";
 import Footer from "@/components/Footer";
 
-/* ── demo stocks (analyse en direct) ─────────────────────────── */
-const DEMO_STOCKS = [
-  { symbol: "AAPL",  name: "Apple Inc.",  market: "NASDAQ",   price: 189.30, change: +1.24, score:  55, pe: 29.1, peg: 1.8, evebitda: 22.4 },
-  { symbol: "MC.PA", name: "LVMH",        market: "Euronext", price: 768.10, change: -0.91, score:  25, pe: 21.3, peg: 1.4, evebitda: 14.2 },
-  { symbol: "MSFT",  name: "Microsoft",   market: "NASDAQ",   price: 415.60, change: +0.82, score:   5, pe: 34.2, peg: 2.1, evebitda: 25.8 },
-  { symbol: "TSLA",  name: "Tesla",       market: "NASDAQ",   price: 172.40, change: -2.10, score: -30, pe: 58.3, peg: 3.2, evebitda: 42.1 },
+/* ── demo stocks — structure de base + fallback ──────────────── */
+interface LiveStock {
+  symbol: string;
+  name: string;
+  market: string;
+  price: number;
+  change: number;       // % affiché (ex: +1.24)
+  gaugeScore: number;   // -100 à +100 pour ValuationGauge
+  signal: string;       // STRONG_BUY | BUY | HOLD | SELL | STRONG_SELL
+  pe: number;
+  peg: number;
+  evebitda: number;
+  loaded: boolean;
+}
+
+const DEMO_FALLBACK: LiveStock[] = [
+  { symbol: "AAPL",  name: "Apple Inc.",  market: "NASDAQ",   price: 189.30, change: +1.24, gaugeScore:  10, signal: "HOLD",       pe: 29.1, peg: 1.8, evebitda: 22.4, loaded: false },
+  { symbol: "MC.PA", name: "LVMH",        market: "Euronext", price: 768.10, change: -0.91, gaugeScore:   0, signal: "HOLD",       pe: 21.3, peg: 1.4, evebitda: 14.2, loaded: false },
+  { symbol: "MSFT",  name: "Microsoft",   market: "NASDAQ",   price: 415.60, change: +0.82, gaugeScore:  10, signal: "HOLD",       pe: 34.2, peg: 2.1, evebitda: 25.8, loaded: false },
+  { symbol: "TSLA",  name: "Tesla",       market: "NASDAQ",   price: 172.40, change: -2.10, gaugeScore: -30, signal: "SELL",       pe: 58.3, peg: 3.2, evebitda: 42.1, loaded: false },
 ];
 const SUGGESTIONS = ["Apple", "LVMH", "Microsoft", "Tesla"];
 
@@ -90,11 +104,14 @@ function eur(n: number) {
 export default function HomePage() {
   const router = useRouter();
   const [, setUser] = useState<{ email?: string } | null>(null);
-  const [activeDemo, setActiveDemo] = useState(DEMO_STOCKS[0]);
+  const [liveStocks, setLiveStocks] = useState<LiveStock[]>(DEMO_FALLBACK);
+  const [activeIdx, setActiveIdx]   = useState(0);
   const [montant, setMontant]       = useState(200);
   const [annees, setAnnees]         = useState(10);
   const search      = useLiveSearch();
   const analysisRef = useRef<HTMLElement>(null);
+
+  const activeDemo = liveStocks[activeIdx];
 
   /* auth (pour adapter le CTA si connecté) */
   useEffect(() => {
@@ -106,15 +123,46 @@ export default function HomePage() {
     return () => subscription.unsubscribe();
   }, []);
 
+  /* fetch vraies données pour les 4 actions démo */
+  useEffect(() => {
+    DEMO_FALLBACK.forEach((stock, idx) => {
+      fetch(`/api/stock/${stock.symbol}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          if (!d || d.error) return;
+          const apiScore: number = d.valuation?.score ?? 50;
+          const gaugeScore = (apiScore - 50) * 2; // convertit 0-100 → -100/+100
+          setLiveStocks((prev) => {
+            const next = [...prev];
+            next[idx] = {
+              symbol:     d.symbol ?? stock.symbol,
+              name:       d.name ?? stock.name,
+              market:     d.exchange ?? stock.market,
+              price:      d.currentPrice ?? stock.price,
+              change:     parseFloat(((d.changePercent ?? 0) * 100).toFixed(2)),
+              gaugeScore,
+              signal:     d.valuation?.signal ?? stock.signal,
+              pe:         parseFloat((d.trailingPE || d.forwardPE || stock.pe).toFixed(1)),
+              peg:        parseFloat((d.pegRatio || stock.peg).toFixed(1)),
+              evebitda:   parseFloat((d.enterpriseToEbitda || stock.evebitda).toFixed(1)),
+              loaded:     true,
+            };
+            return next;
+          });
+        })
+        .catch(() => {/* garde le fallback */});
+    });
+  }, []);
+
   const handleSearchGo = (symbol: string) => {
     search.setQuery(""); search.setOpen(false);
     router.push(`/stock/${symbol}`);
   };
 
   const handleSuggestion = (name: string) => {
-    const found = DEMO_STOCKS.find((d) => d.name.toLowerCase().includes(name.toLowerCase()));
-    if (found) setActiveDemo(found);
-    else router.push(`/stock/${DEMO_STOCKS[0].symbol}`);
+    const idx = liveStocks.findIndex((d) => d.name.toLowerCase().includes(name.toLowerCase()));
+    if (idx >= 0) setActiveIdx(idx);
+    else router.push(`/stock/${liveStocks[0].symbol}`);
   };
 
   const sim = calcSim(montant, annees);
@@ -645,15 +693,7 @@ export default function HomePage() {
                     {activeDemo.symbol} · {activeDemo.market}
                   </div>
                 </div>
-                <SignalPill
-                  score={
-                    activeDemo.score >= 40 ? "STRONG_BUY"
-                    : activeDemo.score >= 15 ? "BUY"
-                    : activeDemo.score > -15 ? "HOLD"
-                    : activeDemo.score > -40 ? "SELL"
-                    : "STRONG_SELL"
-                  }
-                />
+                <SignalPill score={activeDemo.signal} />
               </div>
 
               {/* Prix */}
@@ -666,7 +706,7 @@ export default function HomePage() {
                   fontFamily: "var(--font-geist-mono, monospace)",
                   fontVariantNumeric: "tabular-nums",
                 }}>
-                  {activeDemo.price.toFixed(2)} $
+                  {activeDemo.price.toFixed(2)} {activeDemo.market === "Euronext" ? "€" : "$"}
                 </div>
                 <div style={{
                   fontSize: 13, marginTop: 2,
@@ -680,7 +720,7 @@ export default function HomePage() {
 
               {/* Jauge */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-                <ValuationGauge score={activeDemo.score} size="sm" />
+                <ValuationGauge score={activeDemo.gaugeScore} size="sm" />
               </div>
 
               {/* Commentaire éditorial */}
@@ -689,9 +729,9 @@ export default function HomePage() {
                 lineHeight: 1.6, marginBottom: 20,
                 paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.08)",
               }}>
-                {activeDemo.score > 30
+                {activeDemo.gaugeScore > 30
                   ? "La valorisation suggère un potentiel de hausse significatif par rapport aux fondamentaux."
-                  : activeDemo.score > 0
+                  : activeDemo.gaugeScore > 0
                   ? "L'action semble correctement valorisée au regard des métriques sectorielles."
                   : "Le cours actuel intègre déjà des anticipations de croissance élevées."}
               </p>
@@ -743,7 +783,7 @@ export default function HomePage() {
               </div>
 
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.50)", marginTop: 14, textAlign: "center" }}>
-                Données simulées à titre d&apos;illustration
+                {activeDemo.loaded ? "Données en temps réel · Yahoo Finance" : "Chargement des données…"}
               </p>
             </div>
           </div>
