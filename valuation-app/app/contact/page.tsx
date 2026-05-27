@@ -52,7 +52,7 @@ export default function ContactPage() {
         </p>
 
         {/* Email direct */}
-        <a href="mailto:contact@stocksense.fr" style={{
+        <a href="mailto:contact@rendly.fr" style={{
           display: "flex", alignItems: "center", gap: 12,
           padding: "16px 20px", borderRadius: 12,
           background: "var(--accent-soft)", border: "1.5px solid rgba(45,125,90,0.25)",
@@ -67,7 +67,7 @@ export default function ContactPage() {
           </div>
           <div>
             <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 2 }}>Email direct</div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>contact@stocksense.fr</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>contact@rendly.fr</div>
           </div>
         </a>
 

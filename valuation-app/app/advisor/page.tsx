@@ -1543,7 +1543,7 @@ function NextStepsBlock({ answers }: { answers: Record<string, string> }) {
         fontSize: 11, color: "var(--muted)", lineHeight: 1.55,
         borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 4,
       }}>
-        StockSense ne perçoit aucune commission. Ces courtiers sont mentionnés à titre indicatif.
+        Rendly ne perçoit aucune commission. Ces courtiers sont mentionnés à titre indicatif.
       </p>
     </div>
   );

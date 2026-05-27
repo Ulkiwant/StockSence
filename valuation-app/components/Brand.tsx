@@ -58,7 +58,7 @@ export default function Brand({ size = "md", href = "/" }: BrandProps) {
           lineHeight: 1,
         }}
       >
-        Stock<span style={{ color: "var(--accent)" }}>Sense</span>
+        Rend<span style={{ color: "var(--accent)" }}>ly</span>
       </span>
     </span>
   );

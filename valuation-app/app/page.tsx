@@ -79,14 +79,14 @@ const TESTIMONIALS = [
   {
     initials: "SR", name: "Sarah R.", role: "Médecin · 41 ans · Bordeaux",
     gradient: "linear-gradient(135deg,#3A3E33,#14201A)",
-    quote: "Le portefeuille que StockSense m'a suggéré ressemble exactement à ce que mon conseiller bancaire facturait 300 €/an.",
+    quote: "Le portefeuille que Rendly m'a suggéré ressemble exactement à ce que mon conseiller bancaire facturait 300 €/an.",
   },
 ];
 
 const FAQ_ITEMS = [
   {
-    q: "Est-ce que StockSense gère mon argent ?",
-    a: "Non. StockSense est un outil d'analyse et de recommandation. Tu gardes le contrôle total et tu passes tes ordres chez ton courtier habituel (Boursorama, Trade Republic, Degiro, etc.).",
+    q: "Est-ce que Rendly gère mon argent ?",
+    a: "Non. Rendly est un outil d'analyse et de recommandation. Tu gardes le contrôle total et tu passes tes ordres chez ton courtier habituel (Boursorama, Trade Republic, Degiro, etc.).",
   },
   {
     q: "Combien faut-il pour commencer ?",
@@ -98,7 +98,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Est-ce que c'est risqué ?",
-    a: "Investir comporte des risques de perte en capital. StockSense te propose des allocations diversifiées calibrées à ton profil, mais aucun rendement n'est garanti — ni par nous, ni par personne.",
+    a: "Investir comporte des risques de perte en capital. Rendly te propose des allocations diversifiées calibrées à ton profil, mais aucun rendement n'est garanti — ni par nous, ni par personne.",
   },
   {
     q: "Vais-je vraiment rester gratuit ?",
@@ -315,7 +315,7 @@ export default function HomePage() {
 
             {/* Subtitle */}
             <p style={{ fontSize: 19, color: "#3A3E33", maxWidth: 620, margin: "0 0 36px", lineHeight: 1.5 }}>
-              StockSense te montre,{" "}
+              Rendly te montre,{" "}
               <strong style={{ color: "#14201A", fontWeight: 600 }}>en deux minutes et sans jargon</strong>,{" "}
               comment construire un portefeuille adapté à ton profil — avec les bonnes actions, au bon moment.
             </p>
@@ -398,7 +398,7 @@ export default function HomePage() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1F5C3E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 18 L10 12 L14 16 L20 6"/>
                   </svg>
-                  <span style={{ color: "#1F5C3E" }}>Portefeuille StockSense · ~7 %/an</span>
+                  <span style={{ color: "#1F5C3E" }}>Portefeuille Rendly · ~7 %/an</span>
                 </div>
                 <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 34, lineHeight: 1.1, letterSpacing: "-0.01em", color: "#1F5C3E" }}>
                   {portfolioFv.toLocaleString("fr-FR")} €
@@ -771,7 +771,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 13, color: "#7A7768", fontWeight: 500 }}>Note StockSense</div>
+                    <div style={{ fontSize: 13, color: "#7A7768", fontWeight: 500 }}>Note Rendly</div>
                     <div style={{ fontFamily: "var(--font-instrument,serif)", fontWeight: 400, fontSize: 24, marginTop: 2 }}>
                       {verdictTitle}
                     </div>
@@ -965,7 +965,7 @@ export default function HomePage() {
                 <span style={{ width: 28, height: 28, borderRadius: 8, background: "#1F5C3E", display: "flex", alignItems: "center", justifyContent: "center", color: "#F6F2E8", flexShrink: 0 }}>
                   <LogoMark />
                 </span>
-                StockSense
+                Rendly
               </div>
               <p style={{ fontSize: 14, color: "#3A3E33", maxWidth: 280, lineHeight: 1.5 }}>
                 Investir en bourse, sans jargon. Conçu et hébergé à Paris.
@@ -997,13 +997,13 @@ export default function HomePage() {
 
           {/* Bottom bar */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20, paddingTop: 24, borderTop: "1px solid #D9D1BD", fontSize: 12, color: "#7A7768" }}>
-            <span>© 2026 StockSense SAS · Tous droits réservés.</span>
+            <span>© 2026 Rendly SAS · Tous droits réservés.</span>
             <span style={{ fontFamily: "var(--font-geist-mono,monospace)" }}>v0.9.4 · beta</span>
           </div>
 
           {/* AMF legal notice */}
           <p style={{ fontSize: 11, color: "#7A7768", marginTop: 24, lineHeight: 1.5, maxWidth: 780, fontStyle: "italic" }}>
-            Les performances passées ne préjugent pas des performances futures. Investir comporte un risque de perte en capital. StockSense ne fournit pas de conseil en investissement personnalisé au sens de l&apos;article L.321-1 du Code monétaire et financier. Les chiffres affichés sur cette page sont issus de données de démonstration et n&apos;engagent aucunement la société.
+            Les performances passées ne préjugent pas des performances futures. Investir comporte un risque de perte en capital. Rendly ne fournit pas de conseil en investissement personnalisé au sens de l&apos;article L.321-1 du Code monétaire et financier. Les chiffres affichés sur cette page sont issus de données de démonstration et n&apos;engagent aucunement la société.
           </p>
         </div>
       </footer>

@@ -76,7 +76,7 @@ export default function OnboardingOverlay() {
           </div>
 
           <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.3px", color: "var(--ink)", marginBottom: 6 }}>
-            Bienvenue sur StockSense
+            Bienvenue sur Rendly
           </h1>
           <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.65, marginBottom: 28 }}>
             Faites votre première analyse en 10 secondes.

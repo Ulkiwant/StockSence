@@ -2,8 +2,8 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Mentions légales | StockSense",
-  description: "Mentions légales de StockSense — éditeur, hébergeur, responsabilité et avertissement financier.",
+  title: "Mentions légales | Rendly",
+  description: "Mentions légales de Rendly — éditeur, hébergeur, responsabilité et avertissement financier.",
 };
 
 const SECTION_STYLE = {
@@ -50,7 +50,7 @@ export default function MentionsLegalesPage() {
         <div style={SECTION_STYLE}>
           <h2 style={H2_STYLE}>1. Éditeur du site</h2>
           <p style={P_STYLE}>
-            Le site <strong style={{ color: "var(--ink)" }}>StockSense</strong> (accessible à l'adresse{" "}
+            Le site <strong style={{ color: "var(--ink)" }}>Rendly</strong> (accessible à l'adresse{" "}
             <a href="https://stock-sence-two.vercel.app" style={{ color: "var(--accent)" }}>
               stock-sence-two.vercel.app
             </a>
@@ -61,9 +61,9 @@ export default function MentionsLegalesPage() {
             borderRadius: 12, padding: "16px 20px",
             fontSize: 13, color: "var(--ink)", lineHeight: 1.8,
           }}>
-            <strong>StockSense</strong><br />
+            <strong>Rendly</strong><br />
             Éditeur individuel — projet pédagogique<br />
-            Adresse email : <a href="mailto:contact@stocksense.fr" style={{ color: "var(--accent)" }}>contact@stocksense.fr</a>
+            Adresse email : <a href="mailto:contact@rendly.fr" style={{ color: "var(--accent)" }}>contact@rendly.fr</a>
           </div>
         </div>
 
@@ -87,7 +87,7 @@ export default function MentionsLegalesPage() {
         <div style={SECTION_STYLE}>
           <h2 style={H2_STYLE}>3. Propriété intellectuelle</h2>
           <p style={P_STYLE}>
-            L'ensemble du contenu présent sur StockSense (textes, analyses, code, interface, logo) est la
+            L'ensemble du contenu présent sur Rendly (textes, analyses, code, interface, logo) est la
             propriété exclusive de l'éditeur, sauf mention contraire. Toute reproduction, représentation,
             modification ou adaptation, totale ou partielle, est interdite sans autorisation écrite préalable.
           </p>
@@ -105,13 +105,13 @@ export default function MentionsLegalesPage() {
             borderRadius: 12, padding: "16px 20px",
           }}>
             <p style={{ ...P_STYLE, marginBottom: 0 }}>
-              Les informations, analyses et valorisations présentées sur StockSense sont fournies à titre
+              Les informations, analyses et valorisations présentées sur Rendly sont fournies à titre
               purement <strong style={{ color: "var(--ink)" }}>pédagogique et informatif</strong>. Elles ne constituent
               pas des conseils en investissement au sens de la réglementation de l'Autorité des Marchés Financiers (AMF),
               ni une recommandation d'achat ou de vente de valeurs mobilières.
             </p>
             <p style={{ ...P_STYLE, marginTop: 8, marginBottom: 0 }}>
-              StockSense n'est pas un conseiller financier agréé. Tout investissement comporte des risques,
+              Rendly n'est pas un conseiller financier agréé. Tout investissement comporte des risques,
               y compris la perte totale du capital investi. Les performances passées ne préjugent pas des
               performances futures. Consultez un professionnel agréé avant toute décision d'investissement.
             </p>
@@ -135,8 +135,8 @@ export default function MentionsLegalesPage() {
           <h2 style={H2_STYLE}>6. Contact</h2>
           <p style={P_STYLE}>
             Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à l'adresse :{" "}
-            <a href="mailto:contact@stocksense.fr" style={{ color: "var(--accent)", fontWeight: 500 }}>
-              contact@stocksense.fr
+            <a href="mailto:contact@rendly.fr" style={{ color: "var(--accent)", fontWeight: 500 }}>
+              contact@rendly.fr
             </a>
           </p>
         </div>
