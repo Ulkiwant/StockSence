@@ -232,6 +232,121 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════
+   HOMEPAGE DESIGN TOKENS (handoff v1)
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg:          #EFE9DC;
+  --bg-2:        #E8E0CE;
+  --green:       #1F5C3E;
+  --green-2:     #2F7D52;
+  --green-soft:  #D6E4D6;
+  --red:         #B84A3E;
+  --red-soft:    #EBD7D2;
+  --line-2:      #C9C0A8;
+}
+
+/* ─── Hero h1 strikethrough ─────────────────────────────── */
+.hero-strike {
+  color: #9C9583;
+  font-style: italic;
+  position: relative;
+}
+.hero-strike::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 54%;
+  height: 3px;
+  background: #9C958399;
+  border-radius: 2px;
+}
+
+/* ─── Hero CTA buttons ──────────────────────────────────── */
+.hero-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-radius: 9999px;
+  background: #1F5C3E;
+  color: #F6F2E8;
+  font-weight: 500;
+  font-size: 15px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: transform 0.12s, box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 1px 0 #00000020, inset 0 1px 0 #FFFFFF15;
+}
+.hero-btn-primary:hover {
+  background: #1A4D34;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -10px #1F5C3E80;
+}
+.hero-btn-primary:active { transform: translateY(0); }
+
+.hero-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-radius: 9999px;
+  background: transparent;
+  color: #14201A;
+  font-weight: 500;
+  font-size: 15px;
+  border: 1px solid #C9C0A8;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.hero-btn-ghost:hover { background: #F6F2E8; }
+
+/* ─── Step cards ────────────────────────────────────────── */
+.step-card {
+  background: #F6F2E8;
+  border: 1px solid #D9D1BD;
+  border-radius: 18px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  min-height: 300px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.step-card:hover {
+  transform: translateY(-3px);
+  border-color: #C9C0A8;
+}
+
+/* ─── Showcase card ─────────────────────────────────────── */
+.showcase-card {
+  background: #F6F2E8;
+  border: 1px solid #D9D1BD;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 1px 0 #FFFFFF80 inset, 0 24px 60px -30px #14201A30;
+  position: relative;
+}
+
+/* ─── Responsive breakpoints (homepage) ─────────────────── */
+@media (max-width: 980px) {
+  .home-hero-grid    { grid-template-columns: 1fr !important; gap: 40px !important; }
+  .home-reco-grid    { grid-template-columns: 1fr !important; }
+  .home-analysis     { grid-template-columns: 1fr !important; }
+  .home-quotes       { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 880px) {
+  .home-stats-grid   { grid-template-columns: repeat(2, 1fr) !important; }
+  .home-steps-grid   { grid-template-columns: 1fr !important; }
+  .home-faq-grid     { grid-template-columns: 1fr !important; }
+  .home-footer-grid  { grid-template-columns: 1fr 1fr !important; }
+  .home-cta-block    { grid-template-columns: 1fr !important; padding: 48px 32px !important; }
+  .home-ft-cols      { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
    MISC UTILITIES
    ═══════════════════════════════════════════════════════════ */
 .tabular-nums { font-variant-numeric: tabular-nums; }
