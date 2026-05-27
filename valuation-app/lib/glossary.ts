@@ -1,6 +1,48 @@
 import { MetricDef } from "@/components/MetricTooltip";
 
 export const GLOSSARY: Record<string, MetricDef> = {
+  /* ── Enveloppes fiscales ─────────────────────────────────────── */
+  pea: {
+    name: "PEA",
+    fullName: "Plan d'Épargne en Actions",
+    definition:
+      "Compte d'investissement réservé aux résidents français, permettant d'acheter des actions européennes avec une fiscalité avantageuse après 5 ans.",
+    howToRead:
+      "Plafond de versement à 150 000 €. Après 5 ans de détention, les gains sont exonérés d'impôt sur le revenu (seuls les prélèvements sociaux de 17,2 % s'appliquent). Idéal pour un horizon long terme.\n\n📌 Quand l'utiliser : horizon > 5 ans, actions européennes, premier compte d'investissement recommandé pour un Français.",
+    example:
+      "💡 Tu investis 200 €/mois pendant 10 ans dans un PEA. À la sortie, tu ne paies que 17,2 % sur tes gains au lieu de 30 % (flat tax). Sur 10 000 € de gains, tu économises ~1 280 € d'impôts.",
+    benchmarks: [],
+    currentPosition: 0,
+    tags: ["Fiscal", "Actions", "Débutant"],
+  },
+  assurancevie: {
+    name: "Assurance-vie",
+    fullName: "Contrat d'épargne avec avantages fiscaux et successoraux",
+    definition:
+      "Contrat d'épargne flexible permettant d'investir en fonds euros (sécurisé) ou en unités de compte (actions, ETF), avec des avantages fiscaux et successoraux.",
+    howToRead:
+      "Après 8 ans, abattement annuel de 4 600 € (personne seule) ou 9 200 € (couple) sur les gains. Avantage majeur : les sommes transmises aux bénéficiaires échappent en grande partie aux droits de succession.\n\n📌 Quand l'utiliser : épargne moyen/long terme, préparation de la retraite, transmission de patrimoine.",
+    example:
+      "💡 Marie, 45 ans, place 50 000 € en assurance-vie. Elle peut retirer ses gains après 8 ans avec une fiscalité réduite, et en cas de décès, ses enfants reçoivent le capital avec peu ou pas de droits de succession.",
+    benchmarks: [],
+    currentPosition: 0,
+    tags: ["Fiscal", "Épargne", "Succession"],
+  },
+  cto: {
+    name: "CTO",
+    fullName: "Compte-Titres Ordinaire",
+    definition:
+      "Compte d'investissement sans plafond ni restriction géographique, permettant d'acheter n'importe quelle action mondiale — mais sans avantage fiscal particulier.",
+    howToRead:
+      "Aucun plafond de versement. Accès à toutes les bourses mondiales (US, Asie, émergents). Les gains sont soumis à la flat tax de 30 % (12,8 % d'impôt + 17,2 % de prélèvements sociaux).\n\n📌 Quand l'utiliser : PEA déjà ouvert ou plein, investissement hors Europe, pas de contrainte de plafond.",
+    example:
+      "💡 Tu veux acheter des actions Tesla ou Amazon — impossibles dans un PEA (entreprises américaines). Le CTO te donne accès à ces valeurs, mais tes gains seront taxés à 30 % à la revente.",
+    benchmarks: [],
+    currentPosition: 0,
+    tags: ["Fiscal", "Actions", "Flexible"],
+  },
+
+  /* ── Multiples de valorisation ───────────────────────────────── */
   pe: {
     name: "P/E",
     fullName: "Price-to-Earnings — Ratio cours / bénéfice",
@@ -190,6 +232,11 @@ export const GLOSSARY: Record<string, MetricDef> = {
 
 // Liste ordonnée pour la page glossaire
 export const GLOSSARY_CATEGORIES = [
+  {
+    title: "Enveloppes fiscales",
+    emoji: "🏦",
+    keys: ["pea", "assurancevie", "cto"],
+  },
   {
     title: "Multiples de valorisation",
     emoji: "📊",
