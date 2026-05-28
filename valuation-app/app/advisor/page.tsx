@@ -803,7 +803,7 @@ export default function AdvisorPage() {
                 </h3>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                {[["Capital initial","10 000 €",false],["Versement mensuel","250 €",false],["Horizon","5 — 10 ans",false],["Rendement attendu","~ 6,8 % / an",true],["Projection à 10 ans","~ 56 400 €",true]].map(([lab,val,green]: [string,string,boolean],i,arr) => (
+                {([ ["Capital initial","10 000 €",false],["Versement mensuel","250 €",false],["Horizon","5 — 10 ans",false],["Rendement attendu","~ 6,8 % / an",true],["Projection à 10 ans","~ 56 400 €",true] ] as [string,string,boolean][]).map(([lab,val,green],i,arr) => (
                   <div key={lab} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: i < arr.length - 1 ? "1px dashed rgba(255,255,255,0.1)" : "none" }}>
                     <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{lab}</span>
                     <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 13, fontWeight: 600, color: green ? "#86B89A" : "#F6F2E8" }}>{val}</span>
@@ -814,7 +814,7 @@ export default function AdvisorPage() {
             <div style={{ background: "var(--paper)", display: "grid", gridTemplateColumns: "1fr 1fr" }}>
               <div style={{ padding: "28px", borderRight: "1px solid var(--line)" }}>
                 <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>ALLOCATION CIBLE</p>
-                {[["ETF Monde",45,"#1F5C3E"],["Actions qualité",25,"#2F7D52"],["Thématique (IA, santé)",15,"#C9A24E"],["Obligations",15,"#9C9583"]].map(([n,p,c]: [string,number,string]) => (
+                {([ ["ETF Monde",45,"#1F5C3E"],["Actions qualité",25,"#2F7D52"],["Thématique (IA, santé)",15,"#C9A24E"],["Obligations",15,"#9C9583"] ] as [string,number,string][]).map(([n,p,c]) => (
                   <div key={n} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <span style={{ width: 10, height: 10, borderRadius: 2, background: c, flexShrink: 0 }} />
                     <span style={{ flex: 1, fontSize: 12, color: "var(--ink)" }}>{n}</span>
@@ -824,7 +824,7 @@ export default function AdvisorPage() {
               </div>
               <div style={{ padding: "28px" }}>
                 <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>LIGNES SUGGÉRÉES</p>
-                {[["CW8","Amundi MSCI World","45 %"],["MSFT","Microsoft Corporation","10 %"],["MC.PA","LVMH Moët Hennessy","8 %"],["OR.PA","L'Oréal S.A.","7 %"],["NVDA","NVIDIA Corporation","15 %"],["IBGL","iShares Govt Bonds","15 %"]].map(([sym,name,pct]: [string,string,string],i,arr) => (
+                {([ ["CW8","Amundi MSCI World","45 %"],["MSFT","Microsoft Corporation","10 %"],["MC.PA","LVMH Moët Hennessy","8 %"],["OR.PA","L'Oréal S.A.","7 %"],["NVDA","NVIDIA Corporation","15 %"],["IBGL","iShares Govt Bonds","15 %"] ] as [string,string,string][]).map(([sym,name,pct],i,arr) => (
                   <div key={sym} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: i < arr.length - 1 ? "1px dashed var(--line)" : "none" }}>
                     <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>{sym} <span style={{ fontWeight: 400, color: "var(--muted)", fontFamily: "inherit", fontSize: 11 }}>{name}</span></span>
                     <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 12, color: "var(--muted)" }}>{pct}</span>
