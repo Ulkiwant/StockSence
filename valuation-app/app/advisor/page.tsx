@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, X, ChevronRight, Briefcase, Lightbulb, RefreshCw, Circle, AlertTriangle, ExternalLink } from "lucide-react";
+import { Check, X, Briefcase, Lightbulb, RefreshCw, AlertTriangle, ExternalLink } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import SignalPill from "@/components/SignalPill";
 import Footer from "@/components/Footer";
