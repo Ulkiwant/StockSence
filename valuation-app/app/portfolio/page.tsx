@@ -1,389 +1,655 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import Footer from "@/components/Footer";
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from "recharts";
+import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2 } from "lucide-react";
+import ScenarioAnalysis from "@/components/ScenarioAnalysis";
+import SignalPill from "@/components/SignalPill";
+import { useSettings } from "@/lib/settings";
 
-/* ─── Static portfolio data ─────────────────────────── */
-const TOTAL = 28432.40;
-
-const HOLDINGS = [
-  { sym: "CW8",   name: "Amundi MSCI World UCITS ETF",          lg: "CW", bg: "#1F5C3E", qty: 18, avg: 462.10, cur: 512.30, val: 9221.40, pct: 32.4, plEur: 903.60, plPct: 10.9, sector: "Diversifié" },
-  { sym: "MC.PA", name: "LVMH Moët Hennessy Louis Vuitton",     lg: "LV", bg: "#7D6009", qty: 8,  avg: 714.20, cur: 768.10, val: 6144.80, pct: 21.6, plEur: 431.20, plPct: 7.5,  sector: "Luxe" },
-  { sym: "MSFT",  name: "Microsoft Corporation",                lg: "MS", bg: "#0F4C75", qty: 12, avg: 364.80, cur: 412.50, val: 4554.30, pct: 16.0, plEur: 526.18, plPct: 13.1, sector: "Tech" },
-  { sym: "AAPL",  name: "Apple Inc.",                           lg: "AP", bg: "#3D3D3D", qty: 25, avg: 175.40, cur: 192.40, val: 4425.20, pct: 15.5, plEur: 390.80, plPct: 9.7,  sector: "Tech" },
-  { sym: "OR.PA", name: "L'Oréal S.A.",                        lg: "LO", bg: "#6C3483", qty: 6,  avg: 395.00, cur: 412.30, val: 2473.80, pct: 8.7,  plEur: 103.80, plPct: 4.4,  sector: "Cosmétique" },
-  { sym: "IBGL",  name: "iShares Global Govt Bonds UCITS ETF",  lg: "IB", bg: "#4A5568", qty: 25, avg: 38.20,  cur: 40.50,  val: 1012.50, pct: 3.6,  plEur: 57.50,  plPct: 6.0,  sector: "Obligations" },
-];
-
-const DONUT_SECTORS = [
-  { name: "Diversifié",  pct: 32.4, color: "#1F5C3E" },
-  { name: "Tech",        pct: 31.5, color: "#2F7D52" },
-  { name: "Luxe",        pct: 21.6, color: "#C9A24E" },
-  { name: "Cosmétique",  pct: 8.7,  color: "#7D55C7" },
-  { name: "Obligations", pct: 3.6,  color: "#9C9583" },
-];
-
-const ACTIVITY = [
-  { icon: "€", iBg: "#D6E4D6", iC: "#1F5C3E", sym: "OR.PA",  desc: "6 actions × 6,40 €",     amount: "+38,40 €",   date: "18 mai"   },
-  { icon: "↑", iBg: "#D6E4D6", iC: "#1F5C3E", sym: "MSFT",   desc: "4 actions à 408,20 $",   amount: "−1 504,80 €",date: "12 mai"   },
-  { icon: "↑", iBg: "#D6E4D6", iC: "#1F5C3E", sym: "CW8",    desc: "2 parts (versement auto)",amount: "−1 024,60 €",date: "1 mai"    },
-  { icon: "€", iBg: "#D6E4D6", iC: "#1F5C3E", sym: "TTE.PA", desc: "8 × 0,79 €",             amount: "+6,32 €",    date: "26 avril" },
-];
-
-const DIVIDENDS = [
-  { sym: "OR.PA",  name: "L'Oréal S.A.",         amount: "+38,40 €", date: "18 juin"  },
-  { sym: "MSFT",   name: "Microsoft Corporation", amount: "+10,08 €", date: "14 août"  },
-  { sym: "AAPL",   name: "Apple Inc.",            amount: "+5,75 €",  date: "22 août"  },
-];
-
-/* ─── Performance chart (inline SVG) ────────────────── */
-const PORT_CURVE = [25100, 25800, 26200, 25900, 27100, 27600, 28000, 27400, 28100, 28300, 28350, 28432];
-const CAC_CURVE  = [25100, 25300, 25500, 25200, 25700, 25900, 26100, 25800, 26200, 26400, 26500, 26600];
-const CHART_MONTHS = ["déc.", "janv.", "févr.", "mars", "avril", "mai"];
-const TX_MARKERS   = [{ idx: 2, label: "+ CW8" }, { idx: 7, label: "+ MSFT" }];
-
-function PerfChart() {
-  const W = 800, H = 260, PL = 10, PR = 64, PT = 20, PB = 30;
-  const cW = W - PL - PR, cH = H - PT - PB;
-  const allV = [...PORT_CURVE, ...CAC_CURVE];
-  const lo = Math.min(...allV) - 200, hi = Math.max(...allV) + 200, rng = hi - lo;
-  const px = (i: number) => PL + (i / (PORT_CURVE.length - 1)) * cW;
-  const py = (v: number) => PT + (1 - (v - lo) / rng) * cH;
-  const portD = PORT_CURVE.map((v, i) => `${i === 0 ? "M" : "L"}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(" ");
-  const cacD  = CAC_CURVE.map((v, i)  => `${i === 0 ? "M" : "L"}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(" ");
-  const areaD = `${portD} L${px(PORT_CURVE.length-1).toFixed(1)},${(PT+cH).toFixed(1)} L${PL},${(PT+cH).toFixed(1)} Z`;
-  const gridY = [29500, 28000, 26500, 25000];
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 260 }}>
-      <defs>
-        <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="#1F5C3E" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#1F5C3E" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {gridY.map((v) => <line key={v} x1={PL} y1={py(v).toFixed(1)} x2={W-PR} y2={py(v).toFixed(1)} stroke="#D9D1BD" strokeWidth="1" strokeDasharray="2 4" />)}
-      {gridY.map((v) => <text key={v} x={W-PR+6} y={(py(v)+4).toFixed(1)} fontFamily="var(--font-geist-mono,monospace)" fontSize="10" fill="#9C9583">{v.toLocaleString("fr-FR")} €</text>)}
-      <path d={cacD}  stroke="#9C9583" strokeWidth="1.5" strokeDasharray="4 3" fill="none" />
-      <path d={areaD} fill="url(#pg)" />
-      <path d={portD} stroke="#1F5C3E" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <circle cx={px(PORT_CURVE.length-1).toFixed(1)} cy={py(PORT_CURVE[PORT_CURVE.length-1]).toFixed(1)} r="5"  fill="#1F5C3E" />
-      <circle cx={px(PORT_CURVE.length-1).toFixed(1)} cy={py(PORT_CURVE[PORT_CURVE.length-1]).toFixed(1)} r="10" fill="#1F5C3E" fillOpacity="0.2" />
-      {TX_MARKERS.map((t) => {
-        const x = px(t.idx), y = py(PORT_CURVE[t.idx]);
-        return (
-          <g key={t.idx}>
-            <line x1={x.toFixed(1)} y1={(y-14).toFixed(1)} x2={x.toFixed(1)} y2={(y+2).toFixed(1)} stroke="#C9A24E" strokeWidth="1" strokeDasharray="2 2" />
-            <circle cx={x.toFixed(1)} cy={(y-14).toFixed(1)} r="3" fill="#C9A24E" />
-            <text x={(x+6).toFixed(1)} y={(y-10).toFixed(1)} fontFamily="var(--font-geist-mono,monospace)" fontSize="9.5" fill="#C9A24E" fontWeight="600">{t.label}</text>
-          </g>
-        );
-      })}
-      {CHART_MONTHS.map((m, i) => {
-        const xi = Math.round(i * (PORT_CURVE.length - 1) / (CHART_MONTHS.length - 1));
-        return <text key={m} x={px(xi).toFixed(1)} y={(PT+cH+18).toFixed(1)} fontFamily="var(--font-geist-mono,monospace)" fontSize="10" fill="#9C9583" textAnchor="middle">{m}</text>;
-      })}
-    </svg>
-  );
+interface Holding {
+  id: string;
+  symbol: string;
+  name: string;
+  quantity: number;
+  avg_price: number;
+  currency: string;
+  asset_type: string;
 }
 
-/* ─── Donut SVG ──────────────────────────────────────── */
-function Donut() {
-  const cx = 21, cy = 21, r = 16, circ = 2 * Math.PI * r;
-  const dashes = DONUT_SECTORS.map((s) => (s.pct / 100) * circ);
-  const segs = DONUT_SECTORS.map((s, i) => ({ ...s, dash: dashes[i], off: dashes.slice(0, i).reduce((a, b) => a + b, 0) }));
+interface EnrichedHolding extends Holding {
+  currentPrice: number;
+  pnl: number;
+  pnlPct: number;
+  marketValue: number;
+  sector: string;
+}
+
+interface HistoryPoint { date: string; value: number; cost: number; }
+
+interface PortfolioAnalysis {
+  summary: string;
+  globalScore: number;
+  diversification: string;
+  mainRisk: string;
+  recommendations: { type: string; symbol: string; reason: string }[];
+  missingExposures: string[];
+  strengths: string[];
+  disclaimer: string;
+}
+
+const PERIODS = ["1mo", "3mo", "6mo", "1y"] as const;
+const PERIOD_LABELS: Record<string, string> = { "1mo": "1M", "3mo": "3M", "6mo": "6M", "1y": "1A" };
+const REC_COLORS: Record<string, string> = {
+  RENFORCER: "var(--signal-up)", CONSERVER: "#8b7a5e",
+  ALLÉGER: "#b84a3a", VENDRE: "var(--signal-down)",
+};
+
+const CHART_COLORS = [
+  "#2d7d5a", "#4a9eff", "#b84a3a", "#8b7a5e", "#6b8f71",
+  "#c17f3e", "#5b7fa8", "#a06b8f", "#7a9e6b", "#c09060",
+];
+
+function fmt(n: number, currency = "USD") {
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
+}
+
+function fmtDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+function fmtShort(n: number) {
+  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
+  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(1) + "k";
+  return n.toFixed(0);
+}
+
+export default function PortfolioPage() {
+  const { t, fmtPrice } = useSettings();
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [enriched, setEnriched] = useState<EnrichedHolding[]>([]);
+  const [analysis, setAnalysis] = useState<PortfolioAnalysis | null>(null);
+  const [totals, setTotals] = useState({ value: 0, cost: 0, pnl: 0 });
+  const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [period, setPeriod] = useState<typeof PERIODS[number]>("3mo");
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Add form
+  const [addSymbol, setAddSymbol] = useState("");
+  const [addName, setAddName] = useState("");
+  const [addQty, setAddQty] = useState("");
+  const [addPRU, setAddPRU] = useState("");
+  const [addCurrency, setAddCurrency] = useState("USD");
+  const [addType, setAddType] = useState("stock");
+  const [addLoading, setAddLoading] = useState(false);
+  const [resolving, setResolving] = useState(false);
+  const [resolveError, setResolveError] = useState<string | null>(null);
+
+  const loadHoldings = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch("/api/portfolio");
+    const data = await res.json();
+    setHoldings(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadHoldings(); }, [loadHoldings]);
+
+  // Enrich with current prices
+  useEffect(() => {
+    if (!holdings.length) { setEnriched([]); setTotals({ value: 0, cost: 0, pnl: 0 }); return; }
+    Promise.allSettled(
+      holdings.map(async (h) => {
+        const res = await fetch(`/api/stock/${h.symbol}`);
+        if (!res.ok) return { ...h, currentPrice: h.avg_price, pnl: 0, pnlPct: 0, marketValue: h.avg_price * h.quantity, sector: "N/A" };
+        const d = await res.json();
+        const cp = d.currentPrice ?? h.avg_price;
+        return { ...h, currentPrice: cp, pnl: (cp - h.avg_price) * h.quantity, pnlPct: ((cp - h.avg_price) / h.avg_price) * 100, marketValue: cp * h.quantity, sector: d.sector ?? "N/A" };
+      })
+    ).then((results) => {
+      const ok = results.filter((r): r is PromiseFulfilledResult<EnrichedHolding> => r.status === "fulfilled").map((r) => r.value);
+      setEnriched(ok);
+      setTotals({ value: ok.reduce((s, p) => s + p.marketValue, 0), cost: ok.reduce((s, p) => s + p.avg_price * p.quantity, 0), pnl: ok.reduce((s, p) => s + p.pnl, 0) });
+    });
+  }, [holdings]);
+
+  // Load history chart
+  const loadHistory = useCallback(async (p: string) => {
+    if (!holdings.length) return;
+    setHistoryLoading(true);
+    const res = await fetch("/api/portfolio/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ holdings: holdings.map((h) => ({ symbol: h.symbol, quantity: h.quantity, avg_price: h.avg_price })), period: p }),
+    });
+    const data = await res.json();
+    setHistory(Array.isArray(data) ? data : []);
+    setHistoryLoading(false);
+  }, [holdings]);
+
+  useEffect(() => { if (holdings.length) loadHistory(period); }, [holdings, period, loadHistory]);
+
+  const resolveSymbol = async (sym: string) => {
+    if (!sym || sym.length < 1) return;
+    setResolving(true);
+    setResolveError(null);
+    try {
+      const res = await fetch(`/api/stock/${sym.toUpperCase()}`);
+      if (!res.ok) { setResolveError("Symbole introuvable"); setResolving(false); return; }
+      const d = await res.json();
+      if (d.name) setAddName(d.name);
+      if (d.currency) setAddCurrency(d.currency);
+      if (d.quoteType) {
+        const qt = String(d.quoteType).toUpperCase();
+        if (qt === "ETF" || qt === "MUTUALFUND") setAddType("etf");
+        else setAddType("stock");
+      }
+    } catch {
+      setResolveError("Erreur de résolution");
+    }
+    setResolving(false);
+  };
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addSymbol || !addQty || !addPRU) return;
+    setAddLoading(true);
+    await fetch("/api/portfolio", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symbol: addSymbol.toUpperCase(), name: addName || addSymbol.toUpperCase(), quantity: parseFloat(addQty), avg_price: parseFloat(addPRU), currency: addCurrency, asset_type: addType }),
+    });
+    setShowAdd(false);
+    setAddSymbol(""); setAddName(""); setAddQty(""); setAddPRU("");
+    setAddType("stock"); setAddCurrency("USD");
+    setResolveError(null);
+    setAddLoading(false);
+    setAnalysis(null);
+    loadHoldings();
+  };
+
+  const handleDelete = async (id: string) => {
+    await fetch("/api/portfolio", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    setAnalysis(null);
+    loadHoldings();
+  };
+
+  const handleAnalyze = async () => {
+    if (!enriched.length) return;
+    setAnalyzing(true);
+    const res = await fetch("/api/portfolio/analyze", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ holdings: enriched }),
+    });
+    const data = await res.json();
+    if (data.analysis) setAnalysis(data.analysis);
+    setAnalyzing(false);
+  };
+
+  const totalPct = totals.cost > 0 ? (totals.pnl / totals.cost) * 100 : 0;
+  const isUp = totals.pnl >= 0;
+
+  // Chart performance over selected period
+  const chartPerf = history.length >= 2
+    ? ((history[history.length - 1].value - history[0].value) / history[0].value) * 100
+    : null;
+  const chartPerfUp = chartPerf == null || chartPerf >= 0;
+
+  // Allocation donut data
+  const totalVal = enriched.reduce((s, h) => s + h.marketValue, 0);
+  const allocData = enriched
+    .map((h, i) => ({ symbol: h.symbol, name: h.name, pct: totalVal > 0 ? (h.marketValue / totalVal) * 100 : 0, color: CHART_COLORS[i % CHART_COLORS.length], value: h.marketValue, currency: h.currency }))
+    .sort((a, b) => b.pct - a.pct);
+
   return (
-    <div style={{ position: "relative", width: 180, height: 180, flexShrink: 0 }}>
-      <svg width="180" height="180" viewBox="0 0 42 42" style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth="7" />
-        {segs.map((s) => (
-          <circle key={s.name} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth="7"
-            strokeDasharray={`${s.dash.toFixed(2)} ${(circ-s.dash).toFixed(2)}`}
-            strokeDashoffset={(-s.off).toFixed(2)} />
-        ))}
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", pointerEvents: "none" }}>
-        <span style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 14, color: "var(--ink)", lineHeight: 1.2 }}>28 432 €</span>
-        <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 8, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 2 }}>VALEUR</span>
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+
+      {/* ── Header ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
+        <div>
+          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.5px", marginBottom: 6, color: "var(--ink)" }}>Mon Portefeuille</h1>
+          <p style={{ fontSize: 14, color: "var(--muted)" }}>{holdings.length} position{holdings.length !== 1 ? "s" : ""}</p>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={handleAnalyze} disabled={analyzing || !enriched.length} style={{
+            display: "flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 9999,
+            background: "var(--accent)", border: "none",
+            color: "#fff", fontSize: 14, fontWeight: 600, cursor: analyzing || !enriched.length ? "not-allowed" : "pointer",
+            opacity: !enriched.length ? 0.4 : 1,
+          }}>
+            <Sparkles size={15} />{analyzing ? "Analyse…" : "Analyser avec l'IA"}
+          </button>
+          <button onClick={() => setShowAdd(true)} style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "10px 18px", borderRadius: 9999, border: "1.5px solid var(--line)",
+            background: "transparent", color: "var(--ink)", fontSize: 14, fontWeight: 600, cursor: "pointer",
+          }}><Plus size={15} />Ajouter</button>
+        </div>
       </div>
+
+      {/* ── Summary cards ── */}
+      {enriched.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 28 }}>
+          {[
+            { label: t("portfolio.total_value"), value: fmtPrice(totals.value, "EUR"), color: "var(--ink)" },
+            { label: t("portfolio.invested"), value: fmtPrice(totals.cost, "EUR"), color: "var(--muted)" },
+            { label: t("portfolio.pnl"), value: `${isUp ? "+" : ""}${fmtPrice(totals.pnl, "EUR")}`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
+            { label: t("portfolio.perf"), value: `${isUp ? "+" : ""}${totalPct.toFixed(2)}%`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
+          ].map((card) => (
+            <div key={card.label} style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: "18px 20px" }}>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>{card.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: card.color, fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{card.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Charts row ── */}
+      {enriched.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 20, marginBottom: 28 }}>
+
+          {/* Evolution chart */}
+          <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4 }}>Évolution du portefeuille</div>
+                {chartPerf != null && (
+                  <div style={{ fontSize: 22, fontWeight: 800, color: chartPerfUp ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
+                    {chartPerfUp ? "+" : ""}{chartPerf.toFixed(2)}%
+                    <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 8, fontWeight: 400 }}>sur la période</span>
+                  </div>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {PERIODS.map((p) => (
+                  <button key={p} onClick={() => setPeriod(p)} style={{
+                    padding: "5px 10px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                    border: `1.5px solid ${period === p ? "var(--accent)" : "var(--line)"}`,
+                    background: period === p ? "var(--accent-soft)" : "transparent",
+                    color: period === p ? "var(--accent)" : "var(--muted)",
+                    cursor: "pointer",
+                  }}>{PERIOD_LABELS[p]}</button>
+                ))}
+              </div>
+            </div>
+
+            {historyLoading ? (
+              <div className="skeleton" style={{ height: 180, borderRadius: 8 }} />
+            ) : history.length > 1 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={history} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="valueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"} stopOpacity={0.15} />
+                      <stop offset="95%" stopColor={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--muted)" stopOpacity={0.08} />
+                      <stop offset="95%" stopColor="var(--muted)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                  <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 10, fill: "var(--muted)" }}
+                    axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                  <YAxis tickFormatter={(v) => fmtShort(v)} tick={{ fontSize: 10, fill: "var(--muted)" }}
+                    axisLine={false} tickLine={false} width={44} />
+                  <Tooltip
+                    contentStyle={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }}
+                    labelStyle={{ color: "var(--muted)", marginBottom: 4 }}
+                    labelFormatter={(label: unknown) => fmtDate(String(label))}
+                    formatter={(value: unknown, name: unknown) => [
+                      `${fmtShort(Number(value))} €`,
+                      name === "value" ? "Valeur" : "Investi",
+                    ]}
+                  />
+                  <Area type="monotone" dataKey="cost" stroke="var(--muted)" strokeWidth={1.5}
+                    strokeDasharray="4 4" fill="url(#costGrad)" dot={false} />
+                  <Area type="monotone" dataKey="value" stroke={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"}
+                    strokeWidth={2} fill="url(#valueGrad)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 13 }}>
+                Données insuffisantes pour la période sélectionnée
+              </div>
+            )}
+          </div>
+
+          {/* Allocation donut — dark card */}
+          <div style={{ background: "var(--ink)", border: "1.5px solid var(--ink)", borderRadius: 16, padding: 24 }}>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 16 }}>Répartition actuelle</div>
+            <DonutChart data={allocData} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
+              {allocData.map((a) => (
+                <div key={a.symbol} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: 2, background: a.color, flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#fff" }}>{a.name || a.symbol}</span>
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{a.symbol}</span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", flexShrink: 0, fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{a.pct.toFixed(1)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add modal ── */}
+      {showAdd && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 200,
+          background: "rgba(10,22,40,0.40)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+        }} onClick={(e) => { if (e.target === e.currentTarget) setShowAdd(false); }}>
+          <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, width: "100%", maxWidth: 440, padding: 28 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: "var(--ink)" }}>Ajouter une position</h2>
+            <form onSubmit={handleAdd} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+              {/* Symbole avec auto-résolution */}
+              <div>
+                <label style={labelStyle}>Symbole *</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    value={addSymbol}
+                    onChange={(e) => { setAddSymbol(e.target.value.toUpperCase()); setResolveError(null); }}
+                    onBlur={(e) => resolveSymbol(e.target.value)}
+                    required
+                    placeholder="AAPL, IWDA.AS, CW8.PA…"
+                    style={{ ...inputStyle, paddingRight: 36 }}
+                  />
+                  {resolving && (
+                    <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--muted)" }}>...</div>
+                  )}
+                </div>
+                {resolveError && <div style={{ fontSize: 11, color: "var(--signal-down)", marginTop: 4 }}>{resolveError} — vérifiez le symbole Yahoo Finance</div>}
+              </div>
+
+              {/* Type — mis en avant */}
+              <div>
+                <label style={labelStyle}>Type d'actif</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[
+                    { value: "stock", label: "Action" },
+                    { value: "etf",   label: "ETF" },
+                    { value: "crypto", label: "Crypto" },
+                  ].map((opt) => (
+                    <button key={opt.value} type="button" onClick={() => setAddType(opt.value)} style={{
+                      flex: 1, padding: "9px 8px", borderRadius: 9,
+                      border: `1.5px solid ${addType === opt.value ? "var(--accent)" : "var(--line)"}`,
+                      background: addType === opt.value ? "var(--accent-soft)" : "transparent",
+                      color: addType === opt.value ? "var(--accent)" : "var(--muted)",
+                      fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                    }}>{opt.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Nom {resolving ? <span style={{ color: "var(--muted)" }}>(chargement…)</span> : "(auto-rempli ou manuel)"}</label>
+                <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="iShares Core MSCI World…" style={inputStyle} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Quantité *</label>
+                  <input type="number" value={addQty} onChange={(e) => setAddQty(e.target.value)} required placeholder="10" min="0" step="any" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>PRU * (prix moyen)</label>
+                  <input type="number" value={addPRU} onChange={(e) => setAddPRU(e.target.value)} required placeholder="150.00" min="0" step="any" style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Devise</label>
+                <select value={addCurrency} onChange={(e) => setAddCurrency(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>
+                  {["USD", "EUR", "GBP", "CHF", "JPY"].map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                <button type="button" onClick={() => { setShowAdd(false); setAddSymbol(""); setAddName(""); setAddQty(""); setAddPRU(""); setAddType("stock"); setAddCurrency("USD"); setResolveError(null); }} style={{
+                  flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)",
+                  background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer",
+                }}>Annuler</button>
+                <button type="submit" disabled={addLoading} style={{
+                  flex: 2, padding: "12px", borderRadius: 9999, border: "none",
+                  background: "var(--accent)",
+                  color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                }}>{addLoading ? "Ajout…" : "Ajouter la position"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Holdings table ── */}
+      {loading ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {Array(3).fill(0).map((_, i) => <div key={i} className="skeleton" style={{ height: 68, borderRadius: 12 }} />)}
+        </div>
+      ) : holdings.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "80px 24px", border: "1.5px dashed var(--line)", borderRadius: 20 }}>
+          <TrendingUp size={48} style={{ color: "var(--muted)", marginBottom: 16 }} />
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>Portefeuille vide</h2>
+          <p style={{ color: "var(--muted)", fontSize: 14, marginBottom: 24 }}>Ajoutez vos premières positions pour suivre vos performances.</p>
+          <button onClick={() => setShowAdd(true)} style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "12px 28px", borderRadius: 9999, border: "none",
+            background: "var(--accent)",
+            color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+          }}><Plus size={15} />Ajouter une position</button>
+        </div>
+      ) : (
+        <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, overflow: "hidden", marginBottom: 28 }}>
+          <div style={{
+            display: "grid", gridTemplateColumns: "1fr 80px 90px 90px 100px 100px 36px",
+            padding: "12px 20px", borderBottom: "1.5px solid var(--line)",
+            fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase",
+          }}>
+            <span>Actif</span><span style={{ textAlign: "right" }}>Qté</span>
+            <span style={{ textAlign: "right" }}>PRU</span><span style={{ textAlign: "right" }}>Cours</span>
+            <span style={{ textAlign: "right" }}>Valeur</span><span style={{ textAlign: "right" }}>P&L</span>
+            <span />
+          </div>
+          {enriched.map((h, i) => {
+            const isPos = h.pnl >= 0;
+            return (
+              <div key={h.id} style={{
+                display: "grid", gridTemplateColumns: "1fr 80px 90px 90px 100px 100px 36px",
+                padding: "14px 20px", alignItems: "center",
+                borderBottom: i < enriched.length - 1 ? "1.5px solid var(--line)" : "none",
+                transition: "background 0.15s",
+              }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--paper-3)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                    background: h.asset_type === "etf" ? "rgba(45,125,90,0.12)" : "rgba(45,125,90,0.08)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 10, fontWeight: 700,
+                    color: "var(--accent)",
+                  }}>{h.symbol.slice(0, 3)}</div>
+                  <div>
+                    <Link href={`/stock/${h.symbol}`} style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>{h.name}</Link>
+                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>
+                      <span style={{ fontSize: 11, color: "var(--muted)", background: "var(--paper-3)", padding: "1px 6px", borderRadius: 4 }}>{h.symbol}</span>
+                      {" · "}{h.asset_type === "etf" ? "ETF" : "Action"} · {h.currency}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right", fontSize: 13, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.quantity}</div>
+                <div style={{ textAlign: "right", fontSize: 13, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.avg_price.toFixed(2)}</div>
+                <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.currentPrice.toFixed(2)}</div>
+                <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{fmtPrice(h.marketValue, h.currency)}</div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: isPos ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
+                    {isPos ? "+" : ""}{h.pnlPct.toFixed(1)}%
+                  </div>
+                  <div style={{ fontSize: 11, color: isPos ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
+                    {isPos ? "+" : ""}{h.pnl.toFixed(0)} {h.currency}
+                  </div>
+                </div>
+                <button onClick={() => handleDelete(h.id)} style={{
+                  width: 28, height: 28, borderRadius: 7, border: "none",
+                  background: "rgba(184,74,58,0.08)", color: "var(--signal-down)",
+                  cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                }}><Trash2 size={14} /></button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Scenario Analysis ── */}
+      {enriched.length > 0 && (
+        <ScenarioAnalysis
+          positions={enriched.map((h) => ({
+            symbol: h.symbol,
+            name: h.name,
+            marketValue: h.marketValue,
+            asset_type: h.asset_type,
+            beta: undefined,
+            sector: h.sector,
+          }))}
+          totalValue={totals.value}
+          monthlyContribution={0}
+        />
+      )}
+
+      {/* ── AI Analysis ── */}
+      {analysis && (
+        <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={16} color="#fff" />
+            </div>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)" }}>Analyse IA du portefeuille</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 20, marginBottom: 24, alignItems: "center" }}>
+            <div style={{ position: "relative", width: 80, height: 80 }}>
+              <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
+                <circle cx="40" cy="40" r="32" fill="none" stroke="var(--line)" strokeWidth="7" />
+                <circle cx="40" cy="40" r="32" fill="none"
+                  stroke={analysis.globalScore >= 65 ? "var(--signal-up)" : analysis.globalScore >= 40 ? "var(--signal-neutral)" : "var(--signal-down)"}
+                  strokeWidth="7" strokeDasharray={`${(analysis.globalScore / 100) * 201} 201`} strokeLinecap="round" />
+              </svg>
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>{analysis.globalScore}</span>
+                <span style={{ fontSize: 9, color: "var(--muted)" }}>/100</span>
+              </div>
+            </div>
+            <div>
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: 8 }}>{analysis.summary}</p>
+              <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid rgba(45,125,90,0.2)" }}>
+                Diversification : {analysis.diversification}
+              </span>
+            </div>
+          </div>
+          {analysis.recommendations?.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommandations</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {analysis.recommendations.map((r, i) => {
+                  const holding = enriched.find(h => h.symbol === r.symbol);
+                  const displayName = holding?.name && holding.name !== r.symbol ? holding.name : r.symbol;
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 10, background: "var(--paper-3)", border: "1.5px solid var(--line)" }}>
+                      <span style={{ padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: `${REC_COLORS[r.type]}20`, color: REC_COLORS[r.type], flexShrink: 0 }}>{r.type}</span>
+                      <div>
+                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{displayName}</span>
+                        {holding?.name && holding.name !== r.symbol && <span style={{ fontSize: 11, color: "var(--muted)", background: "var(--paper-3)", padding: "1px 5px", borderRadius: 4, marginLeft: 6 }}>{r.symbol}</span>}
+                        <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 6 }}>{r.reason}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            {analysis.strengths?.length > 0 && (
+              <div>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-up)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                  <TrendingUp size={13} />Points forts
+                </h3>
+                {analysis.strengths.map((s, i) => (
+                  <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
+                    <span style={{ color: "var(--signal-up)" }}>✓</span>{s}
+                  </div>
+                ))}
+              </div>
+            )}
+            {analysis.missingExposures?.length > 0 && (
+              <div>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-neutral)", marginBottom: 8 }}>Expositions manquantes</h3>
+                {analysis.missingExposures.map((s, i) => (
+                  <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
+                    <span style={{ color: "var(--signal-neutral)" }}>+</span>{s}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {analysis.mainRisk && (
+            <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 10, background: "rgba(184,74,58,0.05)", border: "1.5px solid rgba(184,74,58,0.18)" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-down)" }}>Risque principal : </span>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>{analysis.mainRisk}</span>
+            </div>
+          )}
+          <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 16 }}>{analysis.disclaimer}</p>
+        </div>
+      )}
     </div>
   );
 }
 
-/* ─── Weight bar ─────────────────────────────────────── */
-function WBar({ pct, color }: { pct: number; color: string }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-      <span style={{ width: 60, height: 5, borderRadius: 3, background: "var(--line)", overflow: "hidden", display: "inline-block" }}>
-        <span style={{ display: "block", height: "100%", width: `${pct}%`, background: color, borderRadius: 3 }} />
-      </span>
-      <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 12, color: "var(--muted)" }}>{pct} %</span>
-    </span>
-  );
-}
+/* ── Donut chart ── */
+function DonutChart({ data }: { data: { symbol: string; pct: number; color: string }[] }) {
+  const size = 120;
+  const r = 46;
+  const cx = size / 2;
+  const cy = size / 2;
+  const circ = 2 * Math.PI * r;
 
-/* ─── Page ───────────────────────────────────────────── */
-export default function PortfolioPage() {
-  const [chartRange, setChartRange] = useState("6M");
-  const [holdSort,   setHoldSort]   = useState<"val" | "pl" | "pct">("val");
-  const [donutMode,  setDonutMode]  = useState<"Secteur" | "Actif" | "Zone">("Secteur");
-
-  const RANGES = ["1J", "1S", "1M", "6M", "1A", "Tout"];
-  const fmt    = (n: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(n);
-
-  const sorted = [...HOLDINGS].sort((a, b) => {
-    if (holdSort === "pl")  return b.plEur - a.plEur;
-    if (holdSort === "pct") return b.pct - a.pct;
-    return b.val - a.val;
+  let cumulative = 0;
+  const slices = data.map((d) => {
+    const offset = circ * (1 - cumulative / 100);
+    const dash = (d.pct / 100) * circ;
+    cumulative += d.pct;
+    return { ...d, offset, dash };
   });
 
   return (
-    <>
-      <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 28px 80px" }}>
-
-          {/* Page header */}
-          <div style={{ marginBottom: 28 }}>
-            <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "var(--muted)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>RENTLY / MON PORTEFEUILLE</p>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
-              <div>
-                <h1 style={{ fontFamily: "var(--font-instrument,serif)", fontSize: "clamp(40px,4.4vw,56px)", fontWeight: 400, color: "var(--ink)", lineHeight: 1.05, marginBottom: 8 }}>Mon portefeuille.</h1>
-                <p style={{ fontSize: 14, color: "var(--muted)" }}>Profil Équilibré · {new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} · {HOLDINGS.length} lignes</p>
-              </div>
-              <div style={{ display: "flex", gap: 10, flexShrink: 0, paddingTop: 8 }}>
-                <button style={{ padding: "9px 16px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "var(--paper)", color: "var(--ink)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Rapport mensuel</button>
-                <button style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 9999, border: "none", background: "#1F5C3E", color: "#F6F2E8", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                  <span style={{ fontSize: 16, lineHeight: 1 }}>＋</span> Ajouter une transaction
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Hero KPI strip */}
-          <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", marginBottom: 28, overflow: "hidden" }}>
-            <div style={{ background: "linear-gradient(180deg,#EAF0EA,#F4F1E8)", padding: "28px", borderRight: "1px solid var(--line)" }}>
-              <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "#2F7D52", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>VALEUR TOTALE</p>
-              <p style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 52, fontWeight: 400, color: "#1F5C3E", lineHeight: 1, marginBottom: 10 }}>{fmt(TOTAL)}</p>
-              <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 12, color: "#2F7D52" }}>▲ +124,18 € · +0,44 % aujourd'hui</p>
-            </div>
-            {[
-              { lab: "GAIN TOTAL",       val: "+3 432 €", meta: "+13,7 % depuis l'ouverture", vc: "#1F5C3E" },
-              { lab: "ANNUALISÉ",        val: "+9,2 %",   meta: "vs CAC 40 · +6,8 %",         vc: "#1F5C3E" },
-              { lab: "DIVIDENDES (12 m)",val: "412 €",    meta: "prochain : 18 juin · OR.PA",  vc: "var(--ink)" },
-            ].map((k, i, arr) => (
-              <div key={i} style={{ padding: "28px 22px", borderRight: i < arr.length - 1 ? "1px solid var(--line)" : "none" }}>
-                <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>{k.lab}</p>
-                <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 34, fontWeight: 700, color: k.vc, lineHeight: 1.1 }}>{k.val}</p>
-                <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>{k.meta}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Main layout 1.6fr 1fr */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20, alignItems: "start" }}>
-
-            {/* Left */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
-              {/* Performance */}
-              <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 22px 16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>Performance</h2>
-                    <span style={{ padding: "3px 10px", borderRadius: 9999, background: "#D6E4D6", color: "#1F5C3E", fontSize: 12, fontWeight: 600 }}>▲ +9,2 % annualisé</span>
-                  </div>
-                  <div style={{ display: "flex", gap: 2, background: "var(--paper-2)", borderRadius: 9999, padding: 3 }}>
-                    {RANGES.map((r) => (
-                      <button key={r} onClick={() => setChartRange(r)} style={{ padding: "5px 10px", borderRadius: 9999, border: "none", cursor: "pointer", fontSize: 12, fontFamily: "var(--font-geist-mono,monospace)", fontWeight: 600, background: chartRange === r ? "var(--paper)" : "transparent", color: chartRange === r ? "var(--ink)" : "var(--muted)", transition: "all 0.15s" }}>
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <PerfChart />
-                <div style={{ display: "flex", alignItems: "center", gap: 20, paddingTop: 12, borderTop: "1px dashed var(--line)", marginTop: 8 }}>
-                  <LegendItem color="#1F5C3E" dashed={false} label="Mon portefeuille" />
-                  <LegendItem color="#9C9583" dashed label="CAC 40 (référence)" />
-                  <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#C9A24E", display: "inline-block" }} />
-                    Transaction
-                  </span>
-                </div>
-              </div>
-
-              {/* Holdings */}
-              <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, overflow: "hidden" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: "1.5px solid var(--line)" }}>
-                  <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>Lignes du portefeuille ({HOLDINGS.length} positions)</h2>
-                  <div style={{ display: "flex", gap: 2, background: "var(--paper-2)", borderRadius: 9999, padding: 3 }}>
-                    {([["val","Valeur"],["pl","P&L"],["pct","Poids"]] as const).map(([s, lbl]) => (
-                      <button key={s} onClick={() => setHoldSort(s as typeof holdSort)} style={{ padding: "5px 12px", borderRadius: 9999, border: "none", cursor: "pointer", fontSize: 12, fontFamily: "var(--font-geist-mono,monospace)", fontWeight: 600, background: holdSort === s ? "var(--paper)" : "transparent", color: holdSort === s ? "var(--ink)" : "var(--muted)", transition: "all 0.15s" }}>
-                        {lbl}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid var(--line)" }}>
-                      {["Action","Qté","Prix moy.","Cours","Valeur","Poids","P&L",""].map((h, i) => (
-                        <th key={i} style={{ textAlign: i === 0 ? "left" : "right", padding: "10px 16px", fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "var(--muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sorted.map((h, i) => (
-                      <tr key={h.sym} style={{ borderBottom: i < sorted.length - 1 ? "1px solid var(--line)" : "none", transition: "background 0.12s" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.5)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      >
-                        <td style={{ padding: "14px 16px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{ width: 32, height: 32, borderRadius: 7, background: h.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                              <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 10, fontWeight: 700, color: "#fff" }}>{h.lg}</span>
-                            </div>
-                            <div>
-                              <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{h.sym}</p>
-                              <p style={{ fontSize: 11, color: "var(--muted)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td style={{ textAlign: "right", padding: "14px 16px", fontFamily: "var(--font-geist-mono,monospace)", fontSize: 13, color: "var(--muted)" }}>{h.qty}</td>
-                        <td style={{ textAlign: "right", padding: "14px 16px", fontFamily: "var(--font-geist-mono,monospace)", fontSize: 13, color: "var(--muted)" }}>{h.avg.toLocaleString("fr-FR")} €</td>
-                        <td style={{ textAlign: "right", padding: "14px 16px", fontFamily: "var(--font-geist-mono,monospace)", fontSize: 13, color: "var(--ink)", fontWeight: 600 }}>{h.cur.toLocaleString("fr-FR")} €</td>
-                        <td style={{ textAlign: "right", padding: "14px 16px", fontFamily: "var(--font-geist-mono,monospace)", fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{fmt(h.val)}</td>
-                        <td style={{ textAlign: "right", padding: "14px 16px" }}>
-                          <WBar pct={h.pct} color={DONUT_SECTORS.find((s) => s.name === h.sector)?.color ?? "#1F5C3E"} />
-                        </td>
-                        <td style={{ textAlign: "right", padding: "14px 16px" }}>
-                          <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 12, fontWeight: 600, color: "#2F7D52", whiteSpace: "nowrap" }}>+{fmt(h.plEur)}</p>
-                          <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "#2F7D52" }}>+{h.plPct} %</p>
-                        </td>
-                        <td style={{ textAlign: "right", padding: "14px 16px" }}>
-                          <Link href={`/stock/${h.sym}`} style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono,monospace)" }}>Analyser →</Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Right */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
-              {/* Donut */}
-              <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, padding: 22 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>Répartition</h2>
-                  <div style={{ display: "flex", gap: 2, background: "var(--paper-2)", borderRadius: 9999, padding: 3 }}>
-                    {(["Secteur","Actif","Zone"] as const).map((m) => (
-                      <button key={m} onClick={() => setDonutMode(m)} style={{ padding: "4px 10px", borderRadius: 9999, border: "none", cursor: "pointer", fontSize: 11, fontFamily: "var(--font-geist-mono,monospace)", fontWeight: 600, background: donutMode === m ? "var(--paper)" : "transparent", color: donutMode === m ? "var(--ink)" : "var(--muted)", transition: "all 0.15s" }}>
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-                  <Donut />
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                    {DONUT_SECTORS.map((s) => (
-                      <div key={s.name} style={{ display: "grid", gridTemplateColumns: "12px 1fr auto", alignItems: "center", gap: 8 }}>
-                        <span style={{ width: 12, height: 12, borderRadius: 3, background: s.color, flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, color: "var(--ink)" }}>{s.name}</span>
-                        <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 12, color: "var(--muted)" }}>{s.pct} %</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Activité */}
-              <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, padding: 22 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>Activité récente</h2>
-                  <Link href="#" style={{ fontSize: 12, color: "var(--muted)" }}>Tout voir →</Link>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {ACTIVITY.map((a, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: a.iBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: a.iC, fontSize: 14, fontWeight: 700 }}>{a.icon}</div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{a.sym} <span style={{ fontWeight: 400, color: "var(--muted)", fontSize: 12 }}>— {a.desc}</span></p>
-                        <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "var(--muted)" }}>{a.date}</p>
-                      </div>
-                      <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 13, fontWeight: 600, color: a.amount.startsWith("+") ? "#1F5C3E" : "var(--ink)", flexShrink: 0 }}>{a.amount}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Dividendes */}
-              <div style={{ background: "linear-gradient(180deg,#F0E4C3,#F6F2E8)", border: "1.5px solid rgba(201,162,78,0.25)", borderRadius: 18, padding: 22 }}>
-                <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "#7A5A1F", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Prochains dividendes</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {DIVIDENDS.map((d, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{d.sym} <span style={{ fontWeight: 400, color: "var(--muted)", fontSize: 12 }}>— {d.name}</span></p>
-                        <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "#7A5A1F" }}>{d.date}</p>
-                      </div>
-                      <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 13, fontWeight: 700, color: "#C9A24E" }}>{d.amount}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Rebalance banner */}
-          <div style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#1F5C3E,#14201A)", borderRadius: 18, padding: "24px 28px", display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 24, marginTop: 28 }}>
-            <div style={{ position: "absolute", bottom: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle,rgba(47,125,82,0.35) 0%,transparent 70%)", pointerEvents: "none" }} />
-            <div>
-              <p style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 28, color: "#F6F2E8", lineHeight: 1.2, marginBottom: 8 }}>
-                Ton portefeuille a légèrement <em style={{ color: "#86B89A" }}>dévié.</em>
-              </p>
-              <p style={{ fontSize: 14, color: "#C7C1AF", lineHeight: 1.55, maxWidth: 560 }}>
-                La part Tech a progressé à 31,5 % (objectif 28 %). Un léger rééquilibrage maintient ton profil de risque cible.
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-              <button style={{ padding: "10px 18px", borderRadius: 9999, border: "1.5px solid rgba(246,242,232,0.35)", background: "rgba(246,242,232,0.12)", color: "#F6F2E8", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Voir les suggestions</button>
-              <button style={{ padding: "10px 18px", borderRadius: 9999, border: "1.5px solid rgba(246,242,232,0.2)", background: "transparent", color: "rgba(246,242,232,0.55)", fontSize: 13, cursor: "pointer" }}>Plus tard</button>
-            </div>
-          </div>
-
-          {/* Insights */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginTop: 28 }}>
-            {[
-              { iBg: "#D6E4D6", iC: "#1F5C3E", icon: "✦", lab: "Force du portefeuille",    h: "Bien diversifié.",             p: "5 secteurs, 2 zones géographiques. Score de diversification 78/100." },
-              { iBg: "#F0E4C3", iC: "#C9A24E", icon: "⚠", lab: "Point d'attention",        h: "Faible exposition obligataire.",p: "3,6 % vs 15 % cible — les obligations amortissent les baisses de marché." },
-              { iBg: "#EBD7D2", iC: "#B84A3E", icon: "⤴", lab: "Risque mesuré",            h: "Volatilité élevée.",            p: "±15 % attendus sur 12 mois — dans la norme d'un profil équilibré." },
-            ].map((ins, i) => (
-              <div key={i} style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 22 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: ins.iBg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12, fontSize: 16, color: ins.iC }}>{ins.icon}</div>
-                <p style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{ins.lab}</p>
-                <h3 style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 20, fontWeight: 400, color: "var(--ink)", marginBottom: 8 }}>{ins.h}</h3>
-                <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55 }}>{ins.p}</p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </div>
-      <Footer />
-    </>
+    <svg width={size} height={size} style={{ display: "block", margin: "0 auto" }}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="18" />
+      {slices.map((s, i) => (
+        <circle key={i} cx={cx} cy={cy} r={r} fill="none"
+          stroke={s.color} strokeWidth="18"
+          strokeDasharray={`${s.dash} ${circ - s.dash}`}
+          strokeDashoffset={s.offset}
+          style={{ transform: "rotate(-90deg)", transformOrigin: `${cx}px ${cy}px`, transition: "stroke-dasharray 0.5s ease" }}
+        />
+      ))}
+      <text x={cx} y={cy - 4} textAnchor="middle" style={{ fontSize: 11, fill: "rgba(255,255,255,0.45)" }}>Total</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontSize: 13, fontWeight: 700, fill: "#fff" }}>
+        {data.length} pos.
+      </text>
+    </svg>
   );
 }
 
-function LegendItem({ color, dashed, label }: { color: string; dashed: boolean; label: string }) {
-  return (
-    <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
-      {dashed
-        ? <span style={{ width: 14, height: 0, border: `1px dashed ${color}`, display: "inline-block" }} />
-        : <span style={{ width: 14, height: 3, background: color, borderRadius: 2, display: "inline-block" }} />
-      }
-      {label}
-    </span>
-  );
-}
+const labelStyle: React.CSSProperties = { fontSize: 12, color: "var(--muted)", display: "block", marginBottom: 5 };
+const inputStyle: React.CSSProperties = {
+  width: "100%", padding: "10px 14px", borderRadius: 12,
+  background: "#fff", border: "1.5px solid var(--line)",
+  color: "var(--ink)", fontSize: 14, outline: "none", boxSizing: "border-box",
+};
