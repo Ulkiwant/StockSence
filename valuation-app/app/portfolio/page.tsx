@@ -90,8 +90,8 @@ function PerfChart() {
 /* ─── Donut SVG ──────────────────────────────────────── */
 function Donut() {
   const cx = 21, cy = 21, r = 16, circ = 2 * Math.PI * r;
-  let off = 0;
-  const segs = DONUT_SECTORS.map((s) => { const dash = (s.pct / 100) * circ; const seg = { ...s, dash, off }; off += dash; return seg; });
+  const dashes = DONUT_SECTORS.map((s) => (s.pct / 100) * circ);
+  const segs = DONUT_SECTORS.map((s, i) => ({ ...s, dash: dashes[i], off: dashes.slice(0, i).reduce((a, b) => a + b, 0) }));
   return (
     <div style={{ position: "relative", width: 180, height: 180, flexShrink: 0 }}>
       <svg width="180" height="180" viewBox="0 0 42 42" style={{ transform: "rotate(-90deg)" }}>
