@@ -247,9 +247,23 @@ export default function HomePage() {
     });
   }, []);
 
+  const [searchNavigating, setSearchNavigating] = useState(false);
+
   const handleSearchGo = (symbol: string) => {
     search.setQuery(""); search.setOpen(false);
     router.push(`/stock/${symbol}`);
+  };
+
+  const handleAnalyse = async () => {
+    if (search.results[0]) { handleSearchGo(search.results[0].symbol); return; }
+    const q = search.query.trim();
+    if (!q) return;
+    setSearchNavigating(true);
+    try {
+      const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const d: { symbol: string }[] = await r.json();
+      if (d[0]) { handleSearchGo(d[0].symbol); }
+    } finally { setSearchNavigating(false); }
   };
 
   /* ── svg helpers ── */
@@ -671,52 +685,50 @@ export default function HomePage() {
                 <input
                   type="text"
                   value={search.query}
-                  onChange={(e) => search.setQuery(e.target.value)}
+                  onChange={(e) => { search.setQuery(e.target.value); }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (search.results[0]) handleSearchGo(search.results[0].symbol);
-                      else if (search.query.trim()) handleSearchGo(search.query.trim().toUpperCase());
-                    }
-                    if (e.key === "Escape") search.setOpen(false);
+                    if (e.key === "Enter") { e.preventDefault(); handleAnalyse(); }
+                    if (e.key === "Escape") { search.setOpen(false); }
                   }}
+                  onFocus={() => { if (search.results.length > 0) search.setOpen(true); }}
                   placeholder="Rechercher une entreprise — ex : Carbios, LVMH, Apple…"
                   style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#14201A", fontSize: 14, fontFamily: "inherit" }}
                 />
-                {search.loading && <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid #D9D1BD", borderTopColor: "#1F5C3E", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />}
+                {(search.loading || searchNavigating) && (
+                  <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid #D9D1BD", borderTopColor: "#1F5C3E", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+                )}
                 <button
-                  onClick={() => {
-                    if (search.results[0]) handleSearchGo(search.results[0].symbol);
-                    else if (search.query.trim()) handleSearchGo(search.query.trim().toUpperCase());
-                  }}
-                  style={{ padding: "7px 18px", borderRadius: 9999, background: "#1F5C3E", color: "#F6F2E8", fontWeight: 600, fontSize: 13, border: "none", cursor: "pointer", flexShrink: 0, fontFamily: "inherit" }}
+                  onClick={handleAnalyse}
+                  disabled={searchNavigating || !search.query.trim()}
+                  style={{ padding: "7px 18px", borderRadius: 9999, background: searchNavigating ? "#2F7D52" : "#1F5C3E", color: "#F6F2E8", fontWeight: 600, fontSize: 13, border: "none", cursor: "pointer", flexShrink: 0, fontFamily: "inherit", opacity: !search.query.trim() ? 0.5 : 1, transition: "opacity .15s,background .15s" }}
                 >
-                  Analyser
+                  {searchNavigating ? "Recherche…" : "Analyser"}
                 </button>
               </div>
 
               {/* Dropdown — nom de l'entreprise en premier, ticker/bourse en secondaire */}
               {search.open && search.results.length > 0 && (
-                <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "#F6F2E8", border: "1px solid #D9D1BD", borderRadius: 14, overflow: "hidden", zIndex: 100, boxShadow: "0 8px 32px rgba(10,22,40,0.12)" }}>
+                <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0, background: "#F6F2E8", border: "1px solid #D9D1BD", borderRadius: 14, overflow: "hidden", zIndex: 200, boxShadow: "0 12px 40px rgba(10,22,40,0.15)" }}>
                   {search.results.map((r, i) => {
                     const exchangeLabel = EXCHANGE_LABELS[r.exchange] || r.exchange || "Bourse internationale";
                     return (
                       <button
                         key={r.symbol}
-                        onClick={() => handleSearchGo(r.symbol)}
-                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "transparent", border: "none", borderBottom: i < search.results.length - 1 ? "1px solid #D9D1BD" : "none", cursor: "pointer", textAlign: "left" }}
+                        onMouseDown={(e) => { e.preventDefault(); handleSearchGo(r.symbol); }}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "transparent", border: "none", borderBottom: i < search.results.length - 1 ? "1px solid #D9D1BD" : "none", cursor: "pointer", textAlign: "left" }}
                         onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#EFE9DC")}
                         onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
                       >
-                        <div style={{ width: 38, height: 38, borderRadius: 10, background: "#D6E4D6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: "#D6E4D6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                           <span style={{ fontSize: 13, fontWeight: 800, color: "#1F5C3E" }}>
                             {r.name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("").slice(0, 2)}
                           </span>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, color: "#14201A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                          <div style={{ fontSize: 11, color: "#7A7768", marginTop: 2 }}>{exchangeLabel}</div>
+                          <div style={{ fontWeight: 700, fontSize: 15, color: "#14201A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                          <div style={{ fontSize: 12, color: "#7A7768", marginTop: 2 }}>{exchangeLabel}</div>
                         </div>
-                        <ChevronRight size={14} color="#7A7768" />
+                        <ChevronRight size={15} color="#7A7768" />
                       </button>
                     );
                   })}
