@@ -390,7 +390,7 @@ export default function AdvisorPage() {
     const capitalNum = parseFloat(capitalInput || answers.capital) || 0;
     return (
       <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 24px 80px" }}>
+        <div className="pg-pad" style={{ maxWidth: 800, margin: "0 auto" }}>
           <h1 style={{
             fontFamily: "var(--font-instrument, serif)", fontSize: 42,
             fontWeight: 400, color: "var(--ink)", marginBottom: 32, lineHeight: 1.1,

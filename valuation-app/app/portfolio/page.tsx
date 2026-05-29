@@ -241,7 +241,7 @@ export default function PortfolioPage() {
 
   return (
     <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "40px 32px 80px" }}>
+      <div className="pg-pad" style={{ maxWidth: 1320, margin: "0 auto" }}>
 
         {/* ── Header ── */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 0, paddingBottom: 24, borderBottom: "1px solid var(--line)" }}>
@@ -300,10 +300,11 @@ export default function PortfolioPage() {
 
         {/* ── KPI Strip ── */}
         {enriched.length > 0 && (
-          <div style={{
+          <div className="pf-kpi-scroll">
+          <div className="pf-kpi-inner" style={{
             display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr",
             background: "var(--paper)", border: "1px solid var(--line)",
-            borderRadius: 18, overflow: "hidden", margin: "28px 0",
+            borderRadius: 18, overflow: "hidden",
             boxShadow: "0 1px 0 rgba(255,255,255,0.5) inset",
           }}>
             {/* Valeur totale */}
@@ -353,6 +354,7 @@ export default function PortfolioPage() {
                 {uniqueSectors} secteur{uniqueSectors !== 1 ? "s" : ""}
               </div>
             </div>
+          </div>
           </div>
         )}
 
@@ -454,7 +456,7 @@ export default function PortfolioPage() {
 
         {/* ── Main 2-column grid ── */}
         {!loading && enriched.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20, marginBottom: 20 }}>
+          <div className="pf-main-grid">
 
             {/* ── LEFT: Chart + Holdings ── */}
             <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
@@ -738,7 +740,7 @@ export default function PortfolioPage() {
 
         {/* ── Insights cards ── */}
         {!loading && enriched.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 24 }}>
+          <div className="grid-3col" style={{ marginBottom: 24 }}>
             {/* Diversification */}
             <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 16, padding: 20 }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "#D6E4D6", color: "#1F5C3E", display: "grid", placeItems: "center", marginBottom: 12 }}>

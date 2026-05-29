@@ -237,7 +237,7 @@ export default function WatchlistPage() {
 
   return (
     <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "40px 32px 0" }}>
+      <div className="pg-top-pad" style={{ maxWidth: 1400, margin: "0 auto" }}>
 
         {/* ── Header ── */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32, gap: 16, flexWrap: "wrap" }}>
@@ -271,13 +271,13 @@ export default function WatchlistPage() {
         </div>
 
         {/* ── 2-column layout ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 308px", gap: 24, alignItems: "start" }}>
+        <div className="wl-layout">
 
           {/* ═══ LEFT ═══ */}
           <div>
             {/* KPI strip */}
             {stocks.length > 0 && !loading && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 20 }}>
+              <div className="grid-kpi-4">
                 <KpiCard icon={<CheckIcon />} label="En hausse aujourd'hui">
                   <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 36, lineHeight: 1, color: "var(--signal-up)" }}>
                     {risingCount} <span style={{ fontSize: 14, color: "var(--muted)", fontFamily: "inherit" }}>/ {stocks.length}</span>
@@ -470,7 +470,7 @@ export default function WatchlistPage() {
                         Voir toutes les idées →
                       </button>
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 52 }}>
+                    <div className="grid-3col" style={{ marginBottom: 52 }}>
                       {recs.map((rec) => {
                         const bg = avatarBg(rec.name);
                         const isPos = (rec.changePercent ?? 0) >= 0;
