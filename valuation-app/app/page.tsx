@@ -69,17 +69,17 @@ const TESTIMONIALS = [
   {
     initials: "CL", name: "Camille L.", role: "Designer · 28 ans · Lyon",
     gradient: "linear-gradient(135deg,#1F5C3E,#2F7D52)",
-    quote: "J'ai mis 15 minutes à comprendre ce qu'aucun livre n'avait réussi à m'expliquer. Et j'ai enfin commencé à investir.",
+    quote: "J'ai ajouté mes premières actions à ma liste de suivi et j'ai reçu une alerte dès que l'une d'elles a basculé en signal d'achat. Sans Rently j'aurais raté le moment.",
   },
   {
     initials: "TM", name: "Thomas M.", role: "Développeur · 34 ans · Nantes",
     gradient: "linear-gradient(135deg,#C9A24E,#8E6E2C)",
-    quote: "La note A−, B+, C : c'est tellement plus parlant qu'un PER ou un ratio Sharpe. Je sais ce que je dois faire.",
+    quote: "Le score sur 100, les signaux visuels, le graphique de répartition — en deux minutes je vois si mon portefeuille est équilibré. C'est exactement ce qu'il me fallait.",
   },
   {
     initials: "SR", name: "Sarah R.", role: "Médecin · 41 ans · Bordeaux",
     gradient: "linear-gradient(135deg,#3A3E33,#14201A)",
-    quote: "Le portefeuille que Rently m'a suggéré ressemble exactement à ce que mon conseiller bancaire facturait 300 €/an.",
+    quote: "Je ne comprenais rien à la bourse. Rently traduit tout en français clair, avec des recommandations concrètes. J'ai enfin un portefeuille qui me ressemble.",
   },
 ];
 
@@ -197,7 +197,6 @@ export default function HomePage() {
   const growScore      = aapl.peg > 0 ? Math.min(95, Math.max(20, Math.round(100 - aapl.peg  * 18)))        : 55;
   const solidScore     = Math.min(95, Math.max(40, overallScore + 6));
   const momentumScore  = Math.min(95, Math.max(40, overallScore + (aapl.change >= 0 ? 5 : -5)));
-  const grade          = overallScore >= 80 ? "A+" : overallScore >= 72 ? "A" : overallScore >= 62 ? "A−" : overallScore >= 52 ? "B+" : overallScore >= 42 ? "B" : overallScore >= 32 ? "B−" : "C";
   const verdictTitle   = (({ STRONG_BUY: "Excellente opportunité d'achat", BUY: "Bonne opportunité à long terme", HOLD: "Valorisation correcte, à surveiller", SELL: "Légèrement surévalué", STRONG_SELL: "Fortement surévalué" } as Record<string,string>)[aapl.signal]) ?? "Analyse en cours…";
 
   /* ── auth ── */
@@ -610,12 +609,12 @@ export default function HomePage() {
             {/* Holdings */}
             <div style={{ marginTop: 18, borderTop: "1px dashed #D9D1BD", paddingTop: 16 }}>
               {[
-                { logo: "W", ticker: "CW8",   name: "Amundi MSCI World", price: "€512.30",  change: "+1.84 %", up: true  },
-                { logo: "M", ticker: "MC.PA", name: "LVMH",              price: "€768.10",  change: "−0.91 %", up: false },
-                { logo: "O", ticker: "OR.PA", name: "L'Oréal",           price: "€412.30",  change: "+0.55 %", up: true  },
-                { logo: "A", ticker: "AAPL",  name: "Apple Inc.",         price: "$192.40",  change: "+0.62 %", up: true  },
+                { logo: "A", name: "Amundi MSCI World", price: "€512,30",  change: "+1,84 %", up: true  },
+                { logo: "L", name: "LVMH",              price: "€768,10",  change: "−0,91 %", up: false },
+                { logo: "L", name: "L'Oréal",           price: "€412,30",  change: "+0,55 %", up: true  },
+                { logo: "A", name: "Apple Inc.",         price: "€177,40",  change: "+0,62 %", up: true  },
               ].map((h, i) => (
-                <div key={h.ticker} style={{
+                <div key={h.name} style={{
                   display: "grid", gridTemplateColumns: "28px 1fr auto auto",
                   gap: 12, alignItems: "center", padding: "8px 0", fontSize: 13,
                   ...(i > 0 ? { borderTop: "1px dashed #D9D1BD" } : {}),
@@ -623,8 +622,7 @@ export default function HomePage() {
                   <span style={{ width: 28, height: 28, borderRadius: 8, background: "#EFE9DC", color: "#3A3E33", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-geist-mono,monospace)", fontSize: 11, fontWeight: 600, border: "1px solid #D9D1BD" }}>
                     {h.logo}
                   </span>
-                  <span style={{ color: "#3A3E33" }}>
-                    <strong style={{ color: "#14201A", fontWeight: 600, fontFamily: "var(--font-geist-mono,monospace)", fontSize: 12, marginRight: 6 }}>{h.ticker}</strong>
+                  <span style={{ color: "#3A3E33", fontWeight: 500 }}>
                     {h.name}
                   </span>
                   <span style={{ fontFamily: "var(--font-geist-mono,monospace)", color: "#14201A" }}>{h.price}</span>
@@ -721,7 +719,7 @@ export default function HomePage() {
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 34, lineHeight: 1, letterSpacing: "-0.01em" }}>
-                      ${aapl.price.toFixed(2)}
+                      {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(aapl.price)}
                     </div>
                     <div style={{ fontSize: 13, color: aapl.change >= 0 ? "#2F7D52" : "#B84A3E", marginTop: 4 }}>
                       {aapl.change >= 0 ? "▲" : "▼"} {aapl.change >= 0 ? "+" : ""}{aapl.change.toFixed(2)} %
@@ -767,7 +765,7 @@ export default function HomePage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                   <div style={{ width: 64, height: 64, borderRadius: "50%", background: `conic-gradient(#2F7D52 0% ${overallScore}%,#D9D1BD ${overallScore}% 100%)`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
                     <div style={{ position: "absolute", inset: 6, background: "#F6F2E8", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 22, color: "#1F5C3E" }}>{grade}</span>
+                      <span style={{ fontFamily: "var(--font-geist-mono,monospace)", fontSize: 16, fontWeight: 700, color: "#1F5C3E" }}>{overallScore}</span>
                     </div>
                   </div>
                   <div>
