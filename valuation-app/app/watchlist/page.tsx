@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { SearchModal } from "@/components/SearchModal";
 import { createClient } from "@/lib/supabase";
@@ -24,6 +24,16 @@ const SIGNAL_MAP: Record<SignalKey, { bg: string; color: string; label: string }
   SELL:       { bg: "#EBD7D2", color: "#B84A3E", label: "Vendre" },
   STRONG_SELL:{ bg: "#EBD7D2", color: "#B84A3E", label: "Vendre" },
 };
+
+const AVATAR_COLORS = [
+  "#1F5C3E","#2d5e7e","#7e3d2d","#5e2d7e","#7e6b2d",
+  "#2d7e5e","#3d2d7e","#7e2d5e","#2d6e7e","#5e7e2d",
+];
+function avatarColor(sym: string) {
+  let h = 0;
+  for (const c of sym) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
 
 function SignalBadge({ signal }: { signal?: SignalKey }) {
   if (!signal) return <span style={{ color: "var(--muted)", fontSize: 12 }}>—</span>;
@@ -133,75 +143,176 @@ export default function WatchlistPage() {
 
   const watchlistSymbols = items.map((i) => i.symbol);
 
+  const thStyle: React.CSSProperties = {
+    textAlign: "left", fontWeight: 500, fontSize: 11,
+    textTransform: "uppercase", letterSpacing: "0.1em",
+    color: "var(--muted)", padding: "12px 16px",
+    background: "var(--paper-3)", borderBottom: "1px solid var(--line)",
+    whiteSpace: "nowrap",
+  };
+
+  /* ── Computed KPI data ── */
+  const risingCount = stocks.filter((s) => s.changePercent >= 0).length;
+  const avgRisingPct = stocks.length > 0
+    ? stocks.filter((s) => s.changePercent >= 0).reduce((sum, s) => sum + s.changePercent, 0) / Math.max(risingCount, 1)
+    : 0;
+  const topGainer = stocks.length > 0
+    ? stocks.reduce((best, s) => s.changePercent > best.changePercent ? s : best, stocks[0])
+    : null;
+  const buySignalCount = stocks.filter((s) => s.valuation?.signal === "STRONG_BUY" || s.valuation?.signal === "BUY").length;
+  const scoredStocks = stocks.filter((s) => s.valuation?.score !== undefined);
+  const avgScore = scoredStocks.length > 0
+    ? Math.round(scoredStocks.reduce((sum, s) => sum + (s.valuation!.score), 0) / scoredStocks.length)
+    : null;
+
   return (
     <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 28px 80px" }}>
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 40, gap: 16, flexWrap: "wrap" }}>
+        {/* ── Page header ── */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32, gap: 16, flexWrap: "wrap" }}>
           <div>
-            {/* Breadcrumb */}
             <div style={{
               fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
-              color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em",
-              marginBottom: 10,
+              color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em",
+              marginBottom: 12, display: "flex", alignItems: "center", gap: 8,
             }}>
-              RENTLY / MES ACTIONS
+              <Link href="/" style={{ color: "var(--muted)" }}>Rently</Link>
+              <span style={{ opacity: 0.4 }}>/</span>
+              <span>Mes actions</span>
             </div>
-            {/* H1 */}
             <h1 style={{
-              fontFamily: "var(--font-instrument, serif)", fontSize: 56,
-              fontWeight: 400, color: "var(--ink)", margin: "0 0 12px 0", lineHeight: 1.05,
+              fontFamily: "var(--font-instrument, serif)", fontSize: "clamp(40px,4.4vw,56px)",
+              fontWeight: 400, color: "var(--ink)", margin: "0 0 10px 0", lineHeight: 1.05,
+              letterSpacing: "-0.02em",
             }}>
-              Mes actions.
+              Mes <em style={{ fontStyle: "italic", color: "var(--signal-up)" }}>actions</em>.
             </h1>
-            {/* Subtitle */}
-            <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 560 }}>
-              {items.length} valeur{items.length !== 1 ? "s" : ""} suivie{items.length !== 1 ? "s" : ""} — surveillez les signaux, comparez leur santé et gardez un œil sur les opportunités qui vous ressemblent.
+            <p style={{ fontSize: 15, color: "var(--ink-2, var(--muted))", maxWidth: 560, margin: 0 }}>
+              {items.length} valeur{items.length !== 1 ? "s" : ""} suivie{items.length !== 1 ? "s" : ""} — surveillez les signaux, comparez leur santé et gardez un œil sur les opportunités.
             </p>
             {!loggedIn && (
               <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>
-                <Link href="/auth/login" style={{ color: "var(--accent)", fontWeight: 500 }}>
+                <Link href="/auth/login" style={{ color: "var(--signal-up)", fontWeight: 500 }}>
                   {t("nav.login")}
                 </Link>{" "}
                 {t("common.sign_in_sync")}
               </p>
             )}
           </div>
-
-          {/* Buttons */}
-          <div style={{ display: "flex", gap: 10, flexShrink: 0, alignItems: "flex-start", paddingTop: 8 }}>
-            {/* Exporter button — outlined */}
-            <button
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "10px 18px", borderRadius: 9999,
-                border: "1.5px solid var(--line)",
-                background: "transparent",
-                color: "var(--ink)", fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}
-            >
+          <div style={{ display: "flex", gap: 10, flexShrink: 0, alignItems: "flex-start", paddingTop: 6 }}>
+            <button style={{
+              display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
+              borderRadius: 9999, border: "1px solid var(--line)",
+              background: "var(--paper)", color: "var(--ink)", fontSize: 14,
+              fontWeight: 500, cursor: "pointer",
+            }}>
               <Download size={13} strokeWidth={2} />
               Exporter
             </button>
-            {/* Ajouter button — green filled */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "10px 18px", borderRadius: 9999,
-                border: "none",
-                background: "var(--accent)",
-                color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}
-            >
-              ＋ Ajouter une action
+            <button onClick={() => setSearchOpen(true)} style={{
+              display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
+              borderRadius: 9999, border: "none",
+              background: "#1F5C3E", color: "#F6F2E8",
+              fontSize: 14, fontWeight: 500, cursor: "pointer",
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter une action
             </button>
           </div>
         </div>
 
+        {/* ── KPI strip ── */}
+        {stocks.length > 0 && !loading && (
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14,
+            marginBottom: 28,
+          }}>
+            {/* En hausse */}
+            <div style={{
+              background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 14,
+              padding: "18px 20px", display: "flex", flexDirection: "column", gap: 6,
+              minHeight: 108, justifyContent: "space-between",
+            }}>
+              <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                En hausse aujourd&apos;hui
+              </span>
+              <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 36, lineHeight: 1, color: "var(--signal-up)" }}>
+                {risingCount} <span style={{ fontSize: 14, color: "var(--muted)", fontFamily: "inherit", marginLeft: 4 }}>/ {stocks.length}</span>
+              </div>
+              <div style={{ fontSize: 12, color: risingCount > 0 ? "var(--signal-up)" : "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+                {risingCount > 0 ? `+${avgRisingPct.toFixed(2)} % en moyenne` : "Aucune hausse"}
+              </div>
+            </div>
+
+            {/* Plus forte hausse */}
+            <div style={{
+              background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 14,
+              padding: "18px 20px", display: "flex", flexDirection: "column", gap: 6,
+              minHeight: 108, justifyContent: "space-between",
+            }}>
+              <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M5 12h14"/></svg>
+                Plus forte hausse
+              </span>
+              <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 36, lineHeight: 1, color: "var(--ink)" }}>
+                {topGainer ? topGainer.symbol : "—"}
+              </div>
+              <div style={{
+                fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)",
+                color: topGainer && topGainer.changePercent >= 0 ? "var(--signal-up)" : "var(--signal-down)",
+              }}>
+                {topGainer ? `${topGainer.changePercent >= 0 ? "▲ +" : "▼ "}${topGainer.changePercent.toFixed(2)} %` : "—"}
+              </div>
+            </div>
+
+            {/* Signaux d'achat */}
+            <div style={{
+              background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 14,
+              padding: "18px 20px", display: "flex", flexDirection: "column", gap: 6,
+              minHeight: 108, justifyContent: "space-between",
+            }}>
+              <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+                Signaux d&apos;achat
+              </span>
+              <div style={{
+                fontFamily: "var(--font-instrument, serif)", fontSize: 36, lineHeight: 1,
+                color: buySignalCount > 0 ? "#7A5A1F" : "var(--ink)",
+              }}>
+                {buySignalCount} <span style={{ fontSize: 14, color: "var(--muted)", fontFamily: "inherit", marginLeft: 4 }}>/ {stocks.length}</span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+                {buySignalCount > 0 ? `${buySignalCount} valeur${buySignalCount > 1 ? "s" : ""} en zone d'achat` : "Aucun signal d'achat"}
+              </div>
+            </div>
+
+            {/* Note moyenne */}
+            <div style={{
+              background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 14,
+              padding: "18px 20px", display: "flex", flexDirection: "column", gap: 6,
+              minHeight: 108, justifyContent: "space-between",
+            }}>
+              <span style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-7"/></svg>
+                Note moyenne
+              </span>
+              <div style={{
+                fontFamily: "var(--font-instrument, serif)", fontSize: 36, lineHeight: 1,
+                color: avgScore != null ? (avgScore >= 70 ? "var(--signal-up)" : avgScore >= 50 ? "var(--muted)" : "var(--signal-down)") : "var(--muted)",
+              }}>
+                {avgScore != null ? avgScore : "—"} <span style={{ fontSize: 14, color: "var(--muted)", fontFamily: "inherit", marginLeft: 2 }}>/100</span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+                {scoredStocks.length > 0 ? `${scoredStocks.length} valeur${scoredStocks.length > 1 ? "s" : ""} analysée${scoredStocks.length > 1 ? "s" : ""}` : "Données insuffisantes"}
+              </div>
+            </div>
+          </div>
+        )}
+
         {items.length === 0 ? (
-          /* Empty state */
+          /* ── Empty state ── */
           <div style={{
             textAlign: "center", padding: "80px 24px",
             border: "1.5px dashed var(--line)", borderRadius: 18,
@@ -212,7 +323,7 @@ export default function WatchlistPage() {
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 16px",
             }}>
-              <Star size={24} strokeWidth={1.5} color="var(--accent)" />
+              <Star size={24} strokeWidth={1.5} color="var(--signal-up)" />
             </div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", marginBottom: 8 }}>
               {t("watchlist.empty_title")}
@@ -225,135 +336,131 @@ export default function WatchlistPage() {
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "11px 24px", borderRadius: 9999,
-                background: "var(--accent)", color: "#fff",
-                fontWeight: 600, fontSize: 13, cursor: "pointer",
-                border: "none",
+                background: "#1F5C3E", color: "#F6F2E8",
+                fontWeight: 500, fontSize: 14, cursor: "pointer", border: "none",
               }}
             >
-              ＋ {t("watchlist.add_btn")}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              {t("watchlist.add_btn")}
             </button>
           </div>
         ) : (
-          /* Table */
+          /* ── Table card ── */
           <div style={{
-            background: "var(--paper)", border: "1.5px solid var(--line)",
+            background: "var(--paper)", border: "1px solid var(--line)",
             borderRadius: 18, overflow: "hidden",
+            boxShadow: "0 1px 0 rgba(255,255,255,0.5) inset",
           }}>
-            {/* Table header */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 130px 100px 130px 120px 48px",
-              padding: "12px 24px",
-              borderBottom: "1.5px solid var(--line)",
-              fontFamily: "var(--font-geist-mono, monospace)",
-              fontSize: 11, color: "var(--muted)",
-              textTransform: "uppercase", letterSpacing: "0.08em",
-            }}>
-              <span>Action</span>
-              <span style={{ textAlign: "right" }}>Prix</span>
-              <span style={{ textAlign: "right" }}>Var. 1J</span>
-              <span style={{ textAlign: "center" }}>Signal</span>
-              <span style={{ textAlign: "right" }}>Note /100</span>
-              <span />
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: 14 }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Action</th>
+                    <th style={{ ...thStyle, textAlign: "right" }}>Prix</th>
+                    <th style={{ ...thStyle, textAlign: "right" }}>1 J</th>
+                    <th style={thStyle}>Signal IA</th>
+                    <th style={{ ...thStyle, textAlign: "right" }}>Note</th>
+                    <th style={{ ...thStyle, width: 40 }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading && Array.from({ length: 3 }).map((_, i) => (
+                    <tr key={i}>
+                      <td colSpan={6} style={{ padding: 0 }}>
+                        <div className="skeleton" style={{ height: 62, margin: 0, borderRadius: 0, borderBottom: "1px solid var(--line)" }} />
+                      </td>
+                    </tr>
+                  ))}
+                  {!loading && stocks.map((stock, i) => {
+                    const isPos = stock.changePercent >= 0;
+                    const price = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(stock.currentPrice);
+                    const inWatchlist = watchlistSymbols.includes(stock.symbol);
+                    const bg = avatarColor(stock.symbol);
+                    return (
+                      <tr
+                        key={stock.symbol}
+                        style={{ borderBottom: i < stocks.length - 1 ? "1px solid var(--line)" : "none", transition: "background .12s" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.37)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      >
+                        {/* Action cell */}
+                        <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 200 }}>
+                            <div style={{
+                              width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                              background: bg, display: "grid", placeItems: "center",
+                              fontSize: 12, fontWeight: 700, color: "#F6F2E8",
+                              fontFamily: "var(--font-geist-mono, monospace)",
+                              border: "1px solid rgba(0,0,0,0.08)",
+                            }}>
+                              {stock.symbol.slice(0, 2)}
+                            </div>
+                            <div>
+                              <div style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+                                {stock.symbol}
+                              </div>
+                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                                <Link href={`/stock/${stock.symbol}`} style={{ color: "var(--muted)" }}>
+                                  {stock.name}
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        {/* Price */}
+                        <td style={{ padding: "14px 16px", textAlign: "right", verticalAlign: "middle", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 14, fontWeight: 500, color: "var(--ink)", whiteSpace: "nowrap" }}>
+                          {price} <span style={{ fontSize: 11, color: "var(--muted)" }}>{stock.currency}</span>
+                        </td>
+                        {/* Change 1J */}
+                        <td style={{ padding: "14px 16px", textAlign: "right", verticalAlign: "middle", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, fontWeight: 600, color: isPos ? "var(--signal-up)" : "var(--signal-down)", whiteSpace: "nowrap" }}>
+                          {isPos ? "▲ +" : "▼ "}{stock.changePercent.toFixed(2)} %
+                        </td>
+                        {/* Signal */}
+                        <td style={{ padding: "14px 16px", verticalAlign: "middle" }}>
+                          <SignalBadge signal={stock.valuation?.signal} />
+                        </td>
+                        {/* Score */}
+                        <td style={{ padding: "14px 16px", textAlign: "right", verticalAlign: "middle" }}>
+                          <ScoreCell score={stock.valuation?.score} />
+                        </td>
+                        {/* Star */}
+                        <td style={{ padding: "14px 12px", verticalAlign: "middle", textAlign: "center" }}>
+                          <button
+                            onClick={() => inWatchlist ? handleUnfollow(stock.symbol) : handleFollow(stock.symbol, stock.name)}
+                            title={inWatchlist ? "Retirer de la liste" : "Ajouter à la liste"}
+                            style={{
+                              background: "none", border: "none", cursor: "pointer",
+                              padding: 4, display: "flex", alignItems: "center", justifyContent: "center",
+                              color: inWatchlist ? "#C9A24E" : "var(--muted)",
+                            }}
+                          >
+                            <Star size={16} strokeWidth={1.8} fill={inWatchlist ? "#C9A24E" : "none"} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-
-            {/* Skeleton rows */}
-            {loading && Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="skeleton" style={{ height: 56, margin: "0", borderRadius: 0, borderBottom: "1.5px solid var(--line)" }} />
-            ))}
-
-            {/* Data rows */}
-            {!loading && stocks.map((stock, i) => {
-              const isPos = stock.changePercent >= 0;
-              const priceFormatted = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2 }).format(stock.currentPrice);
-              const inWatchlist = watchlistSymbols.includes(stock.symbol);
-              return (
-                <div
-                  key={stock.symbol}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 130px 100px 130px 120px 48px",
-                    padding: "14px 24px",
-                    alignItems: "center",
-                    borderBottom: i < stocks.length - 1 ? "1.5px solid var(--line)" : "none",
-                    transition: "background 0.15s",
-                    cursor: "default",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--paper-2)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  {/* Name + symbol */}
-                  <div>
-                    <Link
-                      href={`/stock/${stock.symbol}`}
-                      style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)", textDecoration: "none" }}
-                    >
-                      {stock.name}
-                    </Link>
-                    <div style={{
-                      fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
-                      color: "var(--muted)", marginTop: 2,
-                    }}>
-                      {stock.symbol}
-                    </div>
-                  </div>
-
-                  {/* Price */}
-                  <div style={{
-                    textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)",
-                    fontSize: 14, fontWeight: 600, color: "var(--ink)",
-                  }}>
-                    {priceFormatted} {stock.currency}
-                  </div>
-
-                  {/* Change % */}
-                  <div style={{
-                    textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)",
-                    fontSize: 13, fontWeight: 600,
-                    color: isPos ? "var(--signal-up)" : "var(--signal-down)",
-                  }}>
-                    {isPos ? "+" : ""}{stock.changePercent.toFixed(2)}%
-                  </div>
-
-                  {/* Signal */}
-                  <div style={{ display: "flex", justifyContent: "center" }}>
-                    <SignalBadge signal={stock.valuation?.signal} />
-                  </div>
-
-                  {/* Score */}
-                  <div style={{ textAlign: "right" }}>
-                    <ScoreCell score={stock.valuation?.score} />
-                  </div>
-
-                  {/* Star / unfollow */}
-                  <div style={{ display: "flex", justifyContent: "center" }}>
-                    <button
-                      onClick={() => inWatchlist ? handleUnfollow(stock.symbol) : handleFollow(stock.symbol, stock.name)}
-                      title={inWatchlist ? "Retirer de la liste" : "Ajouter à la liste"}
-                      style={{
-                        background: "none", border: "none", cursor: "pointer",
-                        padding: 4, display: "flex", alignItems: "center", justifyContent: "center",
-                        color: inWatchlist ? "var(--accent)" : "var(--muted)",
-                        transition: "color 0.15s",
-                      }}
-                    >
-                      <Star
-                        size={16}
-                        strokeWidth={1.8}
-                        fill={inWatchlist ? "var(--accent)" : "none"}
-                      />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {/* Pager footer */}
+            {!loading && stocks.length > 0 && (
+              <div style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "12px 20px", borderTop: "1px solid var(--line)",
+                background: "var(--paper-3)", fontSize: 12, color: "var(--muted)",
+              }}>
+                <span style={{ fontFamily: "var(--font-geist-mono, monospace)" }}>
+                  {stocks.length} action{stocks.length > 1 ? "s" : ""} · trié par ordre d&apos;ajout
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       <Footer />
 
-      {/* Search modal */}
       <SearchModal
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
