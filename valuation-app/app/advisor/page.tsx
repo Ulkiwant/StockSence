@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, X, ChevronRight, Briefcase, Lightbulb, RefreshCw, Circle, AlertTriangle, ExternalLink } from "lucide-react";
+import { Check, X, Briefcase, Lightbulb, RefreshCw, AlertTriangle, ExternalLink } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import SignalPill from "@/components/SignalPill";
 
@@ -303,45 +303,41 @@ export default function AdvisorPage() {
   if (result && step === 11) {
     const capitalNum = parseFloat(capitalInput || answers.capital) || 0;
     return (
-      <div
-        style={{
-          maxWidth: 800,
-          margin: "0 auto",
-          padding: "48px 24px",
-          background: "var(--paper)",
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {/* Metrics */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
-            <MetricCard label="Gain estimé par an" value={result.expectedReturn} color="var(--signal-up)" />
-            <MetricCard
-              label="Niveau de risque"
-              value={`Risque ${result.riskLevel}`}
-              color={RISK_COLOR[result.riskLevel] ?? "var(--muted)"}
-            />
-            {result.dividendYield && result.dividendYield !== "null" && (
-              <MetricCard label="Revenus annuels estimés" value={result.dividendYield} color="var(--signal-neutral)" />
-            )}
-          </div>
+      <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 24px 80px" }}>
+          <h1 style={{
+            fontFamily: "var(--font-instrument, serif)", fontSize: 42,
+            fontWeight: 400, color: "var(--ink)", marginBottom: 32, lineHeight: 1.1,
+          }}>
+            Votre portefeuille personnalisé.
+          </h1>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Metrics */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+              <MetricCard label="Gain estimé par an" value={result.expectedReturn} color="var(--signal-up)" />
+              <MetricCard
+                label="Niveau de risque"
+                value={`Risque ${result.riskLevel}`}
+                color={RISK_COLOR[result.riskLevel] ?? "var(--muted)"}
+              />
+              {result.dividendYield && result.dividendYield !== "null" && (
+                <MetricCard label="Revenus annuels estimés" value={result.dividendYield} color="var(--signal-neutral)" />
+              )}
+            </div>
 
-          {/* Summary */}
-          <div
-            style={{
-              background: "var(--paper-2)",
+            {/* Summary */}
+            <div style={{
+              background: "var(--paper)",
               border: "1.5px solid var(--line)",
-              borderRadius: 16,
+              borderRadius: 18,
               padding: 24,
-            }}
-          >
-            <p style={{ fontSize: 14, lineHeight: 1.75, color: "var(--muted)", marginBottom: 12 }}>{result.summary}</p>
-            <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.6, marginBottom: result.taxAdvice ? 14 : 0 }}>
-              {result.strategy}
-            </p>
-            {result.taxAdvice && (
-              <div
-                style={{
+            }}>
+              <p style={{ fontSize: 14, lineHeight: 1.75, color: "var(--muted)", marginBottom: 12 }}>{result.summary}</p>
+              <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.6, marginBottom: result.taxAdvice ? 14 : 0 }}>
+                {result.strategy}
+              </p>
+              {result.taxAdvice && (
+                <div style={{
                   padding: "10px 14px",
                   borderRadius: 8,
                   background: "var(--accent-soft)",
@@ -351,33 +347,29 @@ export default function AdvisorPage() {
                   display: "flex",
                   alignItems: "flex-start",
                   gap: 8,
-                }}
-              >
-                <Briefcase size={14} style={{ marginTop: 1, flexShrink: 0 }} />
-                {result.taxAdvice}
-              </div>
-            )}
-          </div>
+                }}>
+                  <Briefcase size={14} style={{ marginTop: 1, flexShrink: 0 }} />
+                  {result.taxAdvice}
+                </div>
+              )}
+            </div>
 
-          {/* Allocations */}
-          <div
-            style={{
-              background: "var(--paper-2)",
+            {/* Allocations */}
+            <div style={{
+              background: "var(--paper)",
               border: "1.5px solid var(--line)",
-              borderRadius: 16,
+              borderRadius: 18,
               padding: 24,
-            }}
-          >
-            <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 18, color: "var(--ink)" }}>
-              Votre répartition
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {result.allocations.map((a, i) => (
-                <div key={i}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div
-                        style={{
+            }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 18, color: "var(--ink)" }}>
+                Votre répartition
+              </h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {result.allocations.map((a, i) => (
+                  <div key={i}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{
                           width: 36,
                           height: 36,
                           borderRadius: 8,
@@ -389,15 +381,13 @@ export default function AdvisorPage() {
                           fontSize: 9,
                           fontWeight: 700,
                           color: "var(--accent)",
-                        }}
-                      >
-                        {a.symbol.slice(0, 4)}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>
-                          {a.name || a.symbol}
-                          <span
-                            style={{
+                        }}>
+                          {a.symbol.slice(0, 4)}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>
+                            {a.name || a.symbol}
+                            <span style={{
                               fontSize: 10,
                               color: "var(--muted)",
                               background: "var(--paper-3)",
@@ -405,77 +395,65 @@ export default function AdvisorPage() {
                               borderRadius: 4,
                               marginLeft: 6,
                               fontWeight: 500,
-                            }}
-                          >
-                            {a.symbol}
-                          </span>
-                          <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: 4 }}>{a.type}</span>
-                          {a.dividendFrequency && a.dividendFrequency !== "Capitalisant" && (
-                            <span
-                              style={{
+                            }}>
+                              {a.symbol}
+                            </span>
+                            <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: 4 }}>{a.type}</span>
+                            {a.dividendFrequency && a.dividendFrequency !== "Capitalisant" && (
+                              <span style={{
                                 fontSize: 10,
                                 marginLeft: 6,
                                 color: "var(--signal-neutral)",
                                 background: "rgba(139,122,94,0.12)",
                                 padding: "1px 6px",
                                 borderRadius: 4,
-                              }}
-                            >
-                              {a.dividendFrequency}
-                            </span>
-                          )}
+                              }}>
+                                {a.dividendFrequency}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <span
-                      style={{
+                      <span style={{
                         fontSize: 18,
                         fontWeight: 800,
                         color: "var(--ink)",
                         fontFamily: "var(--font-geist-mono, monospace)",
                         fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {a.percentage}%
-                    </span>
-                  </div>
-                  <div
-                    style={{
+                      }}>
+                        {a.percentage}%
+                      </span>
+                    </div>
+                    <div style={{
                       height: 5,
                       borderRadius: 3,
                       background: "var(--line)",
                       overflow: "hidden",
                       marginBottom: 4,
-                    }}
-                  >
-                    <div
-                      style={{
+                    }}>
+                      <div style={{
                         height: "100%",
                         width: `${a.percentage}%`,
                         borderRadius: 3,
                         background: "var(--accent)",
                         transition: "width 0.6s ease",
-                      }}
-                    />
+                      }} />
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--muted)" }}>{a.rationale}</p>
                   </div>
-                  <p style={{ fontSize: 12, color: "var(--muted)" }}>{a.rationale}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Tips */}
-          {result.tips?.length > 0 && (
-            <div
-              style={{
-                background: "var(--paper-2)",
+            {/* Tips */}
+            {result.tips?.length > 0 && (
+              <div style={{
+                background: "var(--paper)",
                 border: "1.5px solid var(--line)",
-                borderRadius: 16,
+                borderRadius: 18,
                 padding: 24,
-              }}
-            >
-              <h2
-                style={{
+              }}>
+                <h2 style={{
                   fontSize: 15,
                   fontWeight: 700,
                   marginBottom: 14,
@@ -483,22 +461,17 @@ export default function AdvisorPage() {
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                }}
-              >
-                <Lightbulb size={16} color="var(--accent)" />
-                Ce que vous pouvez faire maintenant
-              </h2>
-              {result.tips.map((tip, i) => (
-                <div
-                  key={i}
-                  style={{ display: "flex", gap: 10, marginBottom: 10, fontSize: 13, color: "var(--muted)" }}
-                >
-                  <span style={{ color: "var(--accent)", fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
-                  {tip}
-                </div>
-              ))}
-              <div
-                style={{
+                }}>
+                  <Lightbulb size={16} color="var(--accent)" />
+                  Ce que vous pouvez faire maintenant
+                </h2>
+                {result.tips.map((tip, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, marginBottom: 10, fontSize: 13, color: "var(--muted)" }}>
+                    <span style={{ color: "var(--accent)", fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
+                    {tip}
+                  </div>
+                ))}
+                <div style={{
                   marginTop: 14,
                   padding: "10px 14px",
                   borderRadius: 8,
@@ -509,650 +482,445 @@ export default function AdvisorPage() {
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                }}
-              >
-                <RefreshCw size={13} color="var(--accent)" />
-                Quand vérifier :{" "}
-                <strong style={{ color: "var(--ink)" }}>{result.rebalancing}</strong>
+                }}>
+                  <RefreshCw size={13} color="var(--accent)" />
+                  Quand vérifier :{" "}
+                  <strong style={{ color: "var(--ink)" }}>{result.rebalancing}</strong>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Scenario Analysis */}
-          <ScenarioAnalysis
-            positions={result.allocations.map((a: Allocation) => ({
-              symbol: a.symbol,
-              name: a.name,
-              marketValue: (capitalNum * a.percentage) / 100,
-              asset_type: a.type?.toLowerCase() === "etf" ? "etf" : "stock",
-              sector: undefined,
-            }))}
-            totalValue={capitalNum}
-            monthlyContribution={parseFloat(monthlyInput || answers.monthly) || 0}
-            riskLabel={answers.riskTolerance ?? ""}
-          />
+            {/* Scenario Analysis */}
+            <ScenarioAnalysis
+              positions={result.allocations.map((a: Allocation) => ({
+                symbol: a.symbol,
+                name: a.name,
+                marketValue: (capitalNum * a.percentage) / 100,
+                asset_type: a.type?.toLowerCase() === "etf" ? "etf" : "stock",
+                sector: undefined,
+              }))}
+              totalValue={capitalNum}
+              monthlyContribution={parseFloat(monthlyInput || answers.monthly) || 0}
+              riskLabel={answers.riskTolerance ?? ""}
+            />
 
-          {/* ── Et maintenant ? ── */}
-          <NextStepsBlock answers={answers} />
+            {/* ── Et maintenant ? ── */}
+            <NextStepsBlock answers={answers} />
 
-          <p style={{ fontSize: 11, color: "var(--muted)", textAlign: "center" }}>{result.disclaimer}</p>
+            <p style={{ fontSize: 11, color: "var(--muted)", textAlign: "center" }}>{result.disclaimer}</p>
 
-          <button
-            onClick={() => {
-              setStep(0);
-              setResult(null);
-              setAnswers({});
-              setCapitalInput("");
-              setMonthlyInput("");
-              setTaxWrapperSelections([]);
-              setError(null);
-              setForcedStocks([]);
-              setForcedInput("");
-              setForcedError(null);
-            }}
-            style={{
-              padding: "12px",
-              borderRadius: 9999,
-              border: "1.5px solid var(--line)",
-              background: "transparent",
-              color: "var(--muted)",
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            Refaire le questionnaire
-          </button>
+            <button
+              onClick={() => {
+                setStep(0);
+                setResult(null);
+                setAnswers({});
+                setCapitalInput("");
+                setMonthlyInput("");
+                setTaxWrapperSelections([]);
+                setError(null);
+                setForcedStocks([]);
+                setForcedInput("");
+                setForcedError(null);
+              }}
+              style={{
+                padding: "12px",
+                borderRadius: 9999,
+                border: "1.5px solid var(--line)",
+                background: "transparent",
+                color: "var(--muted)",
+                fontSize: 14,
+                cursor: "pointer",
+              }}
+            >
+              Refaire le questionnaire
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  /* ── Split-panel layout (questionnaire) ── */
+  /* ── Questionnaire layout ── */
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        height: "calc(100vh - 64px)", // subtract navbar height
-        overflow: "hidden",
-      }}
-    >
-      {/* ── LEFT PANEL ── */}
-      <div
-        style={{
-          width: "44%",
-          flexShrink: 0,
-          background: "var(--ink)",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
-        {/* Top section */}
-        <div style={{ padding: 40 }}>
-          {/* Badge */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              marginBottom: 28,
-            }}
-          >
-            <Circle size={13} color="rgba(255,255,255,0.55)" />
-            <span
-              style={{
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                fontSize: 11,
-                color: "rgba(255,255,255,0.55)",
-              }}
-            >
-              Conseiller Patrimonial · IA
-            </span>
+    <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "64px 24px 80px" }}>
+
+        {/* ── Hero section ── */}
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          {/* Pill badge */}
+          <div style={{
+            display: "inline-flex", alignItems: "center",
+            padding: "6px 16px", borderRadius: 9999,
+            background: "var(--paper)", border: "1.5px solid var(--line)",
+            fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+            color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em",
+            marginBottom: 24,
+          }}>
+            CONSEILLER PATRIMONIAL · IA
           </div>
 
-          {/* Headline */}
-          <h1
-            style={{
-              margin: "0 0 20px 0",
-              lineHeight: 1.15,
-            }}
-          >
-            <span
-              style={{
-                display: "block",
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: "clamp(28px, 4vw, 42px)",
-                letterSpacing: "-0.03em",
-              }}
-            >
-              Un portefeuille
-            </span>
-            <em
-              style={{
-                display: "block",
-                fontFamily: "'Instrument Serif', Georgia, serif",
-                fontStyle: "italic",
-                fontSize: "clamp(28px, 4vw, 42px)",
-                color: "rgba(255,255,255,0.85)",
-                fontWeight: 400,
-              }}
-            >
-              fait pour vous.
-            </em>
+          {/* H1 */}
+          <h1 style={{
+            fontFamily: "var(--font-instrument, serif)", fontSize: "clamp(32px, 6vw, 52px)",
+            fontWeight: 400, color: "var(--ink)", lineHeight: 1.15,
+            margin: "0 auto 28px", maxWidth: 560,
+          }}>
+            Un portefeuille fait pour toi, en moins de 3 minutes.
           </h1>
 
-          {/* Description */}
-          <p
-            style={{
-              fontSize: 13,
-              color: "rgba(255,255,255,0.50)",
-              lineHeight: 1.7,
-              maxWidth: 320,
-              margin: 0,
-            }}
-          >
-            Dix questions, trois minutes. Notre IA construit une allocation personnalisée selon votre profil, votre
-            horizon et vos objectifs. Sans engagement, sans collecte de données financières sensibles.
-          </p>
-        </div>
-
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
-
-        {/* Bottom section */}
-        <div style={{ padding: "40px 40px 48px" }}>
-          {/* Step counter */}
-          <div
-            style={{
-              textTransform: "uppercase",
-              fontSize: 10,
-              letterSpacing: "0.1em",
-              color: "rgba(255,255,255,0.45)",
-              marginBottom: 12,
-            }}
-          >
-            ÉTAPE {step + 1} / 11
-          </div>
-
-          {/* Progress segments */}
-          <div style={{ display: "flex", flexDirection: "row", gap: 4 }}>
-            {Array.from({ length: 11 }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  height: 3,
-                  borderRadius: 2,
-                  background: i <= step ? "var(--accent)" : "rgba(255,255,255,0.15)",
-                  transition: "background 0.3s",
-                }}
-              />
+          {/* 3 checkmarks */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
+            {["100 % gratuit", "Sans inscription", "Résultat immédiat"].map((label) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{
+                  width: 18, height: 18, borderRadius: "50%",
+                  background: "var(--accent-soft)", border: "1.5px solid rgba(45,125,90,0.3)",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  <Check size={10} color="var(--accent)" strokeWidth={2.5} />
+                </div>
+                <span style={{ fontSize: 13, color: "var(--muted)" }}>{label}</span>
+              </div>
             ))}
           </div>
+        </div>
 
-          {/* Checklist */}
-          <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
-            {STEP_LABELS.slice(0, 5).map((label, i) => {
-              const isPast = i < step;
-              const isCurrent = i === step;
-              const isFuture = i > step;
-
-              return (
-                <div key={i} style={{ display: "flex", flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
-                  {/* Circle indicator */}
-                  {isCurrent && (
-                    <div
-                      style={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: "50%",
-                        background: "#fff",
-                        color: "var(--ink)",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        marginTop: 1,
-                      }}
-                    >
-                      {i + 1}
-                    </div>
-                  )}
-                  {isPast && (
-                    <div
-                      style={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: "50%",
-                        background: "var(--accent-soft)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        marginTop: 1,
-                      }}
-                    >
-                      <Check size={10} color="var(--accent)" />
-                    </div>
-                  )}
-                  {isFuture && (
-                    <div
-                      style={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: "50%",
-                        background: "rgba(255,255,255,0.15)",
-                        color: "rgba(255,255,255,0.30)",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        marginTop: 1,
-                      }}
-                    >
-                      {i + 1}
-                    </div>
-                  )}
-
-                  {/* Label */}
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: isCurrent ? 500 : 400,
-                      color: isCurrent
-                        ? "#fff"
-                        : isPast
-                        ? "rgba(255,255,255,0.40)"
-                        : "rgba(255,255,255,0.30)",
-                      textDecoration: isPast ? "line-through" : "none",
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {label}
-                  </span>
-                </div>
-              );
-            })}
-
-            {step >= 5 && (
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.30)",
-                  marginLeft: 28,
-                }}
-              >
-                + {10 - 5} questions supplémentaires
-              </span>
-            )}
+        {/* ── Stepper bar ── */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{
+            fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+            color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em",
+            marginBottom: 10, textAlign: "center",
+          }}>
+            Question {step + 1} / 11
+          </div>
+          <div style={{ display: "flex", gap: 4 }}>
+            {Array.from({ length: 11 }).map((_, i) => (
+              <div key={i} style={{
+                flex: 1, height: 4, borderRadius: 2,
+                background: i <= step ? "#1F5C3E" : "var(--paper-2)",
+                transition: "background 0.3s",
+              }} />
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* ── RIGHT PANEL ── */}
-      <div
-        style={{
-          flex: 1,
-          background: "var(--paper-2)",
-          display: "flex",
-          flexDirection: "column",
-          padding: "48px 56px",
-          overflowY: "auto",
-        }}
-      >
-        {/* Step 0–9: regular questions */}
-        {step < 10 && currentQuestion && (
-          <>
-            {/* Question counter */}
-            <div
-              style={{
-                textTransform: "uppercase",
-                fontSize: 11,
-                letterSpacing: "0.1em",
-                color: "var(--muted)",
-                marginBottom: 20,
-              }}
-            >
-              QUESTION {step + 1} SUR 10
-            </div>
+        {/* ── Question card ── */}
+        <div style={{
+          background: "var(--paper)", border: "1.5px solid var(--line)",
+          borderRadius: 24, padding: "48px",
+        }}>
 
-            {/* Question title */}
-            <h2
-              style={{
-                fontSize: "clamp(22px, 3vw, 32px)",
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
-                color: "var(--ink)",
-                marginBottom: 8,
-                lineHeight: 1.2,
-              }}
-            >
-              {currentQuestion.title}
-            </h2>
+          {/* Step 0–9: regular questions */}
+          {step < 10 && currentQuestion && (
+            <>
+              {/* Step label */}
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+                color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em",
+                marginBottom: 16,
+              }}>
+                {STEP_LABELS[step]}
+              </div>
 
-            {/* Subtitle */}
-            <p
-              style={{
-                fontSize: 14,
-                color: "var(--muted)",
-                lineHeight: 1.6,
-                marginBottom: 32,
-              }}
-            >
-              {currentQuestion.subtitle}
-            </p>
+              {/* Question title */}
+              <h2 style={{
+                fontFamily: "var(--font-instrument, serif)", fontSize: 32,
+                fontWeight: 400, color: "var(--ink)",
+                marginBottom: 12, lineHeight: 1.2,
+              }}>
+                {currentQuestion.title}
+              </h2>
 
-            {/* Options area */}
-            <div style={{ flex: 1 }}>
-              {isMonthlyStep ? (
-                <div>
-                  <CapitalInput value={monthlyInput} onChange={setMonthlyInput} placeholder="200 €/mois" />
-                  <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
-                    Laissez vide ou mettez 0 si vous n'investissez pas régulièrement.
-                  </p>
-                </div>
-              ) : isCapitalStep ? (
-                /* Input question */
-                <CapitalInput value={capitalInput} onChange={setCapitalInput} />
-              ) : isMultiStep ? (
-                /* Multi-select checkboxes with descriptions */
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {(currentQuestion.options ?? []).map((option, i) => (
-                    <CheckboxOption
-                      key={option}
-                      label={option}
-                      description={(currentQuestion as { descriptions?: string[] }).descriptions?.[i]}
-                      selected={taxWrapperSelections.includes(option)}
-                      onClick={() => toggleTaxWrapper(option)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                /* Radio options */
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {(currentQuestion.options ?? []).map((option) => (
-                    <RadioOption
-                      key={option}
-                      label={option}
-                      selected={currentAnswer === option}
-                      onClick={() => setAnswer(option)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+              {/* Subtitle / helper */}
+              <p style={{
+                fontSize: 14, color: "var(--muted)",
+                lineHeight: 1.6, marginBottom: 32,
+              }}>
+                {currentQuestion.subtitle}
+              </p>
 
-            {/* Next button */}
-            <div style={{ marginTop: 32 }}>
-              <button
-                onClick={handleNext}
-                disabled={!hasAnswer}
-                style={{
-                  padding: "14px",
-                  borderRadius: 9999,
-                  border: "none",
-                  background: hasAnswer ? "var(--accent)" : "var(--paper-3)",
-                  color: hasAnswer ? "#fff" : "var(--muted)",
-                  cursor: hasAnswer ? "pointer" : "not-allowed",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  width: "100%",
-                  maxWidth: 240,
-                  transition: "all 0.15s",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                }}
-              >
-                Suivant
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </>
-        )}
+              {/* Options area */}
+              <div style={{ marginBottom: 40 }}>
+                {isMonthlyStep ? (
+                  <div>
+                    <CapitalInput value={monthlyInput} onChange={setMonthlyInput} placeholder="200 €/mois" />
+                    <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+                      Laissez vide ou mettez 0 si vous n&apos;investissez pas régulièrement.
+                    </p>
+                  </div>
+                ) : isCapitalStep ? (
+                  <CapitalInput value={capitalInput} onChange={setCapitalInput} />
+                ) : isMultiStep ? (
+                  /* Multi-select — 2×2 grid */
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    {(currentQuestion.options ?? []).map((option, i) => (
+                      <CheckboxOption
+                        key={option}
+                        label={option}
+                        description={(currentQuestion as { descriptions?: string[] }).descriptions?.[i]}
+                        selected={taxWrapperSelections.includes(option)}
+                        onClick={() => toggleTaxWrapper(option)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  /* Radio options — 2×2 grid when 4 options, else column */
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: (currentQuestion.options ?? []).length === 4 ? "1fr 1fr" : "1fr",
+                    gap: 12,
+                  }}>
+                    {(currentQuestion.options ?? []).map((option) => (
+                      <RadioOption
+                        key={option}
+                        label={option}
+                        selected={currentAnswer === option}
+                        onClick={() => setAnswer(option)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
 
-        {/* Step 10: final convictions step */}
-        {step === 10 && (
-          <>
-            {/* Question counter */}
-            <div
-              style={{
-                textTransform: "uppercase",
-                fontSize: 11,
-                letterSpacing: "0.1em",
-                color: "var(--muted)",
-                marginBottom: 20,
-              }}
-            >
-              QUESTION 11 SUR 11
-            </div>
-
-            <h2
-              style={{
-                fontSize: "clamp(22px, 3vw, 32px)",
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
-                color: "var(--ink)",
-                marginBottom: 8,
-                lineHeight: 1.2,
-              }}
-            >
-              Avez-vous des convictions ?
-            </h2>
-            <p
-              style={{
-                fontSize: 14,
-                color: "var(--muted)",
-                lineHeight: 1.6,
-                marginBottom: 32,
-              }}
-            >
-              Ajoutez des actions ou ETF que vous souhaitez inclure. Nous les analyserons avant de les intégrer.
-            </p>
-
-            {/* Search row */}
-            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-              <input
-                value={forcedInput}
-                onChange={(e) => setForcedInput(e.target.value.toUpperCase())}
-                placeholder="Symbole (ex: NVDA, MC.PA…)"
-                onKeyDown={(e) => e.key === "Enter" && handleAddForced()}
-                style={{
-                  flex: 1,
-                  padding: "12px 16px",
-                  borderRadius: 12,
-                  background: "#fff",
-                  border: "1.5px solid var(--line)",
-                  color: "var(--ink)",
-                  fontSize: 15,
-                  outline: "none",
-                  boxSizing: "border-box" as const,
-                }}
-              />
-              <button
-                onClick={handleAddForced}
-                disabled={forcedLoading || !forcedInput}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: 9999,
-                  border: "none",
-                  background: forcedLoading ? "var(--accent-soft)" : "var(--accent)",
-                  color: "#fff",
-                  fontWeight: 600,
-                  cursor: forcedLoading || !forcedInput ? "not-allowed" : "pointer",
-                  fontSize: 14,
-                  whiteSpace: "nowrap" as const,
-                }}
-              >
-                {forcedLoading ? "…" : "Analyser"}
-              </button>
-            </div>
-
-            {forcedError && (
-              <p style={{ color: "var(--signal-down)", fontSize: 13, marginBottom: 12 }}>{forcedError}</p>
-            )}
-
-            {/* Forced stocks list */}
-            {forcedStocks.map((s, i) => {
-              const isPos = s.upside >= 0;
-              return (
-                <div
-                  key={i}
+              {/* Prev / Next buttons */}
+              <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
+                {step > 0 ? (
+                  <button
+                    onClick={() => setStep((s) => s - 1)}
+                    style={{
+                      padding: "13px 24px", borderRadius: 9999,
+                      border: "1.5px solid var(--line)", background: "transparent",
+                      color: "var(--muted)", fontSize: 14, cursor: "pointer",
+                    }}
+                  >
+                    Précédent
+                  </button>
+                ) : <div />}
+                <button
+                  onClick={handleNext}
+                  disabled={!hasAnswer}
                   style={{
-                    padding: 16,
-                    borderRadius: 12,
-                    border: `1.5px solid ${s.confirmed ? "var(--accent)" : "var(--line)"}`,
-                    background: s.confirmed ? "var(--accent-soft)" : "#fff",
-                    marginBottom: 10,
+                    padding: "13px 32px", borderRadius: 9999, border: "none",
+                    background: hasAnswer ? "var(--accent)" : "var(--paper-3)",
+                    color: hasAnswer ? "#fff" : "var(--muted)",
+                    cursor: hasAnswer ? "pointer" : "not-allowed",
+                    fontSize: 14, fontWeight: 600, transition: "all 0.15s",
                   }}
                 >
+                  Suivant
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Step 10: final convictions step */}
+          {step === 10 && (
+            <>
+              {/* Step label */}
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+                color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em",
+                marginBottom: 16,
+              }}>
+                {STEP_LABELS[10]}
+              </div>
+
+              <h2 style={{
+                fontFamily: "var(--font-instrument, serif)", fontSize: 32,
+                fontWeight: 400, color: "var(--ink)",
+                marginBottom: 12, lineHeight: 1.2,
+              }}>
+                Avez-vous des convictions ?
+              </h2>
+              <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.6, marginBottom: 32 }}>
+                Ajoutez des actions ou ETF que vous souhaitez inclure. Nous les analyserons avant de les intégrer.
+              </p>
+
+              {/* Search row */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                <input
+                  value={forcedInput}
+                  onChange={(e) => setForcedInput(e.target.value.toUpperCase())}
+                  placeholder="Symbole (ex: NVDA, MC.PA…)"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddForced()}
+                  style={{
+                    flex: 1,
+                    padding: "12px 16px",
+                    borderRadius: 12,
+                    background: "var(--paper-2)",
+                    border: "1.5px solid var(--line)",
+                    color: "var(--ink)",
+                    fontSize: 15,
+                    outline: "none",
+                    boxSizing: "border-box" as const,
+                  }}
+                />
+                <button
+                  onClick={handleAddForced}
+                  disabled={forcedLoading || !forcedInput}
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: 9999,
+                    border: "none",
+                    background: forcedLoading ? "var(--accent-soft)" : "var(--accent)",
+                    color: "#fff",
+                    fontWeight: 600,
+                    cursor: forcedLoading || !forcedInput ? "not-allowed" : "pointer",
+                    fontSize: 14,
+                    whiteSpace: "nowrap" as const,
+                  }}
+                >
+                  {forcedLoading ? "…" : "Analyser"}
+                </button>
+              </div>
+
+              {forcedError && (
+                <p style={{ color: "var(--signal-down)", fontSize: 13, marginBottom: 12 }}>{forcedError}</p>
+              )}
+
+              {/* Forced stocks list */}
+              {forcedStocks.map((s, i) => {
+                const isPos = s.upside >= 0;
+                return (
                   <div
+                    key={i}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
+                      padding: 16,
+                      borderRadius: 12,
+                      border: `1.5px solid ${s.confirmed ? "var(--accent)" : "var(--line)"}`,
+                      background: s.confirmed ? "var(--accent-soft)" : "var(--paper-2)",
                       marginBottom: 10,
                     }}
                   >
-                    <div>
-                      <span style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)" }}>{s.symbol}</span>
-                      <span style={{ color: "var(--muted)", fontSize: 12, marginLeft: 8 }}>{s.name}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                      <div>
+                        <span style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)" }}>{s.symbol}</span>
+                        <span style={{ color: "var(--muted)", fontSize: 12, marginLeft: 8 }}>{s.name}</span>
+                      </div>
+                      <button
+                        onClick={() => setForcedStocks((fs) => fs.filter((_, j) => j !== i))}
+                        style={{
+                          background: "rgba(184,74,58,0.08)",
+                          border: "none",
+                          color: "var(--signal-down)",
+                          borderRadius: 6,
+                          width: 24,
+                          height: 24,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <X size={12} />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setForcedStocks((fs) => fs.filter((_, j) => j !== i))}
-                      style={{
-                        background: "rgba(184,74,58,0.08)",
-                        border: "none",
-                        color: "var(--signal-down)",
-                        borderRadius: 6,
-                        width: 24,
-                        height: 24,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      alignItems: "center",
-                      flexWrap: "wrap" as const,
-                      marginBottom: 10,
-                    }}
-                  >
-                    <SignalPill score={s.signal} size="sm" />
-                    <span
-                      style={{
+                    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" as const, marginBottom: 10 }}>
+                      <SignalPill score={s.signal} size="sm" />
+                      <span style={{
                         fontSize: 13,
                         color: isPos ? "var(--signal-up)" : "var(--signal-down)",
                         fontWeight: 600,
                         fontFamily: "var(--font-geist-mono, monospace)",
                         fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {isPos ? "+" : ""}
-                      {s.upside.toFixed(1)}% vs valeur estimée
-                    </span>
-                    <span
-                      style={{
+                      }}>
+                        {isPos ? "+" : ""}{s.upside.toFixed(1)}% vs valeur estimée
+                      </span>
+                      <span style={{
                         fontSize: 12,
                         color: "var(--muted)",
                         fontFamily: "var(--font-geist-mono, monospace)",
                         fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      Valeur estimée : {s.fairValue.toFixed(2)} {s.currency} · Cours : {s.currentPrice.toFixed(2)}{" "}
-                      {s.currency}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      onClick={() =>
-                        setForcedStocks((fs) => fs.map((x, j) => (j === i ? { ...x, confirmed: true } : x)))
-                      }
-                      disabled={s.confirmed}
-                      style={{
-                        flex: 1,
-                        padding: "9px",
-                        borderRadius: 9999,
-                        border: `1.5px solid ${s.confirmed ? "var(--accent)" : "rgba(45,125,90,0.3)"}`,
-                        background: s.confirmed ? "var(--accent-soft)" : "transparent",
-                        color: "var(--accent)",
-                        fontWeight: 600,
-                        fontSize: 13,
-                        cursor: s.confirmed ? "default" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <Check size={13} />
-                      {s.confirmed ? "Inclus dans le portefeuille" : "Oui, l'inclure"}
-                    </button>
-                    {s.confirmed && (
+                      }}>
+                        Valeur estimée : {s.fairValue.toFixed(2)} {s.currency} · Cours : {s.currentPrice.toFixed(2)}{" "}
+                        {s.currency}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
                       <button
                         onClick={() =>
-                          setForcedStocks((fs) => fs.map((x, j) => (j === i ? { ...x, confirmed: false } : x)))
+                          setForcedStocks((fs) => fs.map((x, j) => (j === i ? { ...x, confirmed: true } : x)))
                         }
+                        disabled={s.confirmed}
                         style={{
-                          padding: "9px 14px",
+                          flex: 1,
+                          padding: "9px",
                           borderRadius: 9999,
-                          border: "1.5px solid var(--line)",
-                          background: "transparent",
-                          color: "var(--muted)",
+                          border: `1.5px solid ${s.confirmed ? "var(--accent)" : "rgba(45,125,90,0.3)"}`,
+                          background: s.confirmed ? "var(--accent-soft)" : "transparent",
+                          color: "var(--accent)",
+                          fontWeight: 600,
                           fontSize: 13,
-                          cursor: "pointer",
+                          cursor: s.confirmed ? "default" : "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
                         }}
                       >
-                        Retirer
+                        <Check size={13} />
+                        {s.confirmed ? "Inclus dans le portefeuille" : "Oui, l'inclure"}
                       </button>
-                    )}
+                      {s.confirmed && (
+                        <button
+                          onClick={() =>
+                            setForcedStocks((fs) => fs.map((x, j) => (j === i ? { ...x, confirmed: false } : x)))
+                          }
+                          style={{
+                            padding: "9px 14px",
+                            borderRadius: 9999,
+                            border: "1.5px solid var(--line)",
+                            background: "transparent",
+                            color: "var(--muted)",
+                            fontSize: 13,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Retirer
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
 
-            <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 8, marginBottom: 20 }}>
-              Vous pouvez passer cette étape sans ajouter d'action.
-            </p>
+              <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 8, marginBottom: 20 }}>
+                Vous pouvez passer cette étape sans ajouter d&apos;action.
+              </p>
 
-            {error && <p style={{ color: "var(--signal-down)", fontSize: 14, marginBottom: 12 }}>{error}</p>}
+              {error && <p style={{ color: "var(--signal-down)", fontSize: 14, marginBottom: 12 }}>{error}</p>}
 
-            {/* Generate button */}
-            <button
-              onClick={submit}
-              disabled={loading}
-              style={{
-                padding: "16px",
-                borderRadius: 9999,
-                border: "none",
-                background: loading ? "var(--accent-soft)" : "var(--accent)",
-                color: loading ? "var(--accent)" : "#fff",
-                fontSize: 16,
-                fontWeight: 700,
-                width: "100%",
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "all 0.15s",
-              }}
-            >
-              {loading ? "Génération en cours…" : "Générer mon portefeuille"}
-            </button>
-          </>
-        )}
+              {/* Prev / Generate buttons */}
+              <div style={{ display: "flex", gap: 12, justifyContent: "space-between" }}>
+                <button
+                  onClick={() => setStep((s) => s - 1)}
+                  style={{
+                    padding: "13px 24px", borderRadius: 9999,
+                    border: "1.5px solid var(--line)", background: "transparent",
+                    color: "var(--muted)", fontSize: 14, cursor: "pointer",
+                  }}
+                >
+                  Précédent
+                </button>
+                <button
+                  onClick={submit}
+                  disabled={loading}
+                  style={{
+                    padding: "13px 32px", borderRadius: 9999, border: "none",
+                    background: loading ? "var(--accent-soft)" : "var(--accent)",
+                    color: loading ? "var(--accent)" : "#fff",
+                    fontSize: 14, fontWeight: 600,
+                    cursor: loading ? "not-allowed" : "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {loading ? "Génération en cours…" : "Générer mon portefeuille"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1178,8 +946,11 @@ function RadioOption({
         width: "100%",
         textAlign: "left",
         cursor: "pointer",
-        border: `1.5px solid ${selected ? "var(--accent)" : "var(--line)"}`,
-        background: selected ? "var(--accent-soft)" : "#fff",
+        border: `1.5px solid ${selected ? "#1F5C3E" : "var(--line)"}`,
+        background: selected
+          ? "linear-gradient(180deg,#E9F0E5,#F4F1E2)"
+          : "var(--paper-3)",
+        boxShadow: selected ? "0 0 0 4px rgba(47,125,82,0.1)" : "none",
         transition: "all 0.15s",
         display: "flex",
         flexDirection: "row",
@@ -1188,41 +959,30 @@ function RadioOption({
       }}
     >
       {/* Radio circle */}
-      <div
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: "50%",
-          border: `2px solid ${selected ? "var(--accent)" : "var(--line)"}`,
-          background: selected ? "var(--accent)" : "transparent",
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "all 0.15s",
-        }}
-      >
+      <div style={{
+        width: 18,
+        height: 18,
+        borderRadius: "50%",
+        border: `2px solid ${selected ? "var(--accent)" : "var(--line)"}`,
+        background: selected ? "var(--accent)" : "transparent",
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "all 0.15s",
+      }}>
         {selected && (
-          <div
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "#fff",
-            }}
-          />
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
         )}
       </div>
 
       {/* Label */}
-      <span
-        style={{
-          fontSize: 15,
-          color: selected ? "var(--accent)" : "var(--ink)",
-          fontWeight: selected ? 600 : 400,
-          transition: "all 0.15s",
-        }}
-      >
+      <span style={{
+        fontSize: 14,
+        color: selected ? "var(--accent)" : "var(--ink)",
+        fontWeight: selected ? 600 : 400,
+        transition: "all 0.15s",
+      }}>
         {label}
       </span>
     </button>
@@ -1249,8 +1009,11 @@ function CheckboxOption({
         width: "100%",
         textAlign: "left",
         cursor: "pointer",
-        border: `1.5px solid ${selected ? "var(--accent)" : "var(--line)"}`,
-        background: selected ? "var(--accent-soft)" : "#fff",
+        border: `1.5px solid ${selected ? "#1F5C3E" : "var(--line)"}`,
+        background: selected
+          ? "linear-gradient(180deg,#E9F0E5,#F4F1E2)"
+          : "var(--paper-3)",
+        boxShadow: selected ? "0 0 0 4px rgba(47,125,82,0.1)" : "none",
         transition: "all 0.15s",
         display: "flex",
         flexDirection: "row",
@@ -1259,21 +1022,19 @@ function CheckboxOption({
       }}
     >
       {/* Checkbox square */}
-      <div
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: 5,
-          border: `2px solid ${selected ? "var(--accent)" : "var(--line)"}`,
-          background: selected ? "var(--accent)" : "transparent",
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "all 0.15s",
-          marginTop: 1,
-        }}
-      >
+      <div style={{
+        width: 18,
+        height: 18,
+        borderRadius: 5,
+        border: `2px solid ${selected ? "var(--accent)" : "var(--line)"}`,
+        background: selected ? "var(--accent)" : "transparent",
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "all 0.15s",
+        marginTop: 1,
+      }}>
         {selected && (
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
             <path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1283,27 +1044,23 @@ function CheckboxOption({
 
       {/* Label + description */}
       <div style={{ flex: 1 }}>
-        <span
-          style={{
-            fontSize: 15,
-            color: selected ? "var(--accent)" : "var(--ink)",
-            fontWeight: selected ? 600 : 500,
-            transition: "all 0.15s",
-            display: "block",
-          }}
-        >
+        <span style={{
+          fontSize: 14,
+          color: selected ? "var(--accent)" : "var(--ink)",
+          fontWeight: selected ? 600 : 500,
+          transition: "all 0.15s",
+          display: "block",
+        }}>
           {label}
         </span>
         {description && (
-          <span
-            style={{
-              fontSize: 12,
-              color: "var(--muted)",
-              lineHeight: 1.55,
-              display: "block",
-              marginTop: 3,
-            }}
-          >
+          <span style={{
+            fontSize: 12,
+            color: "var(--muted)",
+            lineHeight: 1.55,
+            display: "block",
+            marginTop: 3,
+          }}>
             {description}
           </span>
         )}
@@ -1334,7 +1091,7 @@ function CapitalInput({
         width: "100%",
         padding: "14px 20px",
         borderRadius: 12,
-        background: "#fff",
+        background: "var(--paper-2)",
         border: `1.5px solid ${focused ? "var(--accent)" : "var(--line)"}`,
         color: "var(--ink)",
         fontSize: 18,
@@ -1430,7 +1187,7 @@ function NextStepsBlock({ answers }: { answers: Record<string, string> }) {
 
   return (
     <div style={{
-      background: "var(--paper-2)",
+      background: "var(--paper)",
       border: "1.5px solid var(--line)",
       borderRadius: 16,
       padding: 24,
@@ -1566,24 +1323,20 @@ function MetricCard({
   color: string;
 }) {
   return (
-    <div
-      style={{
-        background: "var(--ink)",
-        border: "1.5px solid var(--ink)",
-        borderRadius: 16,
-        padding: "16px 20px",
-      }}
-    >
+    <div style={{
+      background: "var(--ink)",
+      border: "1.5px solid var(--ink)",
+      borderRadius: 16,
+      padding: "16px 20px",
+    }}>
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{label}</div>
-      <div
-        style={{
-          fontSize: 18,
-          fontWeight: 800,
-          color,
-          fontFamily: "var(--font-geist-mono, monospace)",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
+      <div style={{
+        fontSize: 18,
+        fontWeight: 800,
+        color,
+        fontFamily: "var(--font-geist-mono, monospace)",
+        fontVariantNumeric: "tabular-nums",
+      }}>
         {value}
       </div>
     </div>

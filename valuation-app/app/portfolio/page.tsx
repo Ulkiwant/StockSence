@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
-import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2 } from "lucide-react";
+import { Download, Plus, Sparkles, TrendingUp, Trash2 } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import SignalPill from "@/components/SignalPill";
 import { useSettings } from "@/lib/settings";
@@ -208,406 +208,512 @@ export default function PortfolioPage() {
     .sort((a, b) => b.pct - a.pct);
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+    <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 28px 80px" }}>
 
-      {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.5px", marginBottom: 6, color: "var(--ink)" }}>Mon Portefeuille</h1>
-          <p style={{ fontSize: 14, color: "var(--muted)" }}>{holdings.length} position{holdings.length !== 1 ? "s" : ""}</p>
+        {/* ── Header ── */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 40 }}>
+          <div>
+            {/* Breadcrumb */}
+            <div style={{
+              fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+              color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em",
+              marginBottom: 10,
+            }}>
+              RENTLY / MON PORTEFEUILLE
+            </div>
+            {/* H1 */}
+            <h1 style={{
+              fontFamily: "var(--font-instrument, serif)", fontSize: 56,
+              fontWeight: 400, color: "var(--ink)", margin: "0 0 12px 0", lineHeight: 1.05,
+            }}>
+              Mon portefeuille.
+            </h1>
+            {/* Subtitle */}
+            <p style={{ fontSize: 14, color: "var(--muted)" }}>
+              {holdings.length} position{holdings.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 10, flexShrink: 0, alignItems: "flex-start", paddingTop: 8, flexWrap: "wrap" }}>
+            {/* Rapport mensuel — outlined */}
+            <button style={{
+              display: "flex", alignItems: "center", gap: 7,
+              padding: "10px 18px", borderRadius: 9999,
+              border: "1.5px solid var(--line)",
+              background: "transparent",
+              color: "var(--ink)", fontSize: 13, fontWeight: 600, cursor: "pointer",
+            }}>
+              <Download size={13} strokeWidth={2} />
+              Rapport mensuel
+            </button>
+            {/* Analyser avec l'IA — secondary outlined */}
+            <button onClick={handleAnalyze} disabled={analyzing || !enriched.length} style={{
+              display: "flex", alignItems: "center", gap: 7,
+              padding: "10px 18px", borderRadius: 9999,
+              border: "1.5px solid var(--line)",
+              background: "transparent",
+              color: "var(--ink)", fontSize: 13, fontWeight: 600,
+              cursor: analyzing || !enriched.length ? "not-allowed" : "pointer",
+              opacity: !enriched.length ? 0.4 : 1,
+            }}>
+              <Sparkles size={13} />
+              {analyzing ? "Analyse…" : "Analyser avec l'IA"}
+            </button>
+            {/* Ajouter une transaction — green filled */}
+            <button onClick={() => setShowAdd(true)} style={{
+              display: "flex", alignItems: "center", gap: 7,
+              padding: "10px 18px", borderRadius: 9999,
+              border: "none",
+              background: "var(--accent)",
+              color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
+            }}>
+              ＋ Ajouter une transaction
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={handleAnalyze} disabled={analyzing || !enriched.length} style={{
-            display: "flex", alignItems: "center", gap: 8, padding: "10px 18px", borderRadius: 9999,
-            background: "var(--accent)", border: "none",
-            color: "#fff", fontSize: 14, fontWeight: 600, cursor: analyzing || !enriched.length ? "not-allowed" : "pointer",
-            opacity: !enriched.length ? 0.4 : 1,
+
+        {/* ── KPI Strip ── */}
+        {enriched.length > 0 && (
+          <div style={{
+            display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr",
+            background: "var(--paper)", border: "1.5px solid var(--line)",
+            borderRadius: 18, overflow: "hidden", marginBottom: 28,
           }}>
-            <Sparkles size={15} />{analyzing ? "Analyse…" : "Analyser avec l'IA"}
-          </button>
-          <button onClick={() => setShowAdd(true)} style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "10px 18px", borderRadius: 9999, border: "1.5px solid var(--line)",
-            background: "transparent", color: "var(--ink)", fontSize: 14, fontWeight: 600, cursor: "pointer",
-          }}><Plus size={15} />Ajouter</button>
-        </div>
-      </div>
-
-      {/* ── Summary cards ── */}
-      {enriched.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 28 }}>
-          {[
-            { label: t("portfolio.total_value"), value: fmtPrice(totals.value, "EUR"), color: "var(--ink)" },
-            { label: t("portfolio.invested"), value: fmtPrice(totals.cost, "EUR"), color: "var(--muted)" },
-            { label: t("portfolio.pnl"), value: `${isUp ? "+" : ""}${fmtPrice(totals.pnl, "EUR")}`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
-            { label: t("portfolio.perf"), value: `${isUp ? "+" : ""}${totalPct.toFixed(2)}%`, color: isUp ? "var(--signal-up)" : "var(--signal-down)" },
-          ].map((card) => (
-            <div key={card.label} style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: "18px 20px" }}>
-              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>{card.label}</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: card.color, fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{card.value}</div>
+            {/* First column: Valeur totale with green gradient bg */}
+            <div style={{
+              padding: "28px 28px",
+              background: "linear-gradient(135deg, rgba(45,125,90,0.12) 0%, rgba(45,125,90,0.04) 100%)",
+              borderRight: "1.5px solid var(--line)",
+            }}>
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+                color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em",
+                marginBottom: 10,
+              }}>VALEUR TOTALE</div>
+              <div style={{
+                fontFamily: "var(--font-instrument, serif)", fontSize: 36,
+                fontWeight: 400, color: "var(--ink)", lineHeight: 1.1,
+              }}>{fmtPrice(totals.value, "EUR")}</div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Charts row ── */}
-      {enriched.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 20, marginBottom: 28 }}>
-
-          {/* Evolution chart */}
-          <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-              <div>
-                <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4 }}>Évolution du portefeuille</div>
-                {chartPerf != null && (
-                  <div style={{ fontSize: 22, fontWeight: 800, color: chartPerfUp ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
-                    {chartPerfUp ? "+" : ""}{chartPerf.toFixed(2)}%
-                    <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 8, fontWeight: 400 }}>sur la période</span>
-                  </div>
-                )}
+            {/* Gain total */}
+            <div style={{ padding: "28px 24px", borderRight: "1.5px solid var(--line)" }}>
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+                color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em",
+                marginBottom: 10,
+              }}>GAIN TOTAL</div>
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 22,
+                fontWeight: 700, color: isUp ? "var(--signal-up)" : "var(--signal-down)",
+                fontVariantNumeric: "tabular-nums",
+              }}>
+                {isUp ? "+" : ""}{fmtPrice(totals.pnl, "EUR")}
               </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                {PERIODS.map((p) => (
-                  <button key={p} onClick={() => setPeriod(p)} style={{
-                    padding: "5px 10px", borderRadius: 7, fontSize: 12, fontWeight: 600,
-                    border: `1.5px solid ${period === p ? "var(--accent)" : "var(--line)"}`,
-                    background: period === p ? "var(--accent-soft)" : "transparent",
-                    color: period === p ? "var(--accent)" : "var(--muted)",
-                    cursor: "pointer",
-                  }}>{PERIOD_LABELS[p]}</button>
-                ))}
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13,
+                color: isUp ? "var(--signal-up)" : "var(--signal-down)",
+                fontVariantNumeric: "tabular-nums", marginTop: 4,
+              }}>
+                {isUp ? "+" : ""}{totalPct.toFixed(2)}%
               </div>
             </div>
-
-            {historyLoading ? (
-              <div className="skeleton" style={{ height: 180, borderRadius: 8 }} />
-            ) : history.length > 1 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <AreaChart data={history} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="valueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"} stopOpacity={0.15} />
-                      <stop offset="95%" stopColor={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"} stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--muted)" stopOpacity={0.08} />
-                      <stop offset="95%" stopColor="var(--muted)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
-                  <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 10, fill: "var(--muted)" }}
-                    axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                  <YAxis tickFormatter={(v) => fmtShort(v)} tick={{ fontSize: 10, fill: "var(--muted)" }}
-                    axisLine={false} tickLine={false} width={44} />
-                  <Tooltip
-                    contentStyle={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }}
-                    labelStyle={{ color: "var(--muted)", marginBottom: 4 }}
-                    labelFormatter={(label: unknown) => fmtDate(String(label))}
-                    formatter={(value: unknown, name: unknown) => [
-                      `${fmtShort(Number(value))} €`,
-                      name === "value" ? "Valeur" : "Investi",
-                    ]}
-                  />
-                  <Area type="monotone" dataKey="cost" stroke="var(--muted)" strokeWidth={1.5}
-                    strokeDasharray="4 4" fill="url(#costGrad)" dot={false} />
-                  <Area type="monotone" dataKey="value" stroke={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"}
-                    strokeWidth={2} fill="url(#valueGrad)" dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 13 }}>
-                Données insuffisantes pour la période sélectionnée
+            {/* Annualisé (chart perf) */}
+            <div style={{ padding: "28px 24px", borderRight: "1.5px solid var(--line)" }}>
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+                color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em",
+                marginBottom: 10,
+              }}>ANNUALISÉ</div>
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 22,
+                fontWeight: 700,
+                color: chartPerf == null ? "var(--muted)" : chartPerfUp ? "var(--signal-up)" : "var(--signal-down)",
+                fontVariantNumeric: "tabular-nums",
+              }}>
+                {chartPerf == null ? "—" : `${chartPerfUp ? "+" : ""}${chartPerf.toFixed(2)}%`}
               </div>
-            )}
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>sur la période</div>
+            </div>
+            {/* Dividendes placeholder */}
+            <div style={{ padding: "28px 24px" }}>
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+                color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em",
+                marginBottom: 10,
+              }}>DIVIDENDES</div>
+              <div style={{
+                fontFamily: "var(--font-geist-mono, monospace)", fontSize: 22,
+                fontWeight: 700, color: "var(--muted)", fontVariantNumeric: "tabular-nums",
+              }}>—</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}>non disponible</div>
+            </div>
           </div>
+        )}
 
-          {/* Allocation donut — dark card */}
-          <div style={{ background: "var(--ink)", border: "1.5px solid var(--ink)", borderRadius: 16, padding: 24 }}>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 16 }}>Répartition actuelle</div>
-            <DonutChart data={allocData} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
-              {allocData.map((a) => (
-                <div key={a.symbol} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: 2, background: a.color, flexShrink: 0 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#fff" }}>{a.name || a.symbol}</span>
-                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{a.symbol}</span>
+        {/* ── Charts row ── */}
+        {enriched.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 20, marginBottom: 28 }}>
+
+            {/* Evolution chart */}
+            <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, padding: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 4 }}>Évolution du portefeuille</div>
+                  {chartPerf != null && (
+                    <div style={{ fontSize: 22, fontWeight: 800, color: chartPerfUp ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
+                      {chartPerfUp ? "+" : ""}{chartPerf.toFixed(2)}%
+                      <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 8, fontWeight: 400 }}>sur la période</span>
                     </div>
-                  </div>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", flexShrink: 0, fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{a.pct.toFixed(1)}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Add modal ── */}
-      {showAdd && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 200,
-          background: "rgba(10,22,40,0.40)", backdropFilter: "blur(8px)",
-          display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-        }} onClick={(e) => { if (e.target === e.currentTarget) setShowAdd(false); }}>
-          <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, width: "100%", maxWidth: 440, padding: 28 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: "var(--ink)" }}>Ajouter une position</h2>
-            <form onSubmit={handleAdd} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-              {/* Symbole avec auto-résolution */}
-              <div>
-                <label style={labelStyle}>Symbole *</label>
-                <div style={{ position: "relative" }}>
-                  <input
-                    value={addSymbol}
-                    onChange={(e) => { setAddSymbol(e.target.value.toUpperCase()); setResolveError(null); }}
-                    onBlur={(e) => resolveSymbol(e.target.value)}
-                    required
-                    placeholder="AAPL, IWDA.AS, CW8.PA…"
-                    style={{ ...inputStyle, paddingRight: 36 }}
-                  />
-                  {resolving && (
-                    <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--muted)" }}>...</div>
                   )}
                 </div>
-                {resolveError && <div style={{ fontSize: 11, color: "var(--signal-down)", marginTop: 4 }}>{resolveError} — vérifiez le symbole Yahoo Finance</div>}
-              </div>
-
-              {/* Type — mis en avant */}
-              <div>
-                <label style={labelStyle}>Type d'actif</label>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {[
-                    { value: "stock", label: "Action" },
-                    { value: "etf",   label: "ETF" },
-                    { value: "crypto", label: "Crypto" },
-                  ].map((opt) => (
-                    <button key={opt.value} type="button" onClick={() => setAddType(opt.value)} style={{
-                      flex: 1, padding: "9px 8px", borderRadius: 9,
-                      border: `1.5px solid ${addType === opt.value ? "var(--accent)" : "var(--line)"}`,
-                      background: addType === opt.value ? "var(--accent-soft)" : "transparent",
-                      color: addType === opt.value ? "var(--accent)" : "var(--muted)",
-                      fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
-                    }}>{opt.label}</button>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {PERIODS.map((p) => (
+                    <button key={p} onClick={() => setPeriod(p)} style={{
+                      padding: "5px 10px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                      border: `1.5px solid ${period === p ? "var(--accent)" : "var(--line)"}`,
+                      background: period === p ? "var(--accent-soft)" : "transparent",
+                      color: period === p ? "var(--accent)" : "var(--muted)",
+                      cursor: "pointer",
+                    }}>{PERIOD_LABELS[p]}</button>
                   ))}
                 </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>Nom {resolving ? <span style={{ color: "var(--muted)" }}>(chargement…)</span> : "(auto-rempli ou manuel)"}</label>
-                <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="iShares Core MSCI World…" style={inputStyle} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>Quantité *</label>
-                  <input type="number" value={addQty} onChange={(e) => setAddQty(e.target.value)} required placeholder="10" min="0" step="any" style={inputStyle} />
+              {historyLoading ? (
+                <div className="skeleton" style={{ height: 180, borderRadius: 8 }} />
+              ) : history.length > 1 ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <AreaChart data={history} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="valueGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"} stopOpacity={0.15} />
+                        <stop offset="95%" stopColor={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"} stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--muted)" stopOpacity={0.08} />
+                        <stop offset="95%" stopColor="var(--muted)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                    <XAxis dataKey="date" tickFormatter={fmtDate} tick={{ fontSize: 10, fill: "var(--muted)" }}
+                      axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                    <YAxis tickFormatter={(v) => fmtShort(v)} tick={{ fontSize: 10, fill: "var(--muted)" }}
+                      axisLine={false} tickLine={false} width={44} />
+                    <Tooltip
+                      contentStyle={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "var(--muted)", marginBottom: 4 }}
+                      labelFormatter={(label: unknown) => fmtDate(String(label))}
+                      formatter={(value: unknown, name: unknown) => [
+                        `${fmtShort(Number(value))} €`,
+                        name === "value" ? "Valeur" : "Investi",
+                      ]}
+                    />
+                    <Area type="monotone" dataKey="cost" stroke="var(--muted)" strokeWidth={1.5}
+                      strokeDasharray="4 4" fill="url(#costGrad)" dot={false} />
+                    <Area type="monotone" dataKey="value" stroke={chartPerfUp ? "var(--signal-up)" : "var(--signal-down)"}
+                      strokeWidth={2} fill="url(#valueGrad)" dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 13 }}>
+                  Données insuffisantes pour la période sélectionnée
                 </div>
-                <div>
-                  <label style={labelStyle}>PRU * (prix moyen)</label>
-                  <input type="number" value={addPRU} onChange={(e) => setAddPRU(e.target.value)} required placeholder="150.00" min="0" step="any" style={inputStyle} />
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Devise</label>
-                <select value={addCurrency} onChange={(e) => setAddCurrency(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>
-                  {["USD", "EUR", "GBP", "CHF", "JPY"].map((c) => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-                <button type="button" onClick={() => { setShowAdd(false); setAddSymbol(""); setAddName(""); setAddQty(""); setAddPRU(""); setAddType("stock"); setAddCurrency("USD"); setResolveError(null); }} style={{
-                  flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)",
-                  background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer",
-                }}>Annuler</button>
-                <button type="submit" disabled={addLoading} style={{
-                  flex: 2, padding: "12px", borderRadius: 9999, border: "none",
-                  background: "var(--accent)",
-                  color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-                }}>{addLoading ? "Ajout…" : "Ajouter la position"}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── Holdings table ── */}
-      {loading ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {Array(3).fill(0).map((_, i) => <div key={i} className="skeleton" style={{ height: 68, borderRadius: 12 }} />)}
-        </div>
-      ) : holdings.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "80px 24px", border: "1.5px dashed var(--line)", borderRadius: 20 }}>
-          <TrendingUp size={48} style={{ color: "var(--muted)", marginBottom: 16 }} />
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>Portefeuille vide</h2>
-          <p style={{ color: "var(--muted)", fontSize: 14, marginBottom: 24 }}>Ajoutez vos premières positions pour suivre vos performances.</p>
-          <button onClick={() => setShowAdd(true)} style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "12px 28px", borderRadius: 9999, border: "none",
-            background: "var(--accent)",
-            color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-          }}><Plus size={15} />Ajouter une position</button>
-        </div>
-      ) : (
-        <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, overflow: "hidden", marginBottom: 28 }}>
-          <div style={{
-            display: "grid", gridTemplateColumns: "1fr 80px 90px 90px 100px 100px 36px",
-            padding: "12px 20px", borderBottom: "1.5px solid var(--line)",
-            fontSize: 11, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase",
-          }}>
-            <span>Actif</span><span style={{ textAlign: "right" }}>Qté</span>
-            <span style={{ textAlign: "right" }}>PRU</span><span style={{ textAlign: "right" }}>Cours</span>
-            <span style={{ textAlign: "right" }}>Valeur</span><span style={{ textAlign: "right" }}>P&L</span>
-            <span />
-          </div>
-          {enriched.map((h, i) => {
-            const isPos = h.pnl >= 0;
-            return (
-              <div key={h.id} style={{
-                display: "grid", gridTemplateColumns: "1fr 80px 90px 90px 100px 100px 36px",
-                padding: "14px 20px", alignItems: "center",
-                borderBottom: i < enriched.length - 1 ? "1.5px solid var(--line)" : "none",
-                transition: "background 0.15s",
-              }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--paper-3)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                    background: h.asset_type === "etf" ? "rgba(45,125,90,0.12)" : "rgba(45,125,90,0.08)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 10, fontWeight: 700,
-                    color: "var(--accent)",
-                  }}>{h.symbol.slice(0, 3)}</div>
-                  <div>
-                    <Link href={`/stock/${h.symbol}`} style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>{h.name}</Link>
-                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>
-                      <span style={{ fontSize: 11, color: "var(--muted)", background: "var(--paper-3)", padding: "1px 6px", borderRadius: 4 }}>{h.symbol}</span>
-                      {" · "}{h.asset_type === "etf" ? "ETF" : "Action"} · {h.currency}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ textAlign: "right", fontSize: 13, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.quantity}</div>
-                <div style={{ textAlign: "right", fontSize: 13, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.avg_price.toFixed(2)}</div>
-                <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.currentPrice.toFixed(2)}</div>
-                <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{fmtPrice(h.marketValue, h.currency)}</div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: isPos ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
-                    {isPos ? "+" : ""}{h.pnlPct.toFixed(1)}%
-                  </div>
-                  <div style={{ fontSize: 11, color: isPos ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
-                    {isPos ? "+" : ""}{h.pnl.toFixed(0)} {h.currency}
-                  </div>
-                </div>
-                <button onClick={() => handleDelete(h.id)} style={{
-                  width: 28, height: 28, borderRadius: 7, border: "none",
-                  background: "rgba(184,74,58,0.08)", color: "var(--signal-down)",
-                  cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                }}><Trash2 size={14} /></button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── Scenario Analysis ── */}
-      {enriched.length > 0 && (
-        <ScenarioAnalysis
-          positions={enriched.map((h) => ({
-            symbol: h.symbol,
-            name: h.name,
-            marketValue: h.marketValue,
-            asset_type: h.asset_type,
-            beta: undefined,
-            sector: h.sector,
-          }))}
-          totalValue={totals.value}
-          monthlyContribution={0}
-        />
-      )}
-
-      {/* ── AI Analysis ── */}
-      {analysis && (
-        <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 28 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Sparkles size={16} color="#fff" />
+              )}
             </div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)" }}>Analyse IA du portefeuille</h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 20, marginBottom: 24, alignItems: "center" }}>
-            <div style={{ position: "relative", width: 80, height: 80 }}>
-              <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
-                <circle cx="40" cy="40" r="32" fill="none" stroke="var(--line)" strokeWidth="7" />
-                <circle cx="40" cy="40" r="32" fill="none"
-                  stroke={analysis.globalScore >= 65 ? "var(--signal-up)" : analysis.globalScore >= 40 ? "var(--signal-neutral)" : "var(--signal-down)"}
-                  strokeWidth="7" strokeDasharray={`${(analysis.globalScore / 100) * 201} 201`} strokeLinecap="round" />
-              </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>{analysis.globalScore}</span>
-                <span style={{ fontSize: 9, color: "var(--muted)" }}>/100</span>
-              </div>
-            </div>
-            <div>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: 8 }}>{analysis.summary}</p>
-              <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid rgba(45,125,90,0.2)" }}>
-                Diversification : {analysis.diversification}
-              </span>
-            </div>
-          </div>
-          {analysis.recommendations?.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommandations</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {analysis.recommendations.map((r, i) => {
-                  const holding = enriched.find(h => h.symbol === r.symbol);
-                  const displayName = holding?.name && holding.name !== r.symbol ? holding.name : r.symbol;
-                  return (
-                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 10, background: "var(--paper-3)", border: "1.5px solid var(--line)" }}>
-                      <span style={{ padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: `${REC_COLORS[r.type]}20`, color: REC_COLORS[r.type], flexShrink: 0 }}>{r.type}</span>
-                      <div>
-                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{displayName}</span>
-                        {holding?.name && holding.name !== r.symbol && <span style={{ fontSize: 11, color: "var(--muted)", background: "var(--paper-3)", padding: "1px 5px", borderRadius: 4, marginLeft: 6 }}>{r.symbol}</span>}
-                        <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 6 }}>{r.reason}</span>
+
+            {/* Allocation donut — dark card */}
+            <div style={{ background: "var(--ink)", border: "1.5px solid var(--ink)", borderRadius: 18, padding: 24 }}>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 16 }}>Répartition actuelle</div>
+              <DonutChart data={allocData} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
+                {allocData.map((a) => (
+                  <div key={a.symbol} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: a.color, flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#fff" }}>{a.name || a.symbol}</span>
+                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{a.symbol}</span>
                       </div>
                     </div>
-                  );
-                })}
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", flexShrink: 0, fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{a.pct.toFixed(1)}%</span>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            {analysis.strengths?.length > 0 && (
-              <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-up)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                  <TrendingUp size={13} />Points forts
-                </h3>
-                {analysis.strengths.map((s, i) => (
-                  <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
-                    <span style={{ color: "var(--signal-up)" }}>✓</span>{s}
-                  </div>
-                ))}
-              </div>
-            )}
-            {analysis.missingExposures?.length > 0 && (
-              <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-neutral)", marginBottom: 8 }}>Expositions manquantes</h3>
-                {analysis.missingExposures.map((s, i) => (
-                  <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
-                    <span style={{ color: "var(--signal-neutral)" }}>+</span>{s}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-          {analysis.mainRisk && (
-            <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 10, background: "rgba(184,74,58,0.05)", border: "1.5px solid rgba(184,74,58,0.18)" }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-down)" }}>Risque principal : </span>
-              <span style={{ fontSize: 13, color: "var(--muted)" }}>{analysis.mainRisk}</span>
+        )}
+
+        {/* ── Add modal ── */}
+        {showAdd && (
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(10,22,40,0.40)", backdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+          }} onClick={(e) => { if (e.target === e.currentTarget) setShowAdd(false); }}>
+            <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, width: "100%", maxWidth: 440, padding: 28 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: "var(--ink)" }}>Ajouter une position</h2>
+              <form onSubmit={handleAdd} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+                {/* Symbole avec auto-résolution */}
+                <div>
+                  <label style={labelStyle}>Symbole *</label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      value={addSymbol}
+                      onChange={(e) => { setAddSymbol(e.target.value.toUpperCase()); setResolveError(null); }}
+                      onBlur={(e) => resolveSymbol(e.target.value)}
+                      required
+                      placeholder="AAPL, IWDA.AS, CW8.PA…"
+                      style={{ ...inputStyle, paddingRight: 36 }}
+                    />
+                    {resolving && (
+                      <div style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--muted)" }}>...</div>
+                    )}
+                  </div>
+                  {resolveError && <div style={{ fontSize: 11, color: "var(--signal-down)", marginTop: 4 }}>{resolveError} — vérifiez le symbole Yahoo Finance</div>}
+                </div>
+
+                {/* Type — mis en avant */}
+                <div>
+                  <label style={labelStyle}>Type d&apos;actif</label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[
+                      { value: "stock", label: "Action" },
+                      { value: "etf",   label: "ETF" },
+                      { value: "crypto", label: "Crypto" },
+                    ].map((opt) => (
+                      <button key={opt.value} type="button" onClick={() => setAddType(opt.value)} style={{
+                        flex: 1, padding: "9px 8px", borderRadius: 9,
+                        border: `1.5px solid ${addType === opt.value ? "var(--accent)" : "var(--line)"}`,
+                        background: addType === opt.value ? "var(--accent-soft)" : "transparent",
+                        color: addType === opt.value ? "var(--accent)" : "var(--muted)",
+                        fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                      }}>{opt.label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Nom {resolving ? <span style={{ color: "var(--muted)" }}>(chargement…)</span> : "(auto-rempli ou manuel)"}</label>
+                  <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="iShares Core MSCI World…" style={inputStyle} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label style={labelStyle}>Quantité *</label>
+                    <input type="number" value={addQty} onChange={(e) => setAddQty(e.target.value)} required placeholder="10" min="0" step="any" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>PRU * (prix moyen)</label>
+                    <input type="number" value={addPRU} onChange={(e) => setAddPRU(e.target.value)} required placeholder="150.00" min="0" step="any" style={inputStyle} />
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Devise</label>
+                  <select value={addCurrency} onChange={(e) => setAddCurrency(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>
+                    {["USD", "EUR", "GBP", "CHF", "JPY"].map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                  <button type="button" onClick={() => { setShowAdd(false); setAddSymbol(""); setAddName(""); setAddQty(""); setAddPRU(""); setAddType("stock"); setAddCurrency("USD"); setResolveError(null); }} style={{
+                    flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)",
+                    background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer",
+                  }}>Annuler</button>
+                  <button type="submit" disabled={addLoading} style={{
+                    flex: 2, padding: "12px", borderRadius: 9999, border: "none",
+                    background: "var(--accent)",
+                    color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  }}>{addLoading ? "Ajout…" : "Ajouter la position"}</button>
+                </div>
+              </form>
             </div>
-          )}
-          <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 16 }}>{analysis.disclaimer}</p>
-        </div>
-      )}
+          </div>
+        )}
+
+        {/* ── Holdings table ── */}
+        {loading ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {Array(3).fill(0).map((_, i) => <div key={i} className="skeleton" style={{ height: 68, borderRadius: 12 }} />)}
+          </div>
+        ) : holdings.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "80px 24px", border: "1.5px dashed var(--line)", borderRadius: 18, background: "var(--paper)" }}>
+            <TrendingUp size={48} style={{ color: "var(--muted)", marginBottom: 16 }} />
+            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>Portefeuille vide</h2>
+            <p style={{ color: "var(--muted)", fontSize: 14, marginBottom: 24 }}>Ajoutez vos premières positions pour suivre vos performances.</p>
+            <button onClick={() => setShowAdd(true)} style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "12px 28px", borderRadius: 9999, border: "none",
+              background: "var(--accent)",
+              color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+            }}><Plus size={15} />Ajouter une position</button>
+          </div>
+        ) : (
+          <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, overflow: "hidden", marginBottom: 28 }}>
+            {/* Header row */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "1fr 80px 90px 90px 100px 100px 36px",
+              padding: "12px 20px", borderBottom: "1.5px solid var(--line)",
+              fontFamily: "var(--font-geist-mono, monospace)",
+              fontSize: 11, color: "var(--muted)", fontWeight: 600,
+              letterSpacing: "0.08em", textTransform: "uppercase",
+            }}>
+              <span>Actif</span><span style={{ textAlign: "right" }}>Qté</span>
+              <span style={{ textAlign: "right" }}>PRU</span><span style={{ textAlign: "right" }}>Cours</span>
+              <span style={{ textAlign: "right" }}>Valeur</span><span style={{ textAlign: "right" }}>P&L</span>
+              <span />
+            </div>
+            {enriched.map((h, i) => {
+              const isPos = h.pnl >= 0;
+              return (
+                <div key={h.id} style={{
+                  display: "grid", gridTemplateColumns: "1fr 80px 90px 90px 100px 100px 36px",
+                  padding: "14px 20px", alignItems: "center",
+                  borderBottom: i < enriched.length - 1 ? "1.5px solid var(--line)" : "none",
+                  transition: "background 0.15s",
+                }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--paper-2)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {/* Avatar circle with first 2 letters */}
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                      background: h.asset_type === "etf" ? "rgba(45,125,90,0.12)" : "rgba(45,125,90,0.08)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 700,
+                      color: "var(--accent)",
+                      fontFamily: "var(--font-geist-mono, monospace)",
+                    }}>{h.symbol.slice(0, 2)}</div>
+                    <div>
+                      <Link href={`/stock/${h.symbol}`} style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)", textDecoration: "none" }}>{h.name}</Link>
+                      <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>
+                        <span style={{ fontSize: 11, color: "var(--muted)", background: "var(--paper-3)", padding: "1px 6px", borderRadius: 4 }}>{h.symbol}</span>
+                        {" · "}{h.asset_type === "etf" ? "ETF" : "Action"} · {h.currency}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right", fontSize: 13, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.quantity}</div>
+                  <div style={{ textAlign: "right", fontSize: 13, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.avg_price.toFixed(2)}</div>
+                  <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{h.currentPrice.toFixed(2)}</div>
+                  <div style={{ textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>{fmtPrice(h.marketValue, h.currency)}</div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isPos ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
+                      {isPos ? "+" : ""}{h.pnlPct.toFixed(1)}%
+                    </div>
+                    <div style={{ fontSize: 11, color: isPos ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)", fontVariantNumeric: "tabular-nums" }}>
+                      {isPos ? "+" : ""}{h.pnl.toFixed(0)} {h.currency}
+                    </div>
+                  </div>
+                  <button onClick={() => handleDelete(h.id)} style={{
+                    width: 28, height: 28, borderRadius: 7, border: "none",
+                    background: "rgba(184,74,58,0.08)", color: "var(--signal-down)",
+                    cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                  }}><Trash2 size={14} /></button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Scenario Analysis ── */}
+        {enriched.length > 0 && (
+          <ScenarioAnalysis
+            positions={enriched.map((h) => ({
+              symbol: h.symbol,
+              name: h.name,
+              marketValue: h.marketValue,
+              asset_type: h.asset_type,
+              beta: undefined,
+              sector: h.sector,
+            }))}
+            totalValue={totals.value}
+            monthlyContribution={0}
+          />
+        )}
+
+        {/* ── AI Analysis ── */}
+        {analysis && (
+          <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 18, padding: 28 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Sparkles size={16} color="#fff" />
+              </div>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)" }}>Analyse IA du portefeuille</h2>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 20, marginBottom: 24, alignItems: "center" }}>
+              <div style={{ position: "relative", width: 80, height: 80 }}>
+                <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="var(--line)" strokeWidth="7" />
+                  <circle cx="40" cy="40" r="32" fill="none"
+                    stroke={analysis.globalScore >= 65 ? "var(--signal-up)" : analysis.globalScore >= 40 ? "var(--signal-neutral)" : "var(--signal-down)"}
+                    strokeWidth="7" strokeDasharray={`${(analysis.globalScore / 100) * 201} 201`} strokeLinecap="round" />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>{analysis.globalScore}</span>
+                  <span style={{ fontSize: 9, color: "var(--muted)" }}>/100</span>
+                </div>
+              </div>
+              <div>
+                <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: 8 }}>{analysis.summary}</p>
+                <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 20, background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid rgba(45,125,90,0.2)" }}>
+                  Diversification : {analysis.diversification}
+                </span>
+              </div>
+            </div>
+            {analysis.recommendations?.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommandations</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {analysis.recommendations.map((r, i) => {
+                    const holding = enriched.find(h => h.symbol === r.symbol);
+                    const displayName = holding?.name && holding.name !== r.symbol ? holding.name : r.symbol;
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 10, background: "var(--paper-3)", border: "1.5px solid var(--line)" }}>
+                        <span style={{ padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: `${REC_COLORS[r.type]}20`, color: REC_COLORS[r.type], flexShrink: 0 }}>{r.type}</span>
+                        <div>
+                          <span style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{displayName}</span>
+                          {holding?.name && holding.name !== r.symbol && <span style={{ fontSize: 11, color: "var(--muted)", background: "var(--paper-3)", padding: "1px 5px", borderRadius: 4, marginLeft: 6 }}>{r.symbol}</span>}
+                          <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 6 }}>{r.reason}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              {analysis.strengths?.length > 0 && (
+                <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-up)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                    <TrendingUp size={13} />Points forts
+                  </h3>
+                  {analysis.strengths.map((s, i) => (
+                    <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
+                      <span style={{ color: "var(--signal-up)" }}>✓</span>{s}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {analysis.missingExposures?.length > 0 && (
+                <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-neutral)", marginBottom: 8 }}>Expositions manquantes</h3>
+                  {analysis.missingExposures.map((s, i) => (
+                    <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
+                      <span style={{ color: "var(--signal-neutral)" }}>+</span>{s}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {analysis.mainRisk && (
+              <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 10, background: "rgba(184,74,58,0.05)", border: "1.5px solid rgba(184,74,58,0.18)" }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-down)" }}>Risque principal : </span>
+                <span style={{ fontSize: 13, color: "var(--muted)" }}>{analysis.mainRisk}</span>
+              </div>
+            )}
+            <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 16 }}>{analysis.disclaimer}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -650,6 +756,6 @@ function DonutChart({ data }: { data: { symbol: string; pct: number; color: stri
 const labelStyle: React.CSSProperties = { fontSize: 12, color: "var(--muted)", display: "block", marginBottom: 5 };
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "10px 14px", borderRadius: 12,
-  background: "#fff", border: "1.5px solid var(--line)",
+  background: "var(--paper-2)", border: "1.5px solid var(--line)",
   color: "var(--ink)", fontSize: 14, outline: "none", boxSizing: "border-box",
 };
