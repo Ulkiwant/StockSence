@@ -31,7 +31,9 @@ export default function Navbar() {
   const { locale, currency, setLocale, setCurrency, t } = useSettings();
 
   useEffect(() => {
-    supabase.auth.getUser().then((res: UserResponse) => setUser(res.data.user ?? null));
+    supabase.auth.getUser()
+      .then((res: UserResponse) => setUser(res.data.user ?? null))
+      .catch(() => {});
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event: AuthChangeEvent, session: Session | null) => setUser(session?.user ?? null)
     );

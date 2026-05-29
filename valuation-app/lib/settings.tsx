@@ -26,20 +26,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   // Hydrate from localStorage once on mount
   useEffect(() => {
-    const l = localStorage.getItem("ss-locale")   as Locale   | null;
-    const c = localStorage.getItem("ss-currency") as Currency | null;
-    if (l) setLocaleState(l);
-    if (c) setCurrencyState(c);
+    try {
+      const l = localStorage.getItem("ss-locale")   as Locale   | null;
+      const c = localStorage.getItem("ss-currency") as Currency | null;
+      if (l) setLocaleState(l);
+      if (c) setCurrencyState(c);
+    } catch { /* Safari private browsing */ }
   }, []);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
-    localStorage.setItem("ss-locale", l);
+    try { localStorage.setItem("ss-locale", l); } catch { /* ignore */ }
   }, []);
 
   const setCurrency = useCallback((c: Currency) => {
     setCurrencyState(c);
-    localStorage.setItem("ss-currency", c);
+    try { localStorage.setItem("ss-currency", c); } catch { /* ignore */ }
   }, []);
 
   const t = useCallback((key: string): string => {

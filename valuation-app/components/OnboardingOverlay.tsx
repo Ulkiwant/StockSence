@@ -72,13 +72,13 @@ export default function OnboardingOverlay() {
   const router                = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem(STORAGE_KEY)) {
-      setVisible(true);
-    }
+    try {
+      if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
+    } catch { /* Safari private browsing */ }
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "1");
+    try { localStorage.setItem(STORAGE_KEY, "1"); } catch { /* ignore */ }
     setVisible(false);
   };
 

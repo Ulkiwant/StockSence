@@ -209,7 +209,9 @@ export default function HomePage() {
   /* ── auth ── */
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then((res: UserResponse) => setUser(res.data.user ?? null));
+    supabase.auth.getUser()
+      .then((res: UserResponse) => setUser(res.data.user ?? null))
+      .catch(() => {});
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_e: AuthChangeEvent, s: Session | null) => setUser(s?.user ?? null)
     );
@@ -404,10 +406,10 @@ export default function HomePage() {
                   </svg>
                   Livret A · 2,4 %/an
                 </div>
-                <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 34, lineHeight: 1.1, letterSpacing: "-0.01em" }}>
+                <div suppressHydrationWarning style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 34, lineHeight: 1.1, letterSpacing: "-0.01em" }}>
                   {livretFv.toLocaleString("fr-FR")} €
                 </div>
-                <div style={{ fontSize: 12, color: "#7A7768", marginTop: 4 }}>
+                <div suppressHydrationWarning style={{ fontSize: 12, color: "#7A7768", marginTop: 4 }}>
                   +{(livretFv - 1000).toLocaleString("fr-FR")} € · gain réel limité
                 </div>
               </div>
@@ -420,10 +422,10 @@ export default function HomePage() {
                   </svg>
                   <span style={{ color: "#1F5C3E" }}>Portefeuille Rently · ~7 %/an</span>
                 </div>
-                <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 34, lineHeight: 1.1, letterSpacing: "-0.01em", color: "#1F5C3E" }}>
+                <div suppressHydrationWarning style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 34, lineHeight: 1.1, letterSpacing: "-0.01em", color: "#1F5C3E" }}>
                   {portfolioFv.toLocaleString("fr-FR")} €
                 </div>
-                <div style={{ fontSize: 12, color: "#7A7768", marginTop: 4 }}>
+                <div suppressHydrationWarning style={{ fontSize: 12, color: "#7A7768", marginTop: 4 }}>
                   +{(portfolioFv - 1000).toLocaleString("fr-FR")} € · soit{" "}
                   <strong style={{ color: "#1F5C3E" }}>×{(portfolioFv / 1000).toFixed(1)}</strong> sur le capital
                 </div>
@@ -752,7 +754,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 34, lineHeight: 1, letterSpacing: "-0.01em" }}>
+                    <div suppressHydrationWarning style={{ fontFamily: "var(--font-instrument,serif)", fontSize: 34, lineHeight: 1, letterSpacing: "-0.01em" }}>
                       {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(aapl.price)}
                     </div>
                     <div style={{ fontSize: 13, color: aapl.change >= 0 ? "#2F7D52" : "#B84A3E", marginTop: 4 }}>
