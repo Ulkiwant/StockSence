@@ -2,10 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import StockCard from "@/components/StockCard";
 import { SearchModal } from "@/components/SearchModal";
 import { createClient } from "@/lib/supabase";
-import { Star, Plus } from "lucide-react";
+import { Star, Download } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useSettings } from "@/lib/settings";
 
@@ -14,6 +13,41 @@ interface StockData {
   symbol: string; name: string; currentPrice: number;
   change: number; changePercent: number; currency: string;
   valuation?: { fairValue: number; upside: number; signal: "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL"; score: number; };
+}
+
+type SignalKey = "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL";
+
+const SIGNAL_MAP: Record<SignalKey, { bg: string; color: string; label: string }> = {
+  STRONG_BUY: { bg: "#1F5C3E", color: "#F6F2E8", label: "Achat fort" },
+  BUY:        { bg: "#D6E4D6", color: "#1F5C3E", label: "Achat" },
+  HOLD:       { bg: "#E8E0CE", color: "#3A3E33", label: "Neutre" },
+  SELL:       { bg: "#EBD7D2", color: "#B84A3E", label: "Vendre" },
+  STRONG_SELL:{ bg: "#EBD7D2", color: "#B84A3E", label: "Vendre" },
+};
+
+function SignalBadge({ signal }: { signal?: SignalKey }) {
+  if (!signal) return <span style={{ color: "var(--muted)", fontSize: 12 }}>—</span>;
+  const s = SIGNAL_MAP[signal];
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center",
+      padding: "3px 10px", borderRadius: 9999,
+      background: s.bg, color: s.color,
+      fontSize: 12, fontWeight: 600,
+      fontFamily: "var(--font-geist-mono, monospace)",
+      whiteSpace: "nowrap",
+    }}>{s.label}</span>
+  );
+}
+
+function ScoreCell({ score }: { score?: number }) {
+  if (score === undefined) return <span style={{ color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13 }}>— /100</span>;
+  const color = score >= 70 ? "var(--signal-up)" : score >= 50 ? "var(--signal-neutral)" : "var(--signal-down)";
+  return (
+    <span style={{ color, fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, fontWeight: 600 }}>
+      {score} <span style={{ color: "var(--muted)", fontWeight: 400 }}>/100</span>
+    </span>
+  );
 }
 
 export default function WatchlistPage() {
@@ -100,56 +134,70 @@ export default function WatchlistPage() {
   const watchlistSymbols = items.map((i) => i.symbol);
 
   return (
-    <div style={{ background: "var(--paper)", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 28px 64px" }}>
+    <div style={{ background: "var(--paper-3)", minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 28px 80px" }}>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32, gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 40, gap: 16, flexWrap: "wrap" }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <Star size={20} strokeWidth={1.8} color="var(--accent)" />
-              <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.4px", color: "var(--ink)" }}>
-                {t("watchlist.title")}
-              </h1>
+            {/* Breadcrumb */}
+            <div style={{
+              fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+              color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em",
+              marginBottom: 10,
+            }}>
+              RENTLY / MES ACTIONS
             </div>
-            <p style={{ fontSize: 13, color: "var(--muted)" }}>
-              {items.length} action{items.length !== 1 ? "s" : ""}
-              {!loggedIn && (
-                <span style={{ marginLeft: 10 }}>
-                  ·{" "}
-                  <Link href="/auth/login" style={{ color: "var(--accent)", fontWeight: 500 }}>
-                    {t("nav.login")}
-                  </Link>{" "}
-                  {t("common.sign_in_sync")}
-                </span>
-              )}
+            {/* H1 */}
+            <h1 style={{
+              fontFamily: "var(--font-instrument, serif)", fontSize: 56,
+              fontWeight: 400, color: "var(--ink)", margin: "0 0 12px 0", lineHeight: 1.05,
+            }}>
+              Mes actions.
+            </h1>
+            {/* Subtitle */}
+            <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 560 }}>
+              {items.length} valeur{items.length !== 1 ? "s" : ""} suivie{items.length !== 1 ? "s" : ""} — surveillez les signaux, comparez leur santé et gardez un œil sur les opportunités qui vous ressemblent.
             </p>
+            {!loggedIn && (
+              <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>
+                <Link href="/auth/login" style={{ color: "var(--accent)", fontWeight: 500 }}>
+                  {t("nav.login")}
+                </Link>{" "}
+                {t("common.sign_in_sync")}
+              </p>
+            )}
           </div>
 
-          {/* Bouton "Ajouter" — visible même quand la liste n'est pas vide */}
-          <button
-            onClick={() => setSearchOpen(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              padding: "9px 18px",
-              borderRadius: 9999,
-              border: "1.5px solid var(--line)",
-              background: "var(--paper-2)",
-              color: "var(--ink)",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "all 0.15s",
-              flexShrink: 0,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "var(--accent)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--line)"; e.currentTarget.style.color = "var(--ink)"; }}
-          >
-            <Plus size={14} strokeWidth={2.5} />
-            {t("watchlist.add_btn")}
-          </button>
+          {/* Buttons */}
+          <div style={{ display: "flex", gap: 10, flexShrink: 0, alignItems: "flex-start", paddingTop: 8 }}>
+            {/* Exporter button — outlined */}
+            <button
+              style={{
+                display: "flex", alignItems: "center", gap: 7,
+                padding: "10px 18px", borderRadius: 9999,
+                border: "1.5px solid var(--line)",
+                background: "transparent",
+                color: "var(--ink)", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              <Download size={13} strokeWidth={2} />
+              Exporter
+            </button>
+            {/* Ajouter button — green filled */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 7,
+                padding: "10px 18px", borderRadius: 9999,
+                border: "none",
+                background: "var(--accent)",
+                color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              ＋ Ajouter une action
+            </button>
+          </div>
         </div>
 
         {items.length === 0 ? (
@@ -157,7 +205,7 @@ export default function WatchlistPage() {
           <div style={{
             textAlign: "center", padding: "80px 24px",
             border: "1.5px dashed var(--line)", borderRadius: 18,
-            background: "var(--paper-2)",
+            background: "var(--paper)",
           }}>
             <div style={{
               width: 56, height: 56, borderRadius: "50%", background: "var(--accent-soft)",
@@ -182,23 +230,123 @@ export default function WatchlistPage() {
                 border: "none",
               }}
             >
-              <Plus size={14} strokeWidth={2.5} />
-              {t("watchlist.add_btn")}
+              ＋ {t("watchlist.add_btn")}
             </button>
           </div>
-        ) : loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-            {items.map((w) => <div key={w.symbol} className="skeleton" style={{ height: 200, borderRadius: 14 }} />)}
-          </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-            {stocks.map((stock) => (
-              <StockCard key={stock.symbol} symbol={stock.symbol} name={stock.name}
-                currentPrice={stock.currentPrice} change={stock.change}
-                changePercent={stock.changePercent} currency={stock.currency}
-                signal={stock.valuation?.signal} fairValue={stock.valuation?.fairValue}
-                upside={stock.valuation?.upside} score={stock.valuation?.score} />
+          /* Table */
+          <div style={{
+            background: "var(--paper)", border: "1.5px solid var(--line)",
+            borderRadius: 18, overflow: "hidden",
+          }}>
+            {/* Table header */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 130px 100px 130px 120px 48px",
+              padding: "12px 24px",
+              borderBottom: "1.5px solid var(--line)",
+              fontFamily: "var(--font-geist-mono, monospace)",
+              fontSize: 11, color: "var(--muted)",
+              textTransform: "uppercase", letterSpacing: "0.08em",
+            }}>
+              <span>Action</span>
+              <span style={{ textAlign: "right" }}>Prix</span>
+              <span style={{ textAlign: "right" }}>Var. 1J</span>
+              <span style={{ textAlign: "center" }}>Signal</span>
+              <span style={{ textAlign: "right" }}>Note /100</span>
+              <span />
+            </div>
+
+            {/* Skeleton rows */}
+            {loading && Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ height: 56, margin: "0", borderRadius: 0, borderBottom: "1.5px solid var(--line)" }} />
             ))}
+
+            {/* Data rows */}
+            {!loading && stocks.map((stock, i) => {
+              const isPos = stock.changePercent >= 0;
+              const priceFormatted = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2 }).format(stock.currentPrice);
+              const inWatchlist = watchlistSymbols.includes(stock.symbol);
+              return (
+                <div
+                  key={stock.symbol}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 130px 100px 130px 120px 48px",
+                    padding: "14px 24px",
+                    alignItems: "center",
+                    borderBottom: i < stocks.length - 1 ? "1.5px solid var(--line)" : "none",
+                    transition: "background 0.15s",
+                    cursor: "default",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--paper-2)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  {/* Name + symbol */}
+                  <div>
+                    <Link
+                      href={`/stock/${stock.symbol}`}
+                      style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)", textDecoration: "none" }}
+                    >
+                      {stock.name}
+                    </Link>
+                    <div style={{
+                      fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11,
+                      color: "var(--muted)", marginTop: 2,
+                    }}>
+                      {stock.symbol}
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div style={{
+                    textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)",
+                    fontSize: 14, fontWeight: 600, color: "var(--ink)",
+                  }}>
+                    {priceFormatted} {stock.currency}
+                  </div>
+
+                  {/* Change % */}
+                  <div style={{
+                    textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)",
+                    fontSize: 13, fontWeight: 600,
+                    color: isPos ? "var(--signal-up)" : "var(--signal-down)",
+                  }}>
+                    {isPos ? "+" : ""}{stock.changePercent.toFixed(2)}%
+                  </div>
+
+                  {/* Signal */}
+                  <div style={{ display: "flex", justifyContent: "center" }}>
+                    <SignalBadge signal={stock.valuation?.signal} />
+                  </div>
+
+                  {/* Score */}
+                  <div style={{ textAlign: "right" }}>
+                    <ScoreCell score={stock.valuation?.score} />
+                  </div>
+
+                  {/* Star / unfollow */}
+                  <div style={{ display: "flex", justifyContent: "center" }}>
+                    <button
+                      onClick={() => inWatchlist ? handleUnfollow(stock.symbol) : handleFollow(stock.symbol, stock.name)}
+                      title={inWatchlist ? "Retirer de la liste" : "Ajouter à la liste"}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        padding: 4, display: "flex", alignItems: "center", justifyContent: "center",
+                        color: inWatchlist ? "var(--accent)" : "var(--muted)",
+                        transition: "color 0.15s",
+                      }}
+                    >
+                      <Star
+                        size={16}
+                        strokeWidth={1.8}
+                        fill={inWatchlist ? "var(--accent)" : "none"}
+                      />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
