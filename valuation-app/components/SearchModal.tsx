@@ -19,6 +19,14 @@ interface Props {
   onUnfollow: (symbol: string) => Promise<void>;
 }
 
+const EXCHANGE_LABELS: Record<string, string> = {
+  NYQ: "NYSE", NYSE: "NYSE", NMS: "NASDAQ", NGM: "NASDAQ", NCM: "NASDAQ",
+  PAR: "Euronext Paris", EPA: "Euronext Paris",
+  AMS: "Euronext Amsterdam", XET: "XETRA",
+  LSE: "London Stock Exchange", MIL: "Borsa Italiana",
+  TOR: "Toronto", ASX: "ASX",
+};
+
 const POPULAR: SearchResult[] = [
   { symbol: "AAPL",  name: "Apple Inc.",       exchange: "NASDAQ", quoteType: "EQUITY" },
   { symbol: "NVDA",  name: "Nvidia",            exchange: "NASDAQ", quoteType: "EQUITY" },
@@ -91,12 +99,23 @@ export function SearchModal({ open, onClose, watchlistSymbols, onFollow, onUnfol
     setPendingSymbols((s) => { const n = new Set(s); n.delete(symbol); return n; });
   }, [onUnfollow]);
 
-  const goToStock = (symbol: string) => {
-    onClose();
-    router.push(`/stock/${symbol}`);
-  };
+  const [navigating, setNavigating] = useState(false);
 
   const displayed = query.trim() ? results : POPULAR;
+
+  // Navigate to a stock — if no symbol given, resolve from current results or API
+  const handleGo = useCallback(async (symbol?: string) => {
+    if (symbol) { onClose(); router.push(`/stock/${symbol}`); return; }
+    const first = (query.trim() ? results : POPULAR)[0];
+    if (first) { onClose(); router.push(`/stock/${first.symbol}`); return; }
+    if (!query.trim()) return;
+    setNavigating(true);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`);
+      const data: SearchResult[] = await res.json();
+      if (data[0]) { onClose(); router.push(`/stock/${data[0].symbol}`); }
+    } finally { setNavigating(false); }
+  }, [results, query, onClose, router]);
   const sectionLabel = query.trim()
     ? loading ? "Recherche…" : `${results.length} résultat${results.length !== 1 ? "s" : ""}`
     : "Populaires en ce moment";
@@ -149,7 +168,8 @@ export function SearchModal({ open, onClose, watchlistSymbols, onFollow, onUnfol
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher — Apple, LVMH, NVDA, ETF World…"
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleGo(); } }}
+              placeholder="Rechercher une entreprise — ex : Carbios, LVMH, Apple…"
               style={{
                 flex: 1,
                 background: "transparent",
@@ -223,7 +243,7 @@ export function SearchModal({ open, onClose, watchlistSymbols, onFollow, onUnfol
                 >
                   {/* Icon */}
                   <div
-                    onClick={() => goToStock(r.symbol)}
+                    onClick={() => handleGo(r.symbol)}
                     style={{
                       width: 36,
                       height: 36,
@@ -246,7 +266,7 @@ export function SearchModal({ open, onClose, watchlistSymbols, onFollow, onUnfol
                   {/* Name + meta */}
                   <div
                     style={{ flex: 1, minWidth: 0 }}
-                    onClick={() => goToStock(r.symbol)}
+                    onClick={() => handleGo(r.symbol)}
                   >
                     <div style={{
                       display: "flex",
@@ -283,13 +303,13 @@ export function SearchModal({ open, onClose, watchlistSymbols, onFollow, onUnfol
                       color: "var(--muted)",
                       fontFamily: "var(--font-geist-mono, monospace)",
                     }}>
-                      {r.symbol} · {r.exchange}
+                      {EXCHANGE_LABELS[r.exchange] || r.exchange}
                     </div>
                   </div>
 
                   {/* Analyse link */}
                   <button
-                    onClick={() => goToStock(r.symbol)}
+                    onClick={() => handleGo(r.symbol)}
                     style={{
                       display: "flex",
                       alignItems: "center",
