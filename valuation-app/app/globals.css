@@ -413,3 +413,55 @@ input::placeholder { color: var(--muted); opacity: 0.7; }
 @keyframes bar-grow {
   from { width: 0; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — Internal pages
+   ═══════════════════════════════════════════════════════════ */
+
+/* Page top padding (no footer padding — footer has its own) */
+.pg-top-pad { padding: 40px 32px 0; }
+@media (max-width: 768px) { .pg-top-pad { padding: 24px 16px 0; } }
+
+/* Standard inner page padding */
+.pg-pad { padding: 40px 32px 80px; }
+@media (max-width: 768px) { .pg-pad { padding: 24px 16px 60px; } }
+
+/* KPI strip: 4 columns → 2×2 on tablet/phone */
+.grid-kpi-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+@media (max-width: 900px) { .grid-kpi-4 { grid-template-columns: repeat(2,1fr); } }
+
+/* Watchlist: main 2-col layout collapses to 1 col */
+.wl-layout { display: grid; grid-template-columns: 1fr 308px; gap: 24px; align-items: start; }
+@media (max-width: 1024px) { .wl-layout { grid-template-columns: 1fr; } }
+
+/* Portfolio: main 2-col layout */
+.pf-main-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; margin-bottom: 20px; }
+@media (max-width: 1024px) { .pf-main-grid { grid-template-columns: 1fr; } }
+
+/* Portfolio KPI strip: horizontal scroll on mobile (preserves cell borders/gradients) */
+.pf-kpi-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 28px 0; }
+.pf-kpi-inner  { min-width: 640px; }
+
+/* Generic 3-col grid */
+.grid-3col { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+@media (max-width: 900px) { .grid-3col { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 600px) { .grid-3col { grid-template-columns: 1fr; } }
+
+/* Mobile nav overlay */
+.mobile-nav-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: var(--paper);
+  display: flex; flex-direction: column;
+  padding: 0;
+  overflow-y: auto;
+}
+
+/* Navbar: hide desktop elements on small screens */
+@media (max-width: 768px) {
+  .nav-desktop { display: none !important; }
+  .nav-hamburger { display: flex !important; }
+}
+@media (min-width: 769px) {
+  .nav-hamburger { display: none !important; }
+  .nav-mobile-only { display: none !important; }
+}
