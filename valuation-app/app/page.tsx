@@ -150,6 +150,13 @@ const FOOTER_COLS = [
 ];
 
 /* ── live search hook ──────────────────────────────────────────── */
+const EXCHANGE_LABELS: Record<string, string> = {
+  NYQ: "NYSE", NYSE: "NYSE", NMS: "NASDAQ", NGM: "NASDAQ", NCM: "NASDAQ",
+  PAR: "Euronext Paris", AMS: "Euronext Amsterdam", XET: "XETRA",
+  LSE: "London Stock Exchange", MIL: "Borsa Italiana",
+  TOR: "Toronto Stock Exchange", ASX: "ASX",
+};
+
 function useLiveSearch() {
   const [query, setQuery]     = useState("");
   const [results, setResults] = useState<{ symbol: string; name: string; exchange: string }[]>([]);
@@ -164,7 +171,7 @@ function useLiveSearch() {
         const r = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
         const d = await r.json();
         setResults(d);
-        setOpen(true);
+        setOpen(d.length > 0);
       } finally { setLoading(false); }
     }, 280);
     return () => clearTimeout(id);
@@ -665,39 +672,54 @@ export default function HomePage() {
                   type="text"
                   value={search.query}
                   onChange={(e) => search.setQuery(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && search.results[0]) handleSearchGo(search.results[0].symbol); }}
-                  placeholder="Rechercher une action, un ticker ou un secteur…"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (search.results[0]) handleSearchGo(search.results[0].symbol);
+                      else if (search.query.trim()) handleSearchGo(search.query.trim().toUpperCase());
+                    }
+                    if (e.key === "Escape") search.setOpen(false);
+                  }}
+                  placeholder="Rechercher une entreprise — ex : Carbios, LVMH, Apple…"
                   style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#14201A", fontSize: 14, fontFamily: "inherit" }}
                 />
+                {search.loading && <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid #D9D1BD", borderTopColor: "#1F5C3E", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />}
                 <button
-                  onClick={() => { if (search.results[0]) handleSearchGo(search.results[0].symbol); }}
+                  onClick={() => {
+                    if (search.results[0]) handleSearchGo(search.results[0].symbol);
+                    else if (search.query.trim()) handleSearchGo(search.query.trim().toUpperCase());
+                  }}
                   style={{ padding: "7px 18px", borderRadius: 9999, background: "#1F5C3E", color: "#F6F2E8", fontWeight: 600, fontSize: 13, border: "none", cursor: "pointer", flexShrink: 0, fontFamily: "inherit" }}
                 >
                   Analyser
                 </button>
               </div>
 
-              {/* Dropdown */}
+              {/* Dropdown — nom de l'entreprise en premier, ticker/bourse en secondaire */}
               {search.open && search.results.length > 0 && (
                 <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "#F6F2E8", border: "1px solid #D9D1BD", borderRadius: 14, overflow: "hidden", zIndex: 100, boxShadow: "0 8px 32px rgba(10,22,40,0.12)" }}>
-                  {search.results.slice(0, 6).map((r, i) => (
-                    <button
-                      key={r.symbol}
-                      onClick={() => handleSearchGo(r.symbol)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "transparent", border: "none", borderBottom: i < Math.min(search.results.length, 6) - 1 ? "1px solid #D9D1BD" : "none", cursor: "pointer", textAlign: "left" }}
-                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#EFE9DC")}
-                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
-                    >
-                      <div style={{ width: 32, height: 32, borderRadius: 7, background: "#D6E4D6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#1F5C3E", flexShrink: 0 }}>
-                        {r.symbol.slice(0, 3)}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: "#14201A" }}>{r.symbol}</div>
-                        <div style={{ fontSize: 11, color: "#7A7768", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                      </div>
-                      <ChevronRight size={14} color="#7A7768" />
-                    </button>
-                  ))}
+                  {search.results.map((r, i) => {
+                    const exchangeLabel = EXCHANGE_LABELS[r.exchange] || r.exchange || "Bourse internationale";
+                    return (
+                      <button
+                        key={r.symbol}
+                        onClick={() => handleSearchGo(r.symbol)}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "transparent", border: "none", borderBottom: i < search.results.length - 1 ? "1px solid #D9D1BD" : "none", cursor: "pointer", textAlign: "left" }}
+                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#EFE9DC")}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                      >
+                        <div style={{ width: 38, height: 38, borderRadius: 10, background: "#D6E4D6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: "#1F5C3E" }}>
+                            {r.name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("").slice(0, 2)}
+                          </span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: "#14201A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+                          <div style={{ fontSize: 11, color: "#7A7768", marginTop: 2 }}>{exchangeLabel}</div>
+                        </div>
+                        <ChevronRight size={14} color="#7A7768" />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
