@@ -9,8 +9,14 @@ const YF_HEADERS: HeadersInit = {
   Referer: "https://finance.yahoo.com/",
 };
 
+const YF_TIMEOUT_MS = 7000;
+
+function withTimeout(ms: number): AbortSignal {
+  return AbortSignal.timeout(ms);
+}
+
 async function yfGet(url: string): Promise<any> {
-  const res = await fetch(url, { headers: YF_HEADERS });
+  const res = await fetch(url, { headers: YF_HEADERS, signal: withTimeout(YF_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`Yahoo Finance HTTP ${res.status}: ${url}`);
   return res.json();
 }
@@ -29,6 +35,7 @@ async function getYFCrumb(): Promise<{ crumb: string; cookies: string } | null> 
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
       },
       redirect: "follow",
+      signal: withTimeout(YF_TIMEOUT_MS),
     });
     const raw = pageRes.headers.get("set-cookie") ?? "";
     // Collect all cookie names/values (ignoring attributes)
@@ -48,6 +55,7 @@ async function getYFCrumb(): Promise<{ crumb: string; cookies: string } | null> 
           cookie: _cookies,
           "Content-Type": "text/plain",
         },
+        signal: withTimeout(YF_TIMEOUT_MS),
       }
     );
     if (!crumbRes.ok) return null;
@@ -155,6 +163,7 @@ async function fetchQuoteSummary(symbol: string) {
     headers: auth
       ? { ...YF_HEADERS, cookie: auth.cookies }
       : YF_HEADERS,
+    signal: withTimeout(YF_TIMEOUT_MS),
   };
   const res = await fetch(url, fetchOpts);
   if (!res.ok) return null;

@@ -1,6 +1,6 @@
 import { getTrendingStocks } from "@/lib/yahoo";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const stocks = await getTrendingStocks();
