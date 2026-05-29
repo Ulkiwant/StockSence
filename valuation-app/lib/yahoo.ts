@@ -42,11 +42,25 @@ export interface StockDetails extends StockQuote {
   enterpriseToEbitda: number;
 }
 
+// Preferred exchanges: lower index = higher priority
+const EXCHANGE_PRIORITY: Record<string, number> = {
+  NYQ: 1, NYSE: 1, NMS: 2, NGM: 3, NCM: 4,   // US major
+  PAR: 5, AMS: 6, XET: 7, LSE: 8, MIL: 9,   // European major
+  TOR: 10, ASX: 11, HKG: 12,                  // Other major
+};
+
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\b(inc|corp|co|ltd|sa|plc|nv|ag|se|spa|bv|sas|s\.a|s\.p\.a)\b\.?/gi, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
 export async function searchStocks(query: string) {
   try {
-    const raw = await (yahooFinance.search as any)(query, { quotesCount: 8 });
+    const raw = await (yahooFinance.search as any)(query, { quotesCount: 12 });
     const quotes = (raw?.quotes ?? []) as any[];
-    return quotes
+    const candidates = quotes
       .filter((q: any) => ["EQUITY", "ETF", "MUTUALFUND"].includes(q.quoteType) && q.symbol)
       .map((q: any) => ({
         symbol: q.symbol as string,
@@ -54,6 +68,23 @@ export async function searchStocks(query: string) {
         exchange: (q.exchange || "") as string,
         quoteType: (q.quoteType || "EQUITY") as string,
       }));
+
+    // Deduplicate: one result per unique company name, keeping the best-exchange listing
+    const byName = new Map<string, typeof candidates[0]>();
+    for (const stock of candidates) {
+      const key = normalizeName(stock.name);
+      if (!key) continue;
+      const existing = byName.get(key);
+      if (!existing) {
+        byName.set(key, stock);
+      } else {
+        const ep = EXCHANGE_PRIORITY[existing.exchange] ?? 99;
+        const np = EXCHANGE_PRIORITY[stock.exchange] ?? 99;
+        if (np < ep) byName.set(key, stock);
+      }
+    }
+
+    return Array.from(byName.values()).slice(0, 3);
   } catch {
     return [];
   }
