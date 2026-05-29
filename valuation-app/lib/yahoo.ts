@@ -1,9 +1,62 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import YahooFinanceClass from "yahoo-finance2";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type QuoteSummaryResult = Record<string, any>;
 
-const yahooFinance = new (YahooFinanceClass as any)({ suppressNotices: ["yahooSurvey"] });
+const YF_HEADERS: HeadersInit = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  Accept: "application/json, text/plain, */*",
+  "Accept-Language": "en-US,en;q=0.9",
+  Origin: "https://finance.yahoo.com",
+  Referer: "https://finance.yahoo.com/",
+};
+
+async function yfGet(url: string): Promise<any> {
+  const res = await fetch(url, { headers: YF_HEADERS });
+  if (!res.ok) throw new Error(`Yahoo Finance HTTP ${res.status}: ${url}`);
+  return res.json();
+}
+
+let _crumb: string | null = null;
+let _cookies = "";
+
+async function getYFCrumb(): Promise<{ crumb: string; cookies: string } | null> {
+  if (_crumb) return { crumb: _crumb, cookies: _cookies };
+  try {
+    // Step 1: get session cookies from Yahoo Finance
+    const pageRes = await fetch("https://finance.yahoo.com/quote/AAPL", {
+      headers: {
+        ...YF_HEADERS,
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      },
+      redirect: "follow",
+    });
+    const raw = pageRes.headers.get("set-cookie") ?? "";
+    // Collect all cookie names/values (ignoring attributes)
+    const cookiePairs = raw
+      .split(/,(?=[^ ]+=)/)
+      .map((s) => s.split(";")[0].trim())
+      .filter(Boolean)
+      .join("; ");
+    _cookies = cookiePairs;
+
+    // Step 2: fetch crumb
+    const crumbRes = await fetch(
+      "https://query2.finance.yahoo.com/v1/test/getcrumb",
+      {
+        headers: {
+          ...YF_HEADERS,
+          cookie: _cookies,
+          "Content-Type": "text/plain",
+        },
+      }
+    );
+    if (!crumbRes.ok) return null;
+    _crumb = (await crumbRes.text()).trim();
+    return _crumb ? { crumb: _crumb, cookies: _cookies } : null;
+  } catch {
+    return null;
+  }
+}
 
 export interface StockQuote {
   symbol: string;
@@ -42,11 +95,10 @@ export interface StockDetails extends StockQuote {
   enterpriseToEbitda: number;
 }
 
-// Preferred exchanges: lower index = higher priority
 const EXCHANGE_PRIORITY: Record<string, number> = {
-  NYQ: 1, NYSE: 1, NMS: 2, NGM: 3, NCM: 4,   // US major
-  PAR: 5, AMS: 6, XET: 7, LSE: 8, MIL: 9,   // European major
-  TOR: 10, ASX: 11, HKG: 12,                  // Other major
+  NYQ: 1, NYSE: 1, NMS: 2, NGM: 3, NCM: 4,
+  PAR: 5, AMS: 6, XET: 7, LSE: 8, MIL: 9,
+  TOR: 10, ASX: 11, HKG: 12,
 };
 
 function normalizeName(name: string): string {
@@ -58,8 +110,12 @@ function normalizeName(name: string): string {
 
 export async function searchStocks(query: string) {
   try {
-    const raw = await (yahooFinance.search as any)(query, { quotesCount: 12 });
-    const quotes = (raw?.quotes ?? []) as any[];
+    const url =
+      `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}` +
+      `&lang=en-US&region=US&quotesCount=12&newsCount=0` +
+      `&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query`;
+    const data = await yfGet(url);
+    const quotes: any[] = data?.finance?.result?.[0]?.quotes ?? data?.quotes ?? [];
     const candidates = quotes
       .filter((q: any) => ["EQUITY", "ETF", "MUTUALFUND"].includes(q.quoteType) && q.symbol)
       .map((q: any) => ({
@@ -69,8 +125,7 @@ export async function searchStocks(query: string) {
         quoteType: (q.quoteType || "EQUITY") as string,
       }));
 
-    // Deduplicate: one result per unique company name, keeping the best-exchange listing
-    const byName = new Map<string, typeof candidates[0]>();
+    const byName = new Map<string, (typeof candidates)[0]>();
     for (const stock of candidates) {
       const key = normalizeName(stock.name);
       if (!key) continue;
@@ -83,41 +138,72 @@ export async function searchStocks(query: string) {
         if (np < ep) byName.set(key, stock);
       }
     }
-
     return Array.from(byName.values()).slice(0, 3);
   } catch {
     return [];
   }
 }
 
+async function fetchQuoteSummary(symbol: string) {
+  const auth = await getYFCrumb();
+  const modules = "financialData,defaultKeyStatistics,assetProfile,summaryDetail";
+  const crumbParam = auth ? `&crumb=${encodeURIComponent(auth.crumb)}` : "";
+  const url =
+    `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}` +
+    `?modules=${modules}${crumbParam}`;
+  const fetchOpts: RequestInit = {
+    headers: auth
+      ? { ...YF_HEADERS, cookie: auth.cookies }
+      : YF_HEADERS,
+  };
+  const res = await fetch(url, fetchOpts);
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data?.quoteSummary?.result?.[0] ?? null;
+}
+
+async function fetchChartMeta(symbol: string) {
+  const url =
+    `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
+    `?interval=1d&range=5d&includePrePost=false`;
+  const data = await yfGet(url);
+  return (data?.chart?.result?.[0]?.meta ?? null) as any;
+}
+
 export async function getStockDetails(symbol: string): Promise<StockDetails | null> {
   try {
-    const [quoteRaw, summaryRaw] = await Promise.all([
-      (yahooFinance.quote as any)(symbol),
-      (yahooFinance.quoteSummary as any)(symbol, {
-        modules: ["financialData", "defaultKeyStatistics", "assetProfile", "summaryDetail"],
-      }),
+    const [meta, summary] = await Promise.allSettled([
+      fetchChartMeta(symbol),
+      fetchQuoteSummary(symbol),
     ]);
 
-    const quote = quoteRaw as any;
-    const summary = summaryRaw as QuoteSummaryResult;
+    const m = meta.status === "fulfilled" ? meta.value : null;
+    const s = summary.status === "fulfilled" ? summary.value : null;
 
-    const fd = summary.financialData as any;
-    const ks = summary.defaultKeyStatistics as any;
-    const ap = summary.assetProfile as any;
-    const sd = summary.summaryDetail as any;
+    if (!m && !s) return null;
+
+    const fd = s?.financialData ?? {};
+    const ks = s?.defaultKeyStatistics ?? {};
+    const ap = s?.assetProfile ?? {};
+    const sd = s?.summaryDetail ?? {};
 
     return {
-      symbol: quote.symbol ?? symbol,
-      name: quote.longName ?? quote.shortName ?? symbol,
-      quoteType: (quote.quoteType ?? "EQUITY") as string,
-      currentPrice: quote.regularMarketPrice ?? 0,
-      change: quote.regularMarketChange ?? 0,
-      changePercent: (quote.regularMarketChangePercent ?? 0) / 100,
-      marketCap: quote.marketCap ?? 0,
-      sector: ap?.sector ?? quote.sector ?? "Unknown",
-      industry: ap?.industry ?? quote.industry ?? "Unknown",
-      currency: quote.currency ?? "USD",
+      symbol: m?.symbol ?? symbol,
+      name: m?.longName ?? m?.shortName ?? symbol,
+      quoteType: (m?.instrumentType ?? "EQUITY") as string,
+      currentPrice: m?.regularMarketPrice ?? 0,
+      change:
+        m != null
+          ? (m.regularMarketPrice ?? 0) - (m.chartPreviousClose ?? m.regularMarketPrice ?? 0)
+          : 0,
+      changePercent:
+        m != null && m.chartPreviousClose
+          ? ((m.regularMarketPrice - m.chartPreviousClose) / m.chartPreviousClose)
+          : 0,
+      marketCap: m?.marketCap ?? sd?.marketCap ?? 0,
+      sector: ap?.sector ?? "Unknown",
+      industry: ap?.industry ?? "Unknown",
+      currency: m?.currency ?? "USD",
       logoUrl: "",
       eps: ks?.trailingEps ?? 0,
       forwardPE: sd?.forwardPE ?? 0,
@@ -129,11 +215,11 @@ export async function getStockDetails(symbol: string): Promise<StockDetails | nu
       revenueGrowth: fd?.revenueGrowth ?? 0,
       freeCashFlow: fd?.freeCashflow ?? 0,
       sharesOutstanding: ks?.sharesOutstanding ?? 0,
-      beta: ks?.beta ?? 1,
+      beta: ks?.beta ?? sd?.beta ?? 1,
       dividendYield: sd?.dividendYield ?? 0,
-      fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh ?? 0,
-      fiftyTwoWeekLow: quote.fiftyTwoWeekLow ?? 0,
-      averageVolume: quote.averageVolume3Month ?? quote.regularMarketVolume ?? 0,
+      fiftyTwoWeekHigh: m?.fiftyTwoWeekHigh ?? sd?.fiftyTwoWeekHigh ?? 0,
+      fiftyTwoWeekLow: m?.fiftyTwoWeekLow ?? sd?.fiftyTwoWeekLow ?? 0,
+      averageVolume: m?.regularMarketVolume ?? 0,
       description: ap?.longBusinessSummary ?? "",
       website: ap?.website ?? "",
       employees: ap?.fullTimeEmployees ?? 0,
@@ -164,20 +250,25 @@ export async function getHistoricalPrices(
       "1y": subDays(365),
       "5y": subDays(365 * 5),
     };
-
-    const result = await (yahooFinance.chart as any)(symbol, {
-      period1: periodMap[period],
-      interval: period === "5y" ? "1wk" : "1d",
-    }) as any;
-
-    const quotes: any[] = result?.quotes ?? [];
-    return quotes
-      .filter((r: any) => r.close != null)
-      .map((r: any) => ({
-        date: new Date(r.date).toISOString().split("T")[0],
-        close: r.close as number,
-        volume: (r.volume ?? 0) as number,
-      }));
+    const interval = period === "5y" ? "1wk" : "1d";
+    const period1 = Math.floor(new Date(periodMap[period]).getTime() / 1000);
+    const period2 = Math.floor(Date.now() / 1000);
+    const url =
+      `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
+      `?interval=${interval}&period1=${period1}&period2=${period2}`;
+    const data = await yfGet(url);
+    const result = data?.chart?.result?.[0];
+    if (!result) return [];
+    const timestamps: number[] = result.timestamp ?? [];
+    const closes: number[] = result.indicators?.quote?.[0]?.close ?? [];
+    const volumes: number[] = result.indicators?.quote?.[0]?.volume ?? [];
+    return timestamps
+      .map((ts: number, i: number) => ({
+        date: new Date(ts * 1000).toISOString().split("T")[0],
+        close: closes[i],
+        volume: volumes[i] ?? 0,
+      }))
+      .filter((r) => r.close != null);
   } catch {
     return [];
   }
@@ -187,14 +278,17 @@ export interface NewsItem {
   title: string;
   url: string;
   source: string;
-  publishedAt: string; // ISO date string
+  publishedAt: string;
   summary: string;
 }
 
 export async function getStockNews(symbol: string): Promise<NewsItem[]> {
   try {
-    const raw = await (yahooFinance.search as any)(symbol, { quotesCount: 0, newsCount: 6 });
-    const news = (raw?.news ?? []) as any[];
+    const url =
+      `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}` +
+      `&lang=en-US&region=US&quotesCount=0&newsCount=6`;
+    const data = await yfGet(url);
+    const news: any[] = data?.finance?.result?.[0]?.news ?? data?.news ?? [];
     return news.map((n: any) => ({
       title: n.title ?? "",
       url: n.link ?? "",
@@ -216,31 +310,37 @@ const TRENDING_POOL = [
 ];
 
 export async function getTrendingStocks(): Promise<StockQuote[]> {
-  // Deterministic daily seed for consistent rotation
   const today = new Date();
-  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  const seed =
+    today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
   let rng = seed;
   const rand = () => {
     rng = (rng * 1664525 + 1013904223) & 0xffffffff;
     return (rng >>> 0) / 0xffffffff;
   };
-
   const shuffled = [...TRENDING_POOL].sort(() => rand() - 0.5);
   const daily = shuffled.slice(0, 6);
 
   const results = await Promise.allSettled(
     daily.map(async (sym) => {
-      const q = await (yahooFinance.quote as any)(sym) as any;
+      const meta = await fetchChartMeta(sym);
+      if (!meta) throw new Error("no meta");
       return {
-        symbol: q.symbol ?? sym,
-        name: q.longName ?? q.shortName ?? sym,
-        currentPrice: q.regularMarketPrice ?? 0,
-        change: q.regularMarketChange ?? 0,
-        changePercent: (q.regularMarketChangePercent ?? 0) / 100,
-        marketCap: q.marketCap ?? 0,
+        symbol: meta.symbol ?? sym,
+        name: meta.longName ?? meta.shortName ?? sym,
+        currentPrice: meta.regularMarketPrice ?? 0,
+        change:
+          (meta.regularMarketPrice ?? 0) -
+          (meta.chartPreviousClose ?? meta.regularMarketPrice ?? 0),
+        changePercent:
+          meta.chartPreviousClose
+            ? ((meta.regularMarketPrice - meta.chartPreviousClose) /
+              meta.chartPreviousClose)
+            : 0,
+        marketCap: meta.marketCap ?? 0,
         sector: "",
         industry: "",
-        currency: q.currency ?? "USD",
+        currency: meta.currency ?? "USD",
         logoUrl: "",
       } as StockQuote;
     })
