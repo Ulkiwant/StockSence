@@ -4,46 +4,46 @@ import { NextResponse, type NextRequest } from "next/server";
 const PROTECTED_ROUTES = ["/portfolio", "/watchlist"];
 
 export async function proxy(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // Skip auth protection when Supabase is not yet configured
-  if (!url || !key) return NextResponse.next({ request });
-
-  let response = NextResponse.next({ request });
-
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() { return request.cookies.getAll(); },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
-
-  let user = null;
   try {
-    const result = await supabase.auth.getUser();
-    user = result.data.user;
-  } catch {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !key) return NextResponse.next({ request });
+
+    let response = NextResponse.next({ request });
+
+    const supabase = createServerClient(url, key, {
+      cookies: {
+        getAll() {
+          try { return request.cookies.getAll(); } catch { return []; }
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          } catch { /* ignore cookie errors */ }
+        },
+      },
+    });
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const pathname = request.nextUrl.pathname;
+    const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
+
+    if (!user && isProtected) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/auth/login";
+      redirectUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
     return response;
+  } catch {
+    return NextResponse.next({ request });
   }
-
-  const pathname = request.nextUrl.pathname;
-  const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
-
-  if (!user && isProtected) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/auth/login";
-    redirectUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  return response;
 }
 
 export const config = {
