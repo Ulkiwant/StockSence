@@ -154,6 +154,92 @@ const STEP_LABELS = [
   "Vos convictions",
 ];
 
+/* ── Per-question option descriptions ── */
+const Q_OPTION_DESCS: Record<number, string[]> = {
+  0: [
+    "Horizon long — vous pouvez viser une forte croissance.",
+    "Équilibre entre performance et constitution de capital.",
+    "Transition vers une protection progressive du capital.",
+    "Préservation du capital et revenus stables prioritaires.",
+  ],
+  1: [
+    "Parfait — vous pouvez investir sereinement.",
+    "Priorité : 3 à 6 mois de dépenses sur Livret A d'abord.",
+  ],
+  2: [
+    "Revenus stables — base idéale pour investir régulièrement.",
+    "Revenus variables — diversification et liquidité en priorité.",
+    "Commencez tôt, même avec de petites sommes.",
+    "Préservation du capital et revenus réguliers en priorité.",
+  ],
+  3: [
+    "Disponibilité prioritaire — produits peu volatils conseillés.",
+    "Horizon moyen — mix actions/obligations adapté.",
+    "Horizon long — actions et ETF monde privilégiés.",
+    "Très long terme — ignorez les krachs et visez la performance.",
+  ],
+  6: [
+    "Profil défensif — des placements plus stables vous conviennent.",
+    "Attitude fréquente — un profil équilibré est adapté.",
+    "Bonne maîtrise émotionnelle — profil dynamique accessible.",
+    "Comportement d'investisseur averti — profil dynamique.",
+  ],
+  7: [
+    "Protection du capital — moins de gains, moins de risques.",
+    "Le profil le plus courant — bon équilibre rendement/sécurité.",
+    "Vous ciblez la performance — acceptez les variations importantes.",
+  ],
+  8: [
+    "Faire croître un capital sur le long terme.",
+    "Dividendes et coupons pour un complément de revenu.",
+    "Optimiser pour la retraite — enveloppes fiscales adaptées.",
+    "Se prémunir contre l'érosion monétaire via actifs réels.",
+  ],
+};
+
+/* ── Per-question option icons (SVG path data) ── */
+const Q_OPTION_ICONS: Record<number, string[]> = {
+  0: [
+    "M13 2L3 14h9l-1 8 10-12h-9l1-8z",                                                   // lightning (jeune/dynamique)
+    "M3 3v18h18 M7 14l4-4 4 3 5-7",                                                      // chart up
+    "M12 8v4l3 2 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",                                // clock
+    "M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z", // sun
+  ],
+  1: [
+    "M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6Z M9 12l2 2 4-4",                      // shield-check
+    "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z M12 9v4 M12 17h.01", // alert
+  ],
+  2: [
+    "M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16", // briefcase
+    "M20 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z M8 21h8 M12 17v4", // monitor
+    "M22 10v6 M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5",                           // graduation-cap
+    "M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z", // sun
+  ],
+  3: [
+    "M12 7v5l3 2 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",                                // clock
+    "M3 12h18 M15 6l6 6-6 6",                                                             // arrow-right
+    "M3 21h18 M5 21V8l7-5 7 5v13 M10 21v-6h4v6",                                        // home
+    "M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z", // sun
+  ],
+  6: [
+    "M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6",                                                 // trending-down
+    "M10 15V9 M14 15V9 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",                         // pause-circle
+    "M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6Z",                                    // shield
+    "M12 5v14 M5 12h14",                                                                   // plus
+  ],
+  7: [
+    "M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6Z",                                    // shield
+    "M8 6h8 M6 12h12 M8 18h8",                                                            // menu/sliders (balance)
+    "M3 3v18h18 M7 14l4-4 4 3 5-7",                                                      // chart up
+  ],
+  8: [
+    "M3 3v18h18 M7 10h2 M7 14h2 M7 18h2 M13 3v18 M17 3v18",                            // bar-chart
+    "M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",                     // dollar-sign
+    "M3 21h18 M5 21V8l7-5 7 5v13 M10 21v-6h4v6",                                        // home
+    "M23 12a11.05 11.05 0 0 0-22 0 M5 19a7 7 0 0 1 14 0",                               // umbrella
+  ],
+};
+
 /* ── Main component ── */
 
 export default function AdvisorPage() {
@@ -669,12 +755,14 @@ export default function AdvisorPage() {
                   <div style={{
                     display: "grid",
                     gridTemplateColumns: (currentQuestion.options ?? []).length === 4 ? "1fr 1fr" : "1fr",
-                    gap: 12,
+                    gap: 14,
                   }}>
-                    {(currentQuestion.options ?? []).map((option) => (
+                    {(currentQuestion.options ?? []).map((option, optIdx) => (
                       <RadioOption
                         key={option}
                         label={option}
+                        description={Q_OPTION_DESCS[step]?.[optIdx]}
+                        iconPath={Q_OPTION_ICONS[step]?.[optIdx]}
                         selected={currentAnswer === option}
                         onClick={() => setAnswer(option)}
                       />
@@ -930,10 +1018,14 @@ export default function AdvisorPage() {
 
 function RadioOption({
   label,
+  description,
+  iconPath,
   selected,
   onClick,
 }: {
   label: string;
+  description?: string;
+  iconPath?: string;
   selected: boolean;
   onClick: () => void;
 }) {
@@ -941,50 +1033,60 @@ function RadioOption({
     <button
       onClick={onClick}
       style={{
-        padding: "16px 20px",
-        borderRadius: 12,
-        width: "100%",
-        textAlign: "left",
-        cursor: "pointer",
+        display: "flex", alignItems: "flex-start", gap: 16,
+        background: selected ? "linear-gradient(180deg,#E9F0E5,#F4F1E2)" : "var(--paper-3)",
         border: `1.5px solid ${selected ? "#1F5C3E" : "var(--line)"}`,
-        background: selected
-          ? "linear-gradient(180deg,#E9F0E5,#F4F1E2)"
-          : "var(--paper-3)",
-        boxShadow: selected ? "0 0 0 4px rgba(47,125,82,0.1)" : "none",
-        transition: "all 0.15s",
-        display: "flex",
-        flexDirection: "row",
-        gap: 14,
-        alignItems: "center",
+        borderRadius: 16, padding: "18px 20px", cursor: "pointer",
+        transition: "transform .15s, border-color .2s, background .2s",
+        textAlign: "left", fontFamily: "inherit", color: "var(--ink)",
+        position: "relative", width: "100%",
+        boxShadow: selected ? "0 0 0 4px rgba(31,92,62,0.08)" : "none",
       }}
+      onMouseEnter={(e) => { if (!selected) { e.currentTarget.style.borderColor = "var(--line-2, var(--border-hover))"; e.currentTarget.style.transform = "translateY(-2px)"; } }}
+      onMouseLeave={(e) => { if (!selected) { e.currentTarget.style.borderColor = "var(--line)"; e.currentTarget.style.transform = "translateY(0)"; } }}
     >
-      {/* Radio circle */}
-      <div style={{
-        width: 18,
-        height: 18,
-        borderRadius: "50%",
-        border: `2px solid ${selected ? "var(--accent)" : "var(--line)"}`,
-        background: selected ? "var(--accent)" : "transparent",
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "all 0.15s",
-      }}>
-        {selected && (
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
+      {/* Selected checkmark */}
+      {selected && (
+        <div style={{
+          position: "absolute", top: 16, right: 16,
+          width: 22, height: 22, borderRadius: "50%",
+          background: "#1F5C3E",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5L4.5 8.5L11 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      )}
+
+      {/* Icon box */}
+      {iconPath && (
+        <div style={{
+          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+          background: selected ? "#F6F2E8" : "var(--paper)",
+          border: `1px solid ${selected ? "#2F7D52" : "var(--line)"}`,
+          display: "grid", placeItems: "center",
+          color: selected ? "#1F5C3E" : "var(--signal-up)",
+        }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            {iconPath.split(" M").map((part, i) => (
+              <path key={i} d={i === 0 ? part : "M" + part} />
+            ))}
+          </svg>
+        </div>
+      )}
+
+      {/* Body */}
+      <div style={{ flex: 1, paddingRight: selected ? 28 : 0 }}>
+        <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.005em" }}>
+          {label}
+        </h4>
+        {description && (
+          <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
+            {description}
+          </p>
         )}
       </div>
-
-      {/* Label */}
-      <span style={{
-        fontSize: 14,
-        color: selected ? "var(--accent)" : "var(--ink)",
-        fontWeight: selected ? 600 : 400,
-        transition: "all 0.15s",
-      }}>
-        {label}
-      </span>
     </button>
   );
 }
