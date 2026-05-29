@@ -197,6 +197,35 @@ export default function PortfolioPage() {
     loadHoldings();
   };
 
+  const handleExport = () => {
+    if (!enriched.length) return;
+    const rows = sortedHoldings.map((h) => {
+      const weight = totals.value > 0 ? (h.marketValue / totals.value) * 100 : 0;
+      const sig = h.signal ? SIGNAL_LABELS[h.signal] : null;
+      return {
+        Nom: h.name,
+        Quantité: String(h.quantity),
+        "Prix moyen": h.avg_price.toFixed(2),
+        Devise: h.currency,
+        "Cours actuel": h.currentPrice.toFixed(2),
+        "Valeur totale (€)": new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(h.marketValue),
+        "Part du portefeuille": `${weight.toFixed(1)}%`,
+        "Signal IA": sig ? sig.label : "—",
+        "Score /100": h.score != null ? String(h.score) : "—",
+        Secteur: h.sector,
+      };
+    });
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(";"), ...rows.map((r) => headers.map((h) => `"${(r as Record<string, string>)[h]}"`).join(";"))].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rently-portefeuille-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleDelete = async (id: string) => {
     await fetch("/api/portfolio", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
     setAnalysis(null);
@@ -268,13 +297,14 @@ export default function PortfolioPage() {
             </p>
           </div>
           <div style={{ display: "flex", gap: 10, flexShrink: 0, alignItems: "flex-start", paddingTop: 6, flexWrap: "wrap" }}>
-            <button style={{
+            <button onClick={handleExport} disabled={!enriched.length} style={{
               display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
               borderRadius: 9999, border: "1px solid var(--line)",
-              background: "var(--paper)", color: "var(--ink)", fontSize: 14, fontWeight: 500, cursor: "pointer",
+              background: "var(--paper)", color: "var(--ink)", fontSize: 14, fontWeight: 500,
+              cursor: enriched.length ? "pointer" : "not-allowed", opacity: enriched.length ? 1 : 0.4,
             }}>
               <Download size={13} strokeWidth={2} />
-              Rapport mensuel
+              Exporter CSV
             </button>
             <button onClick={handleAnalyze} disabled={analyzing || !enriched.length} style={{
               display: "flex", alignItems: "center", gap: 7, padding: "10px 18px",
@@ -558,17 +588,34 @@ export default function PortfolioPage() {
                     ))}
                   </div>
                 </div>
-                <div style={{ overflowX: "auto", marginTop: 16 }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <div style={{ marginTop: 16 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, tableLayout: "fixed" }}>
+                    <colgroup>
+                      <col style={{ width: "34%" }} />
+                      <col style={{ width: "8%" }} />
+                      <col style={{ width: "12%" }} />
+                      <col style={{ width: "12%" }} />
+                      <col style={{ width: "14%" }} />
+                      <col style={{ width: "14%" }} />
+                      <col style={{ width: "6%" }} />
+                    </colgroup>
                     <thead>
                       <tr style={{ background: "var(--paper-3)", borderTop: "1px solid var(--line)" }}>
-                        {["Valeur", "Quantité", "Prix moyen", "Cours actuel", "Valeur totale", "Part du portefeuille", "Signal IA", ""].map((th, i) => (
+                        {[
+                          { label: "Valeur", align: "left" as const },
+                          { label: "Qté", align: "right" as const },
+                          { label: "PRU", align: "right" as const },
+                          { label: "Cours", align: "right" as const },
+                          { label: "Valeur tot.", align: "right" as const },
+                          { label: "Part", align: "right" as const },
+                          { label: "", align: "center" as const },
+                        ].map((th, i) => (
                           <th key={i} style={{
-                            padding: "10px 14px", textAlign: i <= 0 ? "left" : i >= 6 ? "center" : "right",
+                            padding: "10px 10px", textAlign: th.align,
                             fontSize: 11, fontWeight: 500, color: "var(--muted)",
                             textTransform: "uppercase", letterSpacing: "0.08em",
                             borderBottom: "1px solid var(--line)", whiteSpace: "nowrap",
-                          }}>{th}</th>
+                          }}>{th.label}</th>
                         ))}
                       </tr>
                     </thead>
@@ -584,13 +631,12 @@ export default function PortfolioPage() {
                             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                           >
                             {/* Action */}
-                            <td style={{ padding: "14px 14px", verticalAlign: "middle" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 180 }}>
+                            <td style={{ padding: "12px 10px", verticalAlign: "middle", overflow: "hidden" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 <div style={{
-                                  width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                                  width: 30, height: 30, borderRadius: 8, flexShrink: 0,
                                   background: color, display: "grid", placeItems: "center",
-                                  fontSize: 11, fontWeight: 700, color: "#F6F2E8",
-                                  fontFamily: "var(--font-geist, sans-serif)",
+                                  fontSize: 10, fontWeight: 700, color: "#F6F2E8",
                                 }}>
                                   {h.name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("").slice(0, 2)}
                                 </div>
@@ -598,54 +644,47 @@ export default function PortfolioPage() {
                                   <Link href={`/stock/${h.symbol}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", textDecoration: "none", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {h.name}
                                   </Link>
+                                  {sig && (
+                                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "1px 7px", borderRadius: 9999, background: sig.bg, color: sig.color, fontSize: 10, fontWeight: 600, marginTop: 2 }}>
+                                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "currentColor", opacity: 0.7 }} />
+                                      {sig.label}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </td>
                             {/* Quantité */}
-                            <td style={{ padding: "14px 14px", textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, color: "var(--ink)" }}>
+                            <td style={{ padding: "12px 10px", textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 12, color: "var(--ink)" }}>
                               {h.quantity}
                             </td>
                             {/* PRU */}
-                            <td style={{ padding: "14px 14px", textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, color: "var(--muted)", whiteSpace: "nowrap" }}>
-                              {h.avg_price.toFixed(2)} <span style={{ fontSize: 10 }}>{h.currency}</span>
+                            <td style={{ padding: "12px 10px", textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden" }}>
+                              {h.avg_price.toFixed(2)}<br /><span style={{ fontSize: 10 }}>{h.currency}</span>
                             </td>
                             {/* Cours actuel */}
-                            <td style={{ padding: "14px 14px", textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap" }}>
-                              {h.currentPrice.toFixed(2)} <span style={{ fontSize: 10, color: "var(--muted)" }}>{h.currency}</span>
+                            <td style={{ padding: "12px 10px", textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 12, fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden" }}>
+                              {h.currentPrice.toFixed(2)}<br /><span style={{ fontSize: 10, color: "var(--muted)", fontWeight: 400 }}>{h.currency}</span>
                             </td>
                             {/* Valeur */}
-                            <td style={{ padding: "14px 14px", textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, fontWeight: 700, color: "var(--ink)", whiteSpace: "nowrap" }}>
+                            <td style={{ padding: "12px 10px", textAlign: "right", fontFamily: "var(--font-geist-mono, monospace)", fontSize: 12, fontWeight: 700, color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden" }}>
                               {fmt(h.marketValue, h.currency)}
                             </td>
                             {/* Poids */}
-                            <td style={{ padding: "14px 14px", textAlign: "right" }}>
-                              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-geist-mono, monospace)", fontSize: 12, color: "var(--muted)" }}>
-                                <div style={{ width: 52, height: 4, background: "var(--paper-3)", borderRadius: 999, overflow: "hidden" }}>
+                            <td style={{ padding: "12px 10px", textAlign: "right", verticalAlign: "middle" }}>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                                <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>{weight.toFixed(1)} %</span>
+                                <div style={{ width: 44, height: 3, background: "var(--paper-3)", borderRadius: 999, overflow: "hidden" }}>
                                   <div style={{ height: "100%", width: `${Math.min(weight, 100)}%`, background: color, borderRadius: 999 }} />
                                 </div>
-                                {weight.toFixed(1)} %
                               </div>
                             </td>
-                            {/* Signal */}
-                            <td style={{ padding: "14px 14px", textAlign: "center" }}>
-                              {sig ? (
-                                <span style={{
-                                  display: "inline-flex", alignItems: "center", gap: 5,
-                                  padding: "3px 10px", borderRadius: 9999,
-                                  background: sig.bg, color: sig.color,
-                                  fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
-                                }}>
-                                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "currentColor", opacity: 0.6 }} />
-                                  {sig.label}
-                                </span>
-                              ) : <span style={{ color: "var(--muted)", fontSize: 12 }}>—</span>}
-                            </td>
                             {/* Delete */}
-                            <td style={{ padding: "14px 10px", textAlign: "center" }}>
+                            <td style={{ padding: "12px 8px", textAlign: "center" }}>
                               <button onClick={() => handleDelete(h.id)} style={{
                                 width: 26, height: 26, borderRadius: 7, border: "none",
                                 background: "rgba(184,74,58,0.07)", color: "var(--signal-down)",
                                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                                margin: "0 auto",
                               }}>
                                 <Trash2 size={13} />
                               </button>
@@ -668,36 +707,6 @@ export default function PortfolioPage() {
                 <PortfolioDonut data={allocData} totalValue={totals.value} />
               </div>
 
-              {/* Signal summary */}
-              <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: "20px", boxShadow: "0 1px 0 rgba(255,255,255,0.5) inset" }}>
-                <h3 style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
-                  Signaux IA
-                </h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  {sortedHoldings.map((h, i) => {
-                    const sig = h.signal ? SIGNAL_LABELS[h.signal] : null;
-                    const color = CHART_COLORS[enriched.indexOf(h) % CHART_COLORS.length];
-                    return (
-                      <div key={h.id} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        gap: 10, padding: "10px 0",
-                        borderBottom: i < sortedHoldings.length - 1 ? "1px dashed var(--line)" : "none",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, overflow: "hidden" }}>
-                          <div style={{ width: 10, height: 10, borderRadius: 3, background: color, flexShrink: 0 }} />
-                          <span style={{ fontSize: 12, fontWeight: 500, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name}</span>
-                        </div>
-                        {sig ? (
-                          <span style={{
-                            padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 600,
-                            background: sig.bg, color: sig.color, whiteSpace: "nowrap", flexShrink: 0,
-                          }}>{sig.label}</span>
-                        ) : <span style={{ fontSize: 11, color: "var(--muted)" }}>—</span>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
           </div>
         )}

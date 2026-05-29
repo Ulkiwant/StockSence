@@ -139,7 +139,7 @@ export default function WatchlistPage() {
     setMktData(map);
   }, []);
 
-  /* ── Load trending → recommendations ── */
+  /* ── Load trending → recommendations (6 daily-rotating) ── */
   const loadTrending = useCallback(async (watchlist: string[]) => {
     try {
       const res = await fetch("/api/trending");
@@ -147,9 +147,12 @@ export default function WatchlistPage() {
       const candidates: { symbol: string; name: string }[] = Array.isArray(data)
         ? (data as Record<string, unknown>[]).map((d) => ({ symbol: String(d.symbol ?? ""), name: String(d.name ?? d.symbol ?? "") })).filter((d) => d.symbol && !watchlist.includes(d.symbol))
         : [];
-      const top3 = candidates.slice(0, 3);
+      // daily rotation: offset by day-of-year so daily picks vary without being fully random
+      const dayOffset = Math.floor(Date.now() / 86_400_000) % Math.max(candidates.length, 1);
+      const rotated = [...candidates.slice(dayOffset), ...candidates.slice(0, dayOffset)];
+      const top6 = rotated.slice(0, 6);
       const enriched = await Promise.allSettled(
-        top3.map(async (c) => {
+        top6.map(async (c) => {
           const res2 = await fetch(`/api/stock/${c.symbol}`);
           if (!res2.ok) return c as Rec;
           const d = await res2.json();
@@ -215,6 +218,30 @@ export default function WatchlistPage() {
 
   const watchlistSymbols = items.map((i) => i.symbol);
 
+  const handleExport = () => {
+    if (!stocks.length) return;
+    const rows = filteredStocks.map((s) => ({
+      Nom: s.name,
+      "Prix": new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(s.currentPrice),
+      Devise: s.currency,
+      "Variation 1J": `${s.changePercent >= 0 ? "+" : ""}${s.changePercent.toFixed(2)}%`,
+      "7J": histData[s.symbol]?.change7d != null ? `${histData[s.symbol].change7d >= 0 ? "+" : ""}${histData[s.symbol].change7d.toFixed(1)}%` : "—",
+      "30J": histData[s.symbol]?.change30d != null ? `${histData[s.symbol].change30d >= 0 ? "+" : ""}${histData[s.symbol].change30d.toFixed(1)}%` : "—",
+      "Signal IA": s.valuation?.signal ? SIGNAL_MAP[s.valuation.signal].label : "—",
+      "Score /100": s.valuation?.score != null ? String(s.valuation.score) : "—",
+      Secteur: s.sector ?? "—",
+    }));
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(";"), ...rows.map((r) => headers.map((h) => `"${(r as Record<string, string>)[h]}"`).join(";"))].join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rently-mes-actions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   /* ── Computed values ── */
   const filteredStocks = stocks.filter((s) => {
     if (query && !s.name.toLowerCase().includes(query.toLowerCase())) return false;
@@ -260,7 +287,7 @@ export default function WatchlistPage() {
             )}
           </div>
           <div style={{ display: "flex", gap: 10, flexShrink: 0, alignItems: "flex-start", paddingTop: 6 }}>
-            <button style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 9999, border: "1px solid var(--line)", background: "var(--paper)", color: "var(--ink)", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+            <button onClick={handleExport} disabled={!stocks.length} style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 9999, border: "1px solid var(--line)", background: "var(--paper)", color: "var(--ink)", fontSize: 14, fontWeight: 500, cursor: stocks.length ? "pointer" : "not-allowed", opacity: stocks.length ? 1 : 0.4 }}>
               <Download size={13} strokeWidth={2} />Exporter
             </button>
             <button onClick={() => setSearchOpen(true)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 9999, border: "none", background: "#1F5C3E", color: "#F6F2E8", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
@@ -457,23 +484,26 @@ export default function WatchlistPage() {
                 {/* Recommendations */}
                 {recs.length > 0 && (
                   <div style={{ marginTop: 52 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20, flexWrap: "wrap", gap: 14 }}>
                       <div>
                         <h2 style={{ fontFamily: "var(--font-instrument, serif)", fontSize: "clamp(28px,3vw,38px)", fontWeight: 400, color: "var(--ink)", margin: 0, letterSpacing: "-0.015em" }}>
                           Tu pourrais <em style={{ fontStyle: "italic", color: "var(--signal-up)" }}>aussi suivre</em>.
                         </h2>
                         <p style={{ fontSize: 13, color: "var(--muted)", margin: "6px 0 0" }}>
-                          {recs.length} action{recs.length > 1 ? "s" : ""} sélectionnée{recs.length > 1 ? "s" : ""} en fonction de ta liste et de ton profil équilibré.
+                          {recs.length} idée{recs.length > 1 ? "s" : ""} du jour — sélectionnées en dehors des valeurs les plus connues, renouvelées chaque jour.
                         </p>
                       </div>
-                      <button style={{ padding: "9px 18px", borderRadius: 9999, border: "1px solid var(--line)", background: "var(--paper)", color: "var(--ink)", fontSize: 13, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                      <Link href="/ideas" style={{ padding: "9px 18px", borderRadius: 9999, border: "1px solid var(--line)", background: "var(--paper)", color: "var(--ink)", fontSize: 13, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
                         Voir toutes les idées →
-                      </button>
+                      </Link>
                     </div>
                     <div className="grid-3col" style={{ marginBottom: 52 }}>
                       {recs.map((rec) => {
                         const bg = avatarBg(rec.name);
                         const isPos = (rec.changePercent ?? 0) >= 0;
+                        const priceEur = rec.currentPrice != null
+                          ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: rec.currency === "EUR" ? "EUR" : "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(rec.currentPrice)
+                          : null;
                         return (
                           <div key={rec.symbol} style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: 22, display: "flex", flexDirection: "column" }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -488,9 +518,9 @@ export default function WatchlistPage() {
                             <div style={{ flexGrow: 1 }} />
                             <div style={{ borderTop: "1px dashed var(--line)", paddingTop: 12, marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                               <div style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13 }}>
-                                {rec.currentPrice != null ? (
+                                {priceEur != null ? (
                                   <>
-                                    <span style={{ color: "var(--ink)", fontWeight: 600 }}>{new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(rec.currentPrice)} {rec.currency ?? ""}</span>
+                                    <span style={{ color: "var(--ink)", fontWeight: 600 }}>{priceEur}</span>
                                     {rec.changePercent != null && <span style={{ color: isPos ? "var(--signal-up)" : "var(--signal-down)", marginLeft: 8 }}>{isPos ? "+" : ""}{rec.changePercent.toFixed(2)} %</span>}
                                   </>
                                 ) : <span style={{ color: "var(--muted)" }}>—</span>}
