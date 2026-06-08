@@ -878,45 +878,62 @@ export default function PortfolioPage() {
 
       {/* ── Répartition de l'investissement — 3 donuts ── */}
       {enriched.length > 0 && (() => {
-        // Helper donut renderer
+
+        // Palettes thématiques par graphique (inspiré BoursoBank)
+        const VALEUR_PALETTE  = ["#4a7c59","#6aab7a","#8ecf9e","#b8e6c4","#d4f0db","#c0c0c0"];
+        const SECTEUR_PALETTE = ["#2d7d5a","#4a9e72","#6fbe8f","#95d9ad","#b8eeca","#c0bcb5","#a8c4b0","#7aaa90","#5a8870","#3d6b55"];
+        const ACTIF_PALETTE   = ["#2d7d5a","#c9a24e","#8B5CF6","#4a9eff","#e07060"];
+
+        const applyPalette = (items: {name:string;pct:number}[], palette: string[]) =>
+          items.map((d, i) => ({ label: d.name, pct: d.pct, color: palette[i % palette.length] }));
+
         const renderDonut = (
           items: { label: string; pct: number; color: string }[],
+          subtitle: string,
           title: string,
           centerLabel: string
         ) => {
-          const size = 160, r = 58, sw = 20, cx = size / 2, cy = size / 2;
+          const size = 220, r = 82, sw = 22, cx = size / 2, cy = size / 2;
           const circ = 2 * Math.PI * r;
           let cumOffset = 0;
           const top5 = items.slice(0, 5);
           const otherPct = items.slice(5).reduce((s, d) => s + d.pct, 0);
           const display = otherPct > 0.5 ? [...top5, { label: "Autre", pct: otherPct, color: "#94A3B8" }] : top5;
           return (
-            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 22px 20px", flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-                Quelle est la répartition de mon contrat
+            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 24px 28px", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+              {/* En-tête */}
+              <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>
+                {subtitle}
               </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 18, fontFamily: "var(--font-instrument, serif)" }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)", marginBottom: 20, fontFamily: "var(--font-instrument, serif)" }}>
                 {title}
               </div>
-              {/* Légende */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+
+              {/* Légende — sans barres */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24, flex: 1 }}>
                 {display.map((d, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.label}>{d.label}</span>
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+                      <div style={{ width: 11, height: 11, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.label}>
+                        {d.label.length > 30 ? d.label.slice(0, 28) + "…" : d.label}
+                      </span>
                     </div>
-                    <span style={{ fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)", fontWeight: 700, flexShrink: 0, marginLeft: 8 }}>
+                    <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)", fontWeight: 600, flexShrink: 0 }}>
                       {d.pct.toFixed(2)}%
                     </span>
                   </div>
                 ))}
               </div>
-              {/* Donut centré */}
+
+              {/* Grand donut centré */}
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                  {/* Track */}
                   <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
+                  {/* Reset cumOffset */}
                   {(() => { cumOffset = 0; return null; })()}
+                  {/* Segments */}
                   {display.map((d, i) => {
                     const dash = (d.pct / 100) * circ;
                     const rotation = (cumOffset / 100) * 360 - 90;
@@ -931,31 +948,19 @@ export default function PortfolioPage() {
                       />
                     );
                   })}
-                  <circle cx={cx} cy={cy} r={r - sw / 2 - 2} fill="var(--paper-2)" />
-                  <text x={cx} y={cy - 5} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>{centerLabel}</text>
-                  <text x={cx} y={cy + 12} textAnchor="middle" fontSize={14} fontWeight="700" fill="var(--ink)" fontFamily="var(--font-geist-mono, monospace)">{display.length}</text>
+                  {/* Centre */}
+                  <circle cx={cx} cy={cy} r={r - sw / 2 - 3} fill="var(--paper-2)" />
+                  <text x={cx} y={cy - 8} textAnchor="middle" fontSize={10} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)" letterSpacing="0.06em" style={{ textTransform: "uppercase" }}>{centerLabel.toUpperCase()}</text>
+                  <text x={cx} y={cy + 16} textAnchor="middle" fontSize={28} fontWeight="700" fill="var(--ink)" fontFamily="var(--font-instrument, serif)">{display.length}</text>
                 </svg>
               </div>
             </div>
           );
         };
 
-        // Données par valeur (positions individuelles)
-        const byValeur = buildAllocData("Valeur");
-
-        // Données par secteur
+        const byValeur  = buildAllocData("Valeur");
         const bySecteur = buildAllocData("Secteur");
-
-        // Données par classe d'actif (Actions / ETF / Crypto)
-        const ASSET_COLORS: Record<string, string> = {
-          "Actions":                 "#C9A24E",
-          "Fonds indiciels (ETF)":   "#2D7D5A",
-          "Crypto-monnaies":         "#8B5CF6",
-        };
-        const byActif = buildAllocData("Actif").map(d => ({
-          ...d,
-          color: ASSET_COLORS[d.name] ?? d.color,
-        }));
+        const byActif   = buildAllocData("Actif");
 
         return (
           <div style={{ marginBottom: 28 }}>
@@ -963,9 +968,9 @@ export default function PortfolioPage() {
               Répartition de l&apos;investissement
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
-              {renderDonut(byValeur.map(d => ({ label: d.name, pct: d.pct, color: d.color })), "par valeur ?", "fonds")}
-              {renderDonut(bySecteur.map((d, i) => ({ label: d.name, pct: d.pct, color: CHART_COLORS[i % CHART_COLORS.length] })), "par secteur ?", "secteurs")}
-              {renderDonut(byActif.map(d => ({ label: d.name, pct: d.pct, color: d.color })), "par classe d'actifs ?", "classes")}
+              {renderDonut(applyPalette(byValeur,  VALEUR_PALETTE),  "Quelle est la répartition", "par valeur ?",          "fonds")}
+              {renderDonut(applyPalette(bySecteur, SECTEUR_PALETTE), "Quelle est la répartition", "par secteur ?",         "secteurs")}
+              {renderDonut(applyPalette(byActif,   ACTIF_PALETTE),   "Quelle est la répartition", "par classe d'actifs ?", "classes")}
             </div>
           </div>
         );
