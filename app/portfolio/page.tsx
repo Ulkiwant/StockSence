@@ -8,9 +8,12 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   ReferenceLine,
 } from "recharts";
+import dynamic from "next/dynamic";
 import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2, Check, Clock, AlertCircle } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import CompanyLogo from "@/components/CompanyLogo";
+
+const WorldMap = dynamic(() => import("@/components/WorldMap"), { ssr: false, loading: () => <div style={{ height: 260, background: "var(--paper-3)", borderRadius: 12 }} /> });
 
 /* ── Currency helpers ── */
 const USD_TO_EUR = 0.92;
@@ -968,13 +971,14 @@ export default function PortfolioPage() {
         );
       })()}
 
-      {/* ── Répartition géographique ── */}
+      {/* ── Répartition géographique — Planisphère ── */}
       {enriched.length > 0 && (() => {
-        const GEO_COLORS: Record<string, string> = {
-          "Europe":             "#2D7D5A",
-          "Amérique du Nord":   "#4a9eff",
-          "Asie-Océanie":       "#C9A24E",
-          "Marchés émergents":  "#8B5CF6",
+        const GEO_LEGEND_COLORS: Record<string, string> = {
+          "Europe":             "#1a4a7a",
+          "Amérique du Nord":   "#2a6aad",
+          "Asie-Océanie":       "#4a9eff",
+          "Amérique du Sud":    "#63b3f0",
+          "Marchés émergents":  "#8ecef7",
           "Mondial":            "#5b7fa8",
           "Autre":              "#94A3B8",
         };
@@ -986,39 +990,49 @@ export default function PortfolioPage() {
           regionMap[region] = (regionMap[region] ?? 0) + h.marketValue;
         });
         const geoData = Object.entries(regionMap)
-          .map(([region, val]) => ({ region, val, pct: totalVal > 0 ? (val / totalVal) * 100 : 0, color: GEO_COLORS[region] ?? "#94A3B8" }))
+          .map(([region, val]) => ({ region, val, pct: totalVal > 0 ? (val / totalVal) * 100 : 0, color: GEO_LEGEND_COLORS[region] ?? "#94A3B8" }))
           .sort((a, b) => b.pct - a.pct);
+
+        const regionWeights: Record<string, number> = {};
+        geoData.forEach(g => { regionWeights[g.region] = g.pct; });
 
         return (
           <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 26px", marginBottom: 28 }}>
             <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
               Quelle est la répartition
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 24, fontFamily: "var(--font-instrument, serif)" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 20, fontFamily: "var(--font-instrument, serif)" }}>
               géographique de mon portefeuille ?
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {geoData.map(g => (
-                <div key={g.region}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: g.color }} />
-                      <span style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>{g.region}</span>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 28, alignItems: isMobile ? "stretch" : "center" }}>
+              {/* Planisphère */}
+              <div style={{ flex: 2, minWidth: 0 }}>
+                <WorldMap regionWeights={regionWeights} />
+              </div>
+              {/* Légende */}
+              <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 14 }}>
+                {geoData.map(g => (
+                  <div key={g.region}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: g.color }} />
+                        <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>{g.region}</span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
+                        <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: g.color, fontWeight: 700 }}>
+                          {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(g.val)}
+                        </span>
+                        <span style={{ fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>
+                          {g.pct.toFixed(2)} %
+                        </span>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                      <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)", fontWeight: 700 }}>
-                        {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(g.val)}
-                      </span>
-                      <span style={{ fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: g.color, fontWeight: 700, minWidth: 44, textAlign: "right" }}>
-                        {g.pct.toFixed(2)} %
-                      </span>
+                    <div style={{ height: 4, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(g.pct, 100)}%`, background: g.color, borderRadius: 9999, transition: "width 0.8s cubic-bezier(0.22,1,0.36,1)" }} />
                     </div>
                   </div>
-                  <div style={{ height: 8, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${Math.min(g.pct, 100)}%`, background: g.color, borderRadius: 9999, transition: "width 0.8s cubic-bezier(0.22,1,0.36,1)" }} />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         );
