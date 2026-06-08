@@ -1506,56 +1506,28 @@ export default function AdvisorPage() {
               )}
 
               {/* Next / Submit */}
-              {step < TOTAL - 1 ? (
-                <button
-                  onClick={handleNext}
-                  disabled={!hasAnswer()}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "12px 28px",
-                    borderRadius: 9999,
-                    border: "none",
-                    background: hasAnswer() ? "var(--accent)" : "var(--line)",
-                    color: hasAnswer() ? "#fff" : "var(--muted)",
-                    fontSize: 15,
-                    fontWeight: 700,
-                    cursor: hasAnswer() ? "pointer" : "not-allowed",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  Question suivante
-                  <ChevronRight size={16} />
-                </button>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-                  {error && (
-                    <p style={{ color: "var(--signal-down)", fontSize: 13, margin: 0 }}>{error}</p>
-                  )}
-                  <button
-                    onClick={submit}
-                    disabled={!hasAnswer()}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "14px 32px",
-                      borderRadius: 9999,
-                      border: "none",
-                      background: hasAnswer() ? "var(--accent)" : "var(--line)",
-                      color: hasAnswer() ? "#fff" : "var(--muted)",
-                      fontSize: 15,
-                      fontWeight: 700,
-                      cursor: hasAnswer() ? "pointer" : "not-allowed",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    Générer mon portefeuille
-                    <Sparkles size={16} />
-                  </button>
-                </div>
-              )}
+              {/* Toutes les questions (y compris la dernière) → "Suivant" pour passer aux convictions */}
+              <button
+                onClick={handleNext}
+                disabled={!hasAnswer()}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: step === TOTAL - 1 ? "14px 32px" : "12px 28px",
+                  borderRadius: 9999,
+                  border: "none",
+                  background: hasAnswer() ? "var(--accent)" : "var(--line)",
+                  color: hasAnswer() ? "#fff" : "var(--muted)",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: hasAnswer() ? "pointer" : "not-allowed",
+                  transition: "all 0.15s",
+                }}
+              >
+                {step === TOTAL - 1 ? "Mes convictions" : "Question suivante"}
+                <ChevronRight size={16} />
+              </button>
             </div>
 
             {/* Optional skip for monthly */}
