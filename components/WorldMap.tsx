@@ -114,7 +114,7 @@ export default function WorldMap({ regionWeights }: Props) {
 
   const getColor = (isoNumeric: number) => {
     const region = COUNTRY_REGION[isoNumeric];
-    if (!region || !regionWeights[region]) return "#e8edf2";
+    if (!region || !regionWeights[region]) return "#ccc8c0";
     const { base, dark } = REGION_COLORS[region] ?? { base: "#4a9eff", dark: "#2a6aad" };
     const intensity = regionWeights[region] / maxWeight;
     // Blend between base and dark based on intensity
@@ -123,7 +123,8 @@ export default function WorldMap({ regionWeights }: Props) {
 
   return (
     <ComposableMap
-      projectionConfig={{ scale: 147, center: [10, 10] }}
+      projectionConfig={{ scale: 195, center: [10, 5] }}
+      viewBox="80 40 640 340"
       style={{ width: "100%", height: "auto" }}
     >
       <Geographies geography={GEO_URL}>
@@ -136,11 +137,11 @@ export default function WorldMap({ regionWeights }: Props) {
                 key={geo.rsmKey}
                 geography={geo}
                 fill={color}
-                stroke="#fff"
-                strokeWidth={0.3}
+                stroke="#b8b2a8"
+                strokeWidth={0.4}
                 style={{
                   default: { outline: "none" },
-                  hover:   { outline: "none", fill: color, opacity: 0.85 },
+                  hover:   { outline: "none", fill: color, opacity: 0.82 },
                   pressed: { outline: "none" },
                 }}
               />
