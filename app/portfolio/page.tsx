@@ -132,56 +132,19 @@ interface PortfolioAnalysis {
   disclaimer: string;
 }
 
-/* ── Assurance-Vie types ── */
-type AVHoldingType = "fonds_euros" | "uc" | "scpi" | "structured";
-
-interface AVHolding {
-  id: string;
-  type: AVHoldingType;
-  name: string;
-  quantity: number;
-  pru: number;
+/* ── Geographic region grouping ── */
+function geoRegion(country: string): string {
+  const eu = ["France","Allemagne","Pays-Bas","Italie","Espagne","Royaume-Uni","Belgique","Europe du Nord","Europe","Suisse","Europe (ETF)"];
+  const na = ["États-Unis","Canada","Amérique du Nord"];
+  const ap = ["Japon","Hong Kong","Chine","Australie","Asie-Pacifique","Inde","Asie-Océanie"];
+  const em = ["Marchés émergents"];
+  if (eu.some(r => country.includes(r) || r.includes(country))) return "Europe";
+  if (na.some(r => country.includes(r) || r.includes(country))) return "Amérique du Nord";
+  if (ap.some(r => country.includes(r) || r.includes(country))) return "Asie-Océanie";
+  if (em.some(r => country === r)) return "Marchés émergents";
+  if (country === "Mondial") return "Mondial";
+  return "Autre";
 }
-
-interface AVContract {
-  id: string;
-  name: string;
-  insurer: string;
-  holdings: AVHolding[];
-}
-
-interface AVAnalysis {
-  summary: string;
-  allocationScore: number;
-  fondsEurosPct: number;
-  ucPct: number;
-  mainRisk: string;
-  recommendations: { type: string; target: string; reason: string }[];
-  disclaimer: string;
-}
-
-/* ── AV helpers ── */
-function avContractValue(contract: AVContract): number {
-  return contract.holdings.reduce((s, h) => s + h.quantity * h.pru, 0);
-}
-
-function avTotalValue(contracts: AVContract[]): number {
-  return contracts.reduce((s, c) => s + avContractValue(c), 0);
-}
-
-const AV_TYPE_LABEL: Record<AVHoldingType, string> = {
-  fonds_euros: "Fonds Euros",
-  uc: "Unité de Compte",
-  scpi: "SCPI",
-  structured: "Fonds Structuré",
-};
-
-const AV_TYPE_COLOR: Record<AVHoldingType, string> = {
-  fonds_euros: "#2D7D5A",
-  uc: "#C9A24E",
-  scpi: "#5A7AB5",
-  structured: "#8B5CF6",
-};
 
 /* ── Generate plausible sparkline ── */
 function generateSparkline(pnlPct: number): number[] {
@@ -378,26 +341,6 @@ export default function PortfolioPage() {
   const [addSearching, setAddSearching] = useState(false);
   const [addStep, setAddStep]           = useState<"search"|"details">("search");
 
-  /* ── Toggle vue ── */
-  const [activeView, setActiveView] = useState<"patrimoine" | "boursier" | "av">("patrimoine");
-
-  /* ── Assurance-vie ── */
-  const [avContracts, setAvContracts] = useState<AVContract[]>([]);
-  const [avAnalysis, setAvAnalysis] = useState<AVAnalysis | null>(null);
-  const [avAnalyzing, setAvAnalyzing] = useState(false);
-  const [avAnalysisError, setAvAnalysisError] = useState<string | null>(null);
-
-  // Modal ajout contrat
-  const [showAddContract, setShowAddContract] = useState(false);
-  const [newContractName, setNewContractName] = useState("");
-  const [newContractInsurer, setNewContractInsurer] = useState("");
-
-  // Modal ajout ligne dans un contrat
-  const [showAddHolding, setShowAddHolding] = useState<string | null>(null);
-  const [addHType, setAddHType] = useState<AVHoldingType>("fonds_euros");
-  const [addHName, setAddHName] = useState("");
-  const [addHQty, setAddHQty] = useState("");
-  const [addHPRU, setAddHPRU] = useState("");
 
   /* ── Data loading ── */
   const loadHoldings = useCallback(async () => {
@@ -408,31 +351,9 @@ export default function PortfolioPage() {
     setLoading(false);
   }, []);
 
-  /* ── AV user email for localStorage ── */
-  const [avUserEmail, setAvUserEmail] = useState<string | null>(null);
-
   useEffect(() => {
     loadHoldings();
-    // Récupérer l'email utilisateur pour la clé localStorage AV
-    const supabase = createClient();
-    supabase.auth.getUser().then((resp: { data: { user: { email?: string } | null } }) => {
-      if (resp.data?.user?.email) {
-        setAvUserEmail(resp.data.user.email);
-        try {
-          const key = `finazen_av_${btoa(resp.data.user.email)}`;
-          const saved = localStorage.getItem(key);
-          if (saved) setAvContracts(JSON.parse(saved) as AVContract[]);
-        } catch { /* ignore */ }
-      }
-    }).catch(() => {});
   }, [loadHoldings]);
-
-  // Sauvegarder les contrats AV à chaque modification
-  useEffect(() => {
-    if (!avUserEmail) return;
-    const key = `finazen_av_${btoa(avUserEmail)}`;
-    localStorage.setItem(key, JSON.stringify(avContracts));
-  }, [avContracts, avUserEmail]);
 
   /* Enrich with current prices */
   useEffect(() => {
@@ -671,110 +592,6 @@ export default function PortfolioPage() {
         <span style={{ color: "var(--ink)" }}>MON PORTEFEUILLE</span>
       </div>
 
-      {/* ── Toggle Vue ── */}
-      <div style={{ display: "flex", background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 9999, padding: 4, gap: 2, marginBottom: 28, width: "fit-content" }}>
-        {([
-          ["patrimoine", "Vue patrimoniale"],
-          ["boursier", "PEA / CTO"],
-          ["av", "Assurance-Vie"],
-        ] as const).map(([key, label]) => (
-          <button key={key} onClick={() => setActiveView(key)}
-            style={{
-              padding: "8px 18px", borderRadius: 9999, border: "none", fontSize: 13,
-              fontWeight: activeView === key ? 700 : 500,
-              background: activeView === key ? "var(--ink)" : "transparent",
-              color: activeView === key ? "var(--paper)" : "var(--muted)",
-              cursor: "pointer", whiteSpace: "nowrap",
-            }}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Vue Patrimoniale ── */}
-      {activeView === "patrimoine" && (
-        <div>
-          {/* KPI cards */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
-            {/* Valeur totale */}
-            <div style={{ background: "linear-gradient(135deg, rgba(45,125,90,0.10) 0%, var(--paper-2) 70%)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 26px" }}>
-              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>PATRIMOINE TOTAL</div>
-              <div style={{ fontSize: 42, color: "var(--accent)", fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 6 }}>
-                {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(totals.value + avTotalValue(avContracts))}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>PEA/CTO + Assurance-Vie</div>
-            </div>
-            {/* PEA/CTO */}
-            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 26px" }}>
-              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>PEA / CTO</div>
-              <div style={{ fontSize: 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, marginBottom: 6, color: "var(--ink)" }}>
-                {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(totals.value)}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
-                {enriched.length} position{enriched.length !== 1 ? "s" : ""}
-                {(totals.value + avTotalValue(avContracts)) > 0 && ` · ${((totals.value / (totals.value + avTotalValue(avContracts))) * 100).toFixed(1)} % du patrimoine`}
-              </div>
-            </div>
-            {/* Assurance-Vie */}
-            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 26px" }}>
-              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>ASSURANCE-VIE</div>
-              <div style={{ fontSize: 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, marginBottom: 6, color: "var(--ink)" }}>
-                {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(avTotalValue(avContracts))}
-              </div>
-              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
-                {avContracts.length} contrat{avContracts.length !== 1 ? "s" : ""}
-                {(totals.value + avTotalValue(avContracts)) > 0 && ` · ${((avTotalValue(avContracts) / (totals.value + avTotalValue(avContracts))) * 100).toFixed(1)} % du patrimoine`}
-              </div>
-            </div>
-          </div>
-
-          {/* Répartition enveloppes */}
-          {(totals.value + avTotalValue(avContracts)) > 0 && (
-            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 26px", marginBottom: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", marginBottom: 16, fontFamily: "var(--font-instrument, serif)" }}>Répartition des enveloppes</div>
-              {[
-                { label: "PEA / CTO", value: totals.value, color: "#2D7D5A" },
-                { label: "Assurance-Vie", value: avTotalValue(avContracts), color: "#C9A24E" },
-              ].map(env => {
-                const total = totals.value + avTotalValue(avContracts);
-                const pct = total > 0 ? (env.value / total) * 100 : 0;
-                return (
-                  <div key={env.label} style={{ marginBottom: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: 2, background: env.color }} />
-                        <span style={{ fontSize: 13, color: "var(--ink)" }}>{env.label}</span>
-                      </div>
-                      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                        <span style={{ fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)", fontWeight: 700 }}>
-                          {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(env.value)}
-                        </span>
-                        <span style={{ fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>{pct.toFixed(1)} %</span>
-                      </div>
-                    </div>
-                    <div style={{ height: 6, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${Math.min(pct, 100)}%`, background: env.color, borderRadius: 9999, transition: "width 0.7s cubic-bezier(0.22,1,0.36,1)" }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Bouton navigation */}
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button onClick={() => setActiveView("boursier")} style={{ padding: "12px 24px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              Voir mon PEA / CTO →
-            </button>
-            <button onClick={() => setActiveView("av")} style={{ padding: "12px 24px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              Gérer mon Assurance-Vie →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Vue PEA/CTO ── */}
-      {activeView === "boursier" && (<>
 
       {/* ── Header ── */}
       <div style={{
@@ -941,9 +758,9 @@ export default function PortfolioPage() {
 
       {/* ── Charts row ── */}
       {enriched.length > 0 && (
-        <div className="chart-row" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)", gap: 20, marginBottom: 28 }}>
+        <div className="chart-row" style={{ marginBottom: 28 }}>
 
-          {/* Left — Performance card */}
+          {/* Performance card — full width */}
           <div style={{
             background: "var(--paper-2)", border: "1.5px solid var(--line)",
             borderRadius: 16, padding: 24,
@@ -1053,99 +870,159 @@ export default function PortfolioPage() {
             )}
           </div>
 
-          {/* Right — Répartition card */}
-          <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: isMobile ? 14 : 22, minWidth: 0 }}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", fontFamily: "var(--font-instrument, serif)" }}>Répartition</span>
-              <div style={{ display: "flex", background: "var(--paper-3)", border: "1px solid var(--line)", borderRadius: 9999, padding: 3, gap: 2 }}>
-                {ALLOC_TABS.map((tab) => (
-                  <button key={tab} onClick={() => setAllocTab(tab)} style={{
-                    padding: "4px 11px", borderRadius: 9999, fontSize: 11, fontWeight: 600,
-                    border: "none", cursor: "pointer", transition: "all 0.15s",
-                    background: allocTab === tab ? "var(--ink)" : "transparent",
-                    color: allocTab === tab ? "var(--paper)" : "var(--muted)",
-                  }}>{tab}</button>
-                ))}
-              </div>
-            </div>
+        </div>
+      )}
 
-            {/* Donut + légende */}
-            <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 16 }}>
-              {/* Donut SVG épuré */}
-              <div style={{ flexShrink: 0 }}>
-                {(() => {
-                  const size = 130;
-                  const r = 48;
-                  const sw = 16;
-                  const cx = size / 2;
-                  const cy = size / 2;
-                  const circ = 2 * Math.PI * r;
-                  let cumOffset = 0;
-                  const slices = allocData.slice(0, 6);
-                  return (
-                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                      {/* Track */}
-                      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
-                      {/* Segments */}
-                      {slices.map((d, i) => {
-                        const dash = (d.pct / 100) * circ;
-                        const rotation = (cumOffset / 100) * 360 - 90;
-                        cumOffset += d.pct;
-                        return (
-                          <circle key={i} cx={cx} cy={cy} r={r}
-                            fill="none" stroke={d.color} strokeWidth={sw}
-                            strokeDasharray={`${dash} ${circ - dash}`}
-                            transform={`rotate(${rotation} ${cx} ${cy})`}
-                            strokeLinecap="butt"
-                            style={{ transition: "stroke-dasharray 0.6s ease" }}
-                          />
-                        );
-                      })}
-                      {/* Centre blanc */}
-                      <circle cx={cx} cy={cy} r={r - sw / 2 - 2} fill="var(--paper-2)" />
-                      {/* Texte centre */}
-                      <text x={cx} y={cy - 7} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>TOTAL</text>
-                      <text x={cx} y={cy + 8} textAnchor="middle" fontSize={11} fontWeight="700" fill="var(--ink)" fontFamily="var(--font-geist-mono, monospace)">{fmtEur(totalVal, "EUR").replace(" €", "")}</text>
-                      <text x={cx} y={cy + 20} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)">€</text>
-                    </svg>
-                  );
-                })()}
+      {/* ── Répartition de l'investissement — 3 donuts ── */}
+      {enriched.length > 0 && (() => {
+        // Helper donut renderer
+        const renderDonut = (
+          items: { label: string; pct: number; color: string }[],
+          title: string,
+          centerLabel: string
+        ) => {
+          const size = 160, r = 58, sw = 20, cx = size / 2, cy = size / 2;
+          const circ = 2 * Math.PI * r;
+          let cumOffset = 0;
+          const top5 = items.slice(0, 5);
+          const otherPct = items.slice(5).reduce((s, d) => s + d.pct, 0);
+          const display = otherPct > 0.5 ? [...top5, { label: "Autre", pct: otherPct, color: "#94A3B8" }] : top5;
+          return (
+            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 22px 20px", flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+                Quelle est la répartition de mon contrat
               </div>
-
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 18, fontFamily: "var(--font-instrument, serif)" }}>
+                {title}
+              </div>
               {/* Légende */}
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 9, minWidth: 0 }}>
-                {allocData.slice(0, 6).map((a, i) => (
-                  <div key={a.symbol || i}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: 2, background: a.color, flexShrink: 0 }} />
-                        <span style={{ fontSize: 11, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={a.name}>{a.name}</span>
-                      </div>
-                      <span style={{ fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)", fontWeight: 700, flexShrink: 0, marginLeft: 6 }}>
-                        {a.pct.toFixed(1)} %
-                      </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                {display.map((d, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.label}>{d.label}</span>
                     </div>
-                    <div style={{ height: 3, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${Math.min(a.pct, 100)}%`, background: a.color, borderRadius: 9999, transition: "width 0.7s cubic-bezier(0.22,1,0.36,1)" }} />
-                    </div>
+                    <span style={{ fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)", fontWeight: 700, flexShrink: 0, marginLeft: 8 }}>
+                      {d.pct.toFixed(2)}%
+                    </span>
                   </div>
                 ))}
               </div>
+              {/* Donut centré */}
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                  <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
+                  {(() => { cumOffset = 0; return null; })()}
+                  {display.map((d, i) => {
+                    const dash = (d.pct / 100) * circ;
+                    const rotation = (cumOffset / 100) * 360 - 90;
+                    cumOffset += d.pct;
+                    return (
+                      <circle key={i} cx={cx} cy={cy} r={r}
+                        fill="none" stroke={d.color} strokeWidth={sw}
+                        strokeDasharray={`${dash} ${circ - dash}`}
+                        transform={`rotate(${rotation} ${cx} ${cy})`}
+                        strokeLinecap="butt"
+                        style={{ transition: "stroke-dasharray 0.6s ease" }}
+                      />
+                    );
+                  })}
+                  <circle cx={cx} cy={cy} r={r - sw / 2 - 2} fill="var(--paper-2)" />
+                  <text x={cx} y={cy - 5} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>{centerLabel}</text>
+                  <text x={cx} y={cy + 12} textAnchor="middle" fontSize={14} fontWeight="700" fill="var(--ink)" fontFamily="var(--font-geist-mono, monospace)">{display.length}</text>
+                </svg>
+              </div>
             </div>
+          );
+        };
 
-            {/* Footer */}
-            <div style={{ paddingTop: 12, borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                {allocData.length} catégorie{allocData.length !== 1 ? "s" : ""}
-              </span>
-              <span style={{ fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
-                {enriched.length} position{enriched.length !== 1 ? "s" : ""}
-              </span>
+        // Données par valeur (positions individuelles)
+        const byValeur = buildAllocData("Valeur");
+
+        // Données par secteur
+        const bySecteur = buildAllocData("Secteur");
+
+        // Données par classe d'actif (Actions / ETF / Crypto)
+        const ASSET_COLORS: Record<string, string> = {
+          "Actions":                 "#C9A24E",
+          "Fonds indiciels (ETF)":   "#2D7D5A",
+          "Crypto-monnaies":         "#8B5CF6",
+        };
+        const byActif = buildAllocData("Actif").map(d => ({
+          ...d,
+          color: ASSET_COLORS[d.name] ?? d.color,
+        }));
+
+        return (
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 400, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", color: "var(--ink)", marginBottom: 20 }}>
+              Répartition de l&apos;investissement
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
+              {renderDonut(byValeur.map(d => ({ label: d.name, pct: d.pct, color: d.color })), "par valeur ?", "fonds")}
+              {renderDonut(bySecteur.map((d, i) => ({ label: d.name, pct: d.pct, color: CHART_COLORS[i % CHART_COLORS.length] })), "par secteur ?", "secteurs")}
+              {renderDonut(byActif.map(d => ({ label: d.name, pct: d.pct, color: d.color })), "par classe d'actifs ?", "classes")}
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* ── Répartition géographique ── */}
+      {enriched.length > 0 && (() => {
+        const GEO_COLORS: Record<string, string> = {
+          "Europe":             "#2D7D5A",
+          "Amérique du Nord":   "#4a9eff",
+          "Asie-Océanie":       "#C9A24E",
+          "Marchés émergents":  "#8B5CF6",
+          "Mondial":            "#5b7fa8",
+          "Autre":              "#94A3B8",
+        };
+        // Group by region
+        const regionMap: Record<string, number> = {};
+        enriched.forEach(h => {
+          const country = detectGeography(h.symbol, h.name, h.asset_type);
+          const region = geoRegion(country);
+          regionMap[region] = (regionMap[region] ?? 0) + h.marketValue;
+        });
+        const geoData = Object.entries(regionMap)
+          .map(([region, val]) => ({ region, val, pct: totalVal > 0 ? (val / totalVal) * 100 : 0, color: GEO_COLORS[region] ?? "#94A3B8" }))
+          .sort((a, b) => b.pct - a.pct);
+
+        return (
+          <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 26px", marginBottom: 28 }}>
+            <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+              Quelle est la répartition
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 24, fontFamily: "var(--font-instrument, serif)" }}>
+              géographique de mon portefeuille ?
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {geoData.map(g => (
+                <div key={g.region}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: g.color }} />
+                      <span style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>{g.region}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                      <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)", fontWeight: 700 }}>
+                        {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(g.val)}
+                      </span>
+                      <span style={{ fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: g.color, fontWeight: 700, minWidth: 44, textAlign: "right" }}>
+                        {g.pct.toFixed(2)} %
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ height: 8, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${Math.min(g.pct, 100)}%`, background: g.color, borderRadius: 9999, transition: "width 0.8s cubic-bezier(0.22,1,0.36,1)" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Holdings table ── */}
       {loading ? (
@@ -2137,471 +2014,6 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      </>)}
-
-      {/* ══════════════════════════════════════════════════════
-          VUE ASSURANCE-VIE
-      ══════════════════════════════════════════════════════ */}
-      {activeView === "av" && (
-        <div>
-          {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, marginBottom: 28 }}>
-            <div>
-              <h2 style={{ fontSize: 28, fontWeight: 400, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", color: "var(--ink)", marginBottom: 6, lineHeight: 1.1 }}>
-                Mes <em style={{ fontStyle: "italic", color: "var(--accent)" }}>contrats</em>.
-              </h2>
-              <p style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", margin: 0 }}>
-                {avContracts.length} contrat{avContracts.length !== 1 ? "s" : ""} — valeur totale : {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(avTotalValue(avContracts))}
-              </p>
-            </div>
-            <button onClick={() => setShowAddContract(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              <Plus size={14} />Ajouter un contrat
-            </button>
-          </div>
-
-          {/* Empty state */}
-          {avContracts.length === 0 && (
-            <div style={{ textAlign: "center", padding: "80px 24px", border: "1.5px dashed var(--line)", borderRadius: 20, marginBottom: 24 }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>🏦</div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>Aucun contrat</h3>
-              <p style={{ color: "var(--muted)", fontSize: 14, marginBottom: 24 }}>Ajoutez vos contrats d'assurance-vie pour les suivre et les analyser.</p>
-              <button onClick={() => setShowAddContract(true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-                <Plus size={15} />Ajouter un contrat
-              </button>
-            </div>
-          )}
-
-          {/* Liste des contrats */}
-          {avContracts.map(contract => (
-            <div key={contract.id} style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, marginBottom: 20, overflow: "hidden" }}>
-              {/* En-tête contrat */}
-              <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-                <div>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", marginBottom: 2 }}>{contract.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>{contract.insurer}</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>Valeur estimée</div>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-instrument, serif)" }}>
-                      {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(avContractValue(contract))}
-                    </div>
-                  </div>
-                  <button onClick={() => setAvContracts(cs => cs.filter(c => c.id !== contract.id))} style={{ width: 30, height: 30, borderRadius: 7, border: "none", background: "rgba(184,74,58,0.08)", color: "var(--signal-down)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Tableau des lignes */}
-              {contract.holdings.length > 0 && (
-                <div style={{ overflowX: "auto" }}>
-                  {/* Header */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1.2fr 2fr 1fr 1fr 1fr 28px", columnGap: 8, padding: "10px 22px", fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.07em", borderBottom: "1px solid var(--line)" }}>
-                    <span>TYPE</span>
-                    <span>NOM</span>
-                    <span style={{ textAlign: "right" }}>QUANTITÉ</span>
-                    <span style={{ textAlign: "right" }}>PRU (€)</span>
-                    <span style={{ textAlign: "right" }}>VALEUR</span>
-                    <span />
-                  </div>
-                  {contract.holdings.map((h, hi) => (
-                    <div key={h.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 2fr 1fr 1fr 1fr 28px", columnGap: 8, padding: "12px 22px", alignItems: "center", borderBottom: hi < contract.holdings.length - 1 ? "1px solid var(--line)" : "none" }}>
-                      <div>
-                        <span style={{ padding: "3px 8px", borderRadius: 5, fontSize: 10, fontWeight: 700, background: `${AV_TYPE_COLOR[h.type]}22`, color: AV_TYPE_COLOR[h.type] }}>
-                          {AV_TYPE_LABEL[h.type]}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{h.name}</div>
-                      <div style={{ textAlign: "right", fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>{h.quantity}</div>
-                      <div style={{ textAlign: "right", fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>{h.pru.toFixed(2)} €</div>
-                      <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)" }}>
-                        {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(h.quantity * h.pru)}
-                      </div>
-                      <button onClick={() => setAvContracts(cs => cs.map(c => c.id === contract.id ? { ...c, holdings: c.holdings.filter(x => x.id !== h.id) } : c))} style={{ width: 24, height: 24, borderRadius: 5, border: "none", background: "rgba(184,74,58,0.07)", color: "var(--signal-down)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Trash2 size={11} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Actions contrat */}
-              <div style={{ padding: "14px 22px", borderTop: contract.holdings.length > 0 ? "1px solid var(--line)" : "none", display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button onClick={() => { setShowAddHolding(contract.id); setAddHType("fonds_euros"); setAddHName(""); setAddHQty(""); setAddHPRU(""); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                  <Plus size={13} />Ajouter une ligne
-                </button>
-                <button
-                  disabled={avAnalyzing || contract.holdings.length === 0}
-                  onClick={async () => {
-                    setAvAnalyzing(true);
-                    setAvAnalysisError(null);
-                    setAvAnalysis(null);
-                    try {
-                      const res = await fetch("/api/av/analyze", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ contracts: [contract] }),
-                      });
-                      const d = await res.json();
-                      if (d.error) setAvAnalysisError(d.error);
-                      else if (d.analysis) setAvAnalysis(d.analysis as AVAnalysis);
-                    } catch { setAvAnalysisError("Erreur inattendue. Réessayez."); }
-                    finally { setAvAnalyzing(false); }
-                  }}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: avAnalyzing || contract.holdings.length === 0 ? "not-allowed" : "pointer", opacity: contract.holdings.length === 0 ? 0.5 : 1 }}>
-                  <Sparkles size={13} />{avAnalyzing ? "Analyse en cours…" : "Analyser ce contrat (IA)"}
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {/* ── Graphiques répartition AV ── */}
-          {avContracts.length > 0 && avTotalValue(avContracts) > 0 && (() => {
-            // Données "Par type"
-            const byType: Record<string, number> = {};
-            avContracts.forEach(c => c.holdings.forEach(h => {
-              byType[h.type] = (byType[h.type] ?? 0) + h.quantity * h.pru;
-            }));
-            const total = avTotalValue(avContracts);
-            const typeData = (Object.entries(byType) as [AVHoldingType, number][])
-              .sort((a, b) => b[1] - a[1])
-              .map(([type, val]) => ({ label: AV_TYPE_LABEL[type], pct: (val / total) * 100, color: AV_TYPE_COLOR[type], val }));
-
-            // Données "Par fonds" (top 7)
-            const byFonds: { name: string; val: number; type: AVHoldingType }[] = [];
-            avContracts.forEach(c => c.holdings.forEach(h => {
-              const existing = byFonds.find(f => f.name === h.name);
-              if (existing) existing.val += h.quantity * h.pru;
-              else byFonds.push({ name: h.name, val: h.quantity * h.pru, type: h.type });
-            }));
-            const FONDS_COLORS = ["#2d7d5a","#C9A24E","#5B8ADB","#E0705B","#9B6DB5","#4ABFAD","#D4A853"];
-            const fondsData = byFonds.sort((a, b) => b.val - a.val).slice(0, 7)
-              .map((f, i) => ({ ...f, pct: (f.val / total) * 100, color: AV_TYPE_COLOR[f.type] ?? FONDS_COLORS[i % FONDS_COLORS.length] }));
-
-            const renderDonut = (data: { label: string; pct: number; color: string; val: number }[], title: string, subtitle: string) => {
-              const size = 130, r = 48, sw = 16, cx = size / 2, cy = size / 2;
-              const circ = 2 * Math.PI * r;
-              let cumOffset = 0;
-              return (
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 14, fontFamily: "var(--font-instrument, serif)" }}>{title}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <div style={{ flexShrink: 0 }}>
-                      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
-                        {data.map((d, i) => {
-                          const dash = (d.pct / 100) * circ;
-                          const rotation = (cumOffset / 100) * 360 - 90;
-                          cumOffset += d.pct;
-                          return (
-                            <circle key={i} cx={cx} cy={cy} r={r}
-                              fill="none" stroke={d.color} strokeWidth={sw}
-                              strokeDasharray={`${dash} ${circ - dash}`}
-                              transform={`rotate(${rotation} ${cx} ${cy})`}
-                              strokeLinecap="butt"
-                              style={{ transition: "stroke-dasharray 0.6s ease" }}
-                            />
-                          );
-                        })}
-                        <circle cx={cx} cy={cy} r={r - sw / 2 - 2} fill="var(--paper-2)" />
-                        <text x={cx} y={cy - 7} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>{subtitle}</text>
-                        <text x={cx} y={cy + 8} textAnchor="middle" fontSize={11} fontWeight="700" fill="var(--ink)" fontFamily="var(--font-geist-mono, monospace)">{new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(total / 1000)}k</text>
-                        <text x={cx} y={cy + 20} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)">€</text>
-                      </svg>
-                    </div>
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
-                      {data.map((d, i) => (
-                        <div key={i}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
-                              <span style={{ fontSize: 11, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.label}>{d.label}</span>
-                            </div>
-                            <span style={{ fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)", fontWeight: 700, flexShrink: 0, marginLeft: 6 }}>
-                              {d.pct.toFixed(1)} %
-                            </span>
-                          </div>
-                          <div style={{ height: 3, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${Math.min(d.pct, 100)}%`, background: d.color, borderRadius: 9999, transition: "width 0.7s cubic-bezier(0.22,1,0.36,1)" }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            };
-
-            return (
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 24 }}>
-                <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 20 }}>
-                  {renderDonut(typeData, "Répartition par type", "AV")}
-                </div>
-                {fondsData.length > 1 && (
-                  <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 20 }}>
-                    {renderDonut(fondsData.map(f => ({ ...f, label: f.name })), "Répartition par fonds", "AV")}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Résultat analyse IA */}
-          {avAnalysisError && (
-            <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(184,74,58,0.07)", border: "1px solid rgba(184,74,58,0.25)", fontSize: 13, color: "var(--signal-down)", marginBottom: 16 }}>
-              {avAnalysisError}
-            </div>
-          )}
-
-          {avAnalyzing && (
-            <div style={{ textAlign: "center", padding: "32px 0", color: "var(--muted)", fontSize: 13, marginBottom: 16 }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid var(--line)", borderTopColor: "var(--accent)", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-              L&apos;IA analyse votre contrat d&apos;assurance-vie…
-            </div>
-          )}
-
-          {avAnalysis && (
-            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 28px", marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Sparkles size={16} color="#fff" />
-                </div>
-                <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Analyse IA — Assurance-Vie</h2>
-              </div>
-
-              {/* Score + summary */}
-              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 20, marginBottom: 20, alignItems: "center" }}>
-                <div style={{ position: "relative", width: 80, height: 80 }}>
-                  <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="var(--line)" strokeWidth="7" />
-                    <circle cx="40" cy="40" r="32" fill="none"
-                      stroke={avAnalysis.allocationScore >= 65 ? "var(--signal-up)" : avAnalysis.allocationScore >= 40 ? "#b07d00" : "var(--signal-down)"}
-                      strokeWidth="7"
-                      strokeDasharray={`${(avAnalysis.allocationScore / 100) * 201} 201`}
-                      strokeLinecap="round" />
-                  </svg>
-                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>{avAnalysis.allocationScore}</span>
-                    <span style={{ fontSize: 9, color: "var(--muted)" }}>/100</span>
-                  </div>
-                </div>
-                <div>
-                  <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: 8 }}>{avAnalysis.summary}</p>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid rgba(45,125,90,0.2)" }}>
-                      Fonds €: {avAnalysis.fondsEurosPct.toFixed(0)} %
-                    </span>
-                    <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "rgba(201,162,78,0.10)", color: "#7A5A1F", border: "1px solid rgba(201,162,78,0.30)" }}>
-                      UC: {avAnalysis.ucPct.toFixed(0)} %
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Risque principal */}
-              {avAnalysis.mainRisk && (
-                <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(184,74,58,0.05)", border: "1.5px solid rgba(184,74,58,0.18)", marginBottom: 16 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-down)" }}>Risque principal : </span>
-                  <span style={{ fontSize: 13, color: "var(--muted)" }}>{avAnalysis.mainRisk}</span>
-                </div>
-              )}
-
-              {/* Recommandations */}
-              {avAnalysis.recommendations?.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommandations</h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {avAnalysis.recommendations.map((r, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 10, background: "var(--paper-3)", border: "1.5px solid var(--line)" }}>
-                        <span style={{ padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: "rgba(45,125,90,0.10)", color: "var(--accent)", flexShrink: 0 }}>{r.type}</span>
-                        <div>
-                          <span style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{r.target}</span>
-                          <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 6 }}>{r.reason}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 12 }}>{avAnalysis.disclaimer}</p>
-            </div>
-          )}
-
-          {/* Modal ajout contrat */}
-          {showAddContract && (
-            <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,22,40,0.40)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
-              onClick={e => { if (e.target === e.currentTarget) setShowAddContract(false); }}>
-              <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 20, width: "100%", maxWidth: 420, boxShadow: "0 24px 64px rgba(10,22,40,0.18)" }}>
-                <div style={{ padding: "22px 24px 18px", borderBottom: "1px solid var(--line)" }}>
-                  <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Nouveau contrat</h2>
-                  <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>Linxea Avenir, Boursorama Vie…</p>
-                </div>
-                <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div>
-                    <label style={{ ...labelStyle }}>Nom du contrat</label>
-                    <input value={newContractName} onChange={e => setNewContractName(e.target.value)} placeholder="ex: Linxea Avenir 2" style={{ ...inputStyle }} />
-                  </div>
-                  <div>
-                    <label style={{ ...labelStyle }}>Assureur</label>
-                    <input value={newContractInsurer} onChange={e => setNewContractInsurer(e.target.value)} placeholder="ex: Spirica, Generali…" style={{ ...inputStyle }} />
-                  </div>
-                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-                    <button onClick={() => setShowAddContract(false)} style={{ flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
-                    <button
-                      disabled={!newContractName.trim()}
-                      onClick={() => {
-                        if (!newContractName.trim()) return;
-                        setAvContracts(cs => [...cs, { id: crypto.randomUUID(), name: newContractName.trim(), insurer: newContractInsurer.trim(), holdings: [] }]);
-                        setNewContractName(""); setNewContractInsurer(""); setShowAddContract(false);
-                      }}
-                      style={{ flex: 2, padding: "12px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: !newContractName.trim() ? 0.5 : 1 }}>
-                      Créer le contrat
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Modal ajout ligne dans un contrat */}
-          {showAddHolding !== null && (
-            <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,22,40,0.40)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
-              onClick={e => { if (e.target === e.currentTarget) setShowAddHolding(null); }}>
-              <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 20, width: "100%", maxWidth: 420, boxShadow: "0 24px 64px rgba(10,22,40,0.18)" }}>
-                <div style={{ padding: "22px 24px 18px", borderBottom: "1px solid var(--line)" }}>
-                  <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Ajouter une ligne</h2>
-                  <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>
-                    {avContracts.find(c => c.id === showAddHolding)?.name}
-                  </p>
-                </div>
-                <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-
-                  {/* Sélecteur de type — pills visuelles */}
-                  <div>
-                    <label style={{ ...labelStyle }}>Type de support</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
-                      {(Object.entries(AV_TYPE_LABEL) as [AVHoldingType, string][]).map(([k, v]) => (
-                        <button key={k} onClick={() => { setAddHType(k); setAddHQty(""); setAddHPRU(""); }}
-                          style={{
-                            padding: "10px 8px", borderRadius: 10, border: `1.5px solid ${addHType === k ? AV_TYPE_COLOR[k] : "var(--line)"}`,
-                            background: addHType === k ? `${AV_TYPE_COLOR[k]}18` : "transparent",
-                            color: addHType === k ? AV_TYPE_COLOR[k] : "var(--muted)",
-                            fontSize: 12, fontWeight: addHType === k ? 700 : 500, cursor: "pointer",
-                            display: "flex", alignItems: "center", gap: 6,
-                          }}>
-                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: addHType === k ? AV_TYPE_COLOR[k] : "var(--line)", flexShrink: 0 }} />
-                          {v}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Nom du fonds — toujours affiché */}
-                  <div>
-                    <label style={{ ...labelStyle }}>
-                      {addHType === "fonds_euros" ? "Nom du fonds euro" :
-                       addHType === "uc" ? "Nom du fonds / UC" :
-                       addHType === "scpi" ? "Nom de la SCPI" :
-                       "Nom du produit structuré"}
-                    </label>
-                    <input
-                      value={addHName} onChange={e => setAddHName(e.target.value)}
-                      placeholder={
-                        addHType === "fonds_euros" ? "ex: Sécurité Pierre Plus" :
-                        addHType === "uc" ? "ex: ROBECO US LRG CAP EQ DH EUR" :
-                        addHType === "scpi" ? "ex: Primonial REIM" :
-                        "ex: Autocall Phoenix BNP"
-                      }
-                      style={{ ...inputStyle }} />
-                  </div>
-
-                  {/* Champs contextuels selon le type */}
-                  {(addHType === "fonds_euros" || addHType === "structured") ? (
-                    /* Fonds euros / Structuré : juste le montant total */
-                    <div>
-                      <label style={{ ...labelStyle }}>Montant investi (€)</label>
-                      <input type="number" value={addHPRU} onChange={e => setAddHPRU(e.target.value)}
-                        placeholder="ex: 5000" min="0" step="any" style={{ ...inputStyle }} />
-                      <p style={{ fontSize: 11, color: "var(--muted)", margin: "6px 0 0" }}>
-                        {addHType === "fonds_euros" ? "Valeur garantie de ton fonds euro — généralement indiquée sur ton espace client." : "Capital investi dans le produit structuré."}
-                      </p>
-                    </div>
-                  ) : (
-                    /* UC / SCPI : nb parts + PRU */
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                      <div>
-                        <label style={{ ...labelStyle }}>Nombre de parts</label>
-                        <input type="number" value={addHQty} onChange={e => setAddHQty(e.target.value)}
-                          placeholder="ex: 4.0431" min="0" step="any" style={{ ...inputStyle }} />
-                      </div>
-                      <div>
-                        <label style={{ ...labelStyle }}>
-                          {addHType === "scpi" ? "Prix de part (€)" : "PRU (€ / part)"}
-                        </label>
-                        <input type="number" value={addHPRU} onChange={e => setAddHPRU(e.target.value)}
-                          placeholder="ex: 99.70" min="0" step="any" style={{ ...inputStyle }} />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Valeur calculée */}
-                  {(() => {
-                    let val: number | null = null;
-                    if (addHType === "fonds_euros" || addHType === "structured") {
-                      val = addHPRU ? parseFloat(addHPRU) : null;
-                    } else {
-                      val = addHQty && addHPRU ? parseFloat(addHQty) * parseFloat(addHPRU) : null;
-                    }
-                    return (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 10, background: "var(--paper-3)", fontSize: 13 }}>
-                        <span style={{ color: "var(--muted)" }}>Valeur totale :</span>
-                        <span style={{ fontWeight: 700, color: val ? "var(--accent)" : "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
-                          {val ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(val) : "—"}
-                        </span>
-                      </div>
-                    );
-                  })()}
-
-                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-                    <button onClick={() => { setShowAddHolding(null); setAddHName(""); setAddHQty(""); setAddHPRU(""); }}
-                      style={{ flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer" }}>
-                      Annuler
-                    </button>
-                    <button
-                      disabled={(() => {
-                        if (!addHName.trim()) return true;
-                        if (addHType === "fonds_euros" || addHType === "structured") return !addHPRU;
-                        return !addHQty || !addHPRU;
-                      })()}
-                      onClick={() => {
-                        const contractId = showAddHolding;
-                        let qty: number, pru: number;
-                        if (addHType === "fonds_euros" || addHType === "structured") {
-                          qty = 1;
-                          pru = parseFloat(addHPRU);
-                        } else {
-                          qty = parseFloat(addHQty);
-                          pru = parseFloat(addHPRU);
-                        }
-                        if (!addHName.trim() || isNaN(qty) || isNaN(pru)) return;
-                        setAvContracts(cs => cs.map(c => c.id === contractId ? {
-                          ...c,
-                          holdings: [...c.holdings, { id: crypto.randomUUID(), type: addHType, name: addHName.trim(), quantity: qty, pru }],
-                        } : c));
-                        setAddHName(""); setAddHQty(""); setAddHPRU(""); setShowAddHolding(null);
-                      }}
-                      style={{ flex: 2, padding: "12px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                      Ajouter
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
