@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase";
 import { useMobile } from "@/lib/useMobile";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -130,6 +131,57 @@ interface PortfolioAnalysis {
   strengths: string[];
   disclaimer: string;
 }
+
+/* ── Assurance-Vie types ── */
+type AVHoldingType = "fonds_euros" | "uc" | "scpi" | "structured";
+
+interface AVHolding {
+  id: string;
+  type: AVHoldingType;
+  name: string;
+  quantity: number;
+  pru: number;
+}
+
+interface AVContract {
+  id: string;
+  name: string;
+  insurer: string;
+  holdings: AVHolding[];
+}
+
+interface AVAnalysis {
+  summary: string;
+  allocationScore: number;
+  fondsEurosPct: number;
+  ucPct: number;
+  mainRisk: string;
+  recommendations: { type: string; target: string; reason: string }[];
+  disclaimer: string;
+}
+
+/* ── AV helpers ── */
+function avContractValue(contract: AVContract): number {
+  return contract.holdings.reduce((s, h) => s + h.quantity * h.pru, 0);
+}
+
+function avTotalValue(contracts: AVContract[]): number {
+  return contracts.reduce((s, c) => s + avContractValue(c), 0);
+}
+
+const AV_TYPE_LABEL: Record<AVHoldingType, string> = {
+  fonds_euros: "Fonds Euros",
+  uc: "Unité de Compte",
+  scpi: "SCPI",
+  structured: "Fonds Structuré",
+};
+
+const AV_TYPE_COLOR: Record<AVHoldingType, string> = {
+  fonds_euros: "#2D7D5A",
+  uc: "#C9A24E",
+  scpi: "#5A7AB5",
+  structured: "#8B5CF6",
+};
 
 /* ── Generate plausible sparkline ── */
 function generateSparkline(pnlPct: number): number[] {
@@ -326,6 +378,27 @@ export default function PortfolioPage() {
   const [addSearching, setAddSearching] = useState(false);
   const [addStep, setAddStep]           = useState<"search"|"details">("search");
 
+  /* ── Toggle vue ── */
+  const [activeView, setActiveView] = useState<"patrimoine" | "boursier" | "av">("patrimoine");
+
+  /* ── Assurance-vie ── */
+  const [avContracts, setAvContracts] = useState<AVContract[]>([]);
+  const [avAnalysis, setAvAnalysis] = useState<AVAnalysis | null>(null);
+  const [avAnalyzing, setAvAnalyzing] = useState(false);
+  const [avAnalysisError, setAvAnalysisError] = useState<string | null>(null);
+
+  // Modal ajout contrat
+  const [showAddContract, setShowAddContract] = useState(false);
+  const [newContractName, setNewContractName] = useState("");
+  const [newContractInsurer, setNewContractInsurer] = useState("");
+
+  // Modal ajout ligne dans un contrat
+  const [showAddHolding, setShowAddHolding] = useState<string | null>(null);
+  const [addHType, setAddHType] = useState<AVHoldingType>("fonds_euros");
+  const [addHName, setAddHName] = useState("");
+  const [addHQty, setAddHQty] = useState("");
+  const [addHPRU, setAddHPRU] = useState("");
+
   /* ── Data loading ── */
   const loadHoldings = useCallback(async () => {
     setLoading(true);
@@ -335,7 +408,31 @@ export default function PortfolioPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadHoldings(); }, [loadHoldings]);
+  /* ── AV user email for localStorage ── */
+  const [avUserEmail, setAvUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadHoldings();
+    // Récupérer l'email utilisateur pour la clé localStorage AV
+    const supabase = createClient();
+    supabase.auth.getUser().then((resp: { data: { user: { email?: string } | null } }) => {
+      if (resp.data?.user?.email) {
+        setAvUserEmail(resp.data.user.email);
+        try {
+          const key = `finazen_av_${btoa(resp.data.user.email)}`;
+          const saved = localStorage.getItem(key);
+          if (saved) setAvContracts(JSON.parse(saved) as AVContract[]);
+        } catch { /* ignore */ }
+      }
+    }).catch(() => {});
+  }, [loadHoldings]);
+
+  // Sauvegarder les contrats AV à chaque modification
+  useEffect(() => {
+    if (!avUserEmail) return;
+    const key = `finazen_av_${btoa(avUserEmail)}`;
+    localStorage.setItem(key, JSON.stringify(avContracts));
+  }, [avContracts, avUserEmail]);
 
   /* Enrich with current prices */
   useEffect(() => {
@@ -572,6 +669,111 @@ export default function PortfolioPage() {
         {" / "}
         <span style={{ color: "var(--ink)" }}>MON PORTEFEUILLE</span>
       </div>
+
+      {/* ── Toggle Vue ── */}
+      <div style={{ display: "flex", background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 9999, padding: 4, gap: 2, marginBottom: 28, width: "fit-content" }}>
+        {([
+          ["patrimoine", "Vue patrimoniale"],
+          ["boursier", "PEA / CTO"],
+          ["av", "Assurance-Vie"],
+        ] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setActiveView(key)}
+            style={{
+              padding: "8px 18px", borderRadius: 9999, border: "none", fontSize: 13,
+              fontWeight: activeView === key ? 700 : 500,
+              background: activeView === key ? "var(--ink)" : "transparent",
+              color: activeView === key ? "var(--paper)" : "var(--muted)",
+              cursor: "pointer", whiteSpace: "nowrap",
+            }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Vue Patrimoniale ── */}
+      {activeView === "patrimoine" && (
+        <div>
+          {/* KPI cards */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16, marginBottom: 28 }}>
+            {/* Valeur totale */}
+            <div style={{ background: "linear-gradient(135deg, rgba(45,125,90,0.10) 0%, var(--paper-2) 70%)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 26px" }}>
+              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>PATRIMOINE TOTAL</div>
+              <div style={{ fontSize: 42, color: "var(--accent)", fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 6 }}>
+                {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(totals.value + avTotalValue(avContracts))}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>PEA/CTO + Assurance-Vie</div>
+            </div>
+            {/* PEA/CTO */}
+            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 26px" }}>
+              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>PEA / CTO</div>
+              <div style={{ fontSize: 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, marginBottom: 6, color: "var(--ink)" }}>
+                {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(totals.value)}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+                {enriched.length} position{enriched.length !== 1 ? "s" : ""}
+                {(totals.value + avTotalValue(avContracts)) > 0 && ` · ${((totals.value / (totals.value + avTotalValue(avContracts))) * 100).toFixed(1)} % du patrimoine`}
+              </div>
+            </div>
+            {/* Assurance-Vie */}
+            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 26px" }}>
+              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>ASSURANCE-VIE</div>
+              <div style={{ fontSize: 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, marginBottom: 6, color: "var(--ink)" }}>
+                {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(avTotalValue(avContracts))}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+                {avContracts.length} contrat{avContracts.length !== 1 ? "s" : ""}
+                {(totals.value + avTotalValue(avContracts)) > 0 && ` · ${((avTotalValue(avContracts) / (totals.value + avTotalValue(avContracts))) * 100).toFixed(1)} % du patrimoine`}
+              </div>
+            </div>
+          </div>
+
+          {/* Répartition enveloppes */}
+          {(totals.value + avTotalValue(avContracts)) > 0 && (
+            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 26px", marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", marginBottom: 16, fontFamily: "var(--font-instrument, serif)" }}>Répartition des enveloppes</div>
+              {[
+                { label: "PEA / CTO", value: totals.value, color: "#2D7D5A" },
+                { label: "Assurance-Vie", value: avTotalValue(avContracts), color: "#C9A24E" },
+              ].map(env => {
+                const total = totals.value + avTotalValue(avContracts);
+                const pct = total > 0 ? (env.value / total) * 100 : 0;
+                return (
+                  <div key={env.label} style={{ marginBottom: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: 2, background: env.color }} />
+                        <span style={{ fontSize: 13, color: "var(--ink)" }}>{env.label}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                        <span style={{ fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)", fontWeight: 700 }}>
+                          {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(env.value)}
+                        </span>
+                        <span style={{ fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>{pct.toFixed(1)} %</span>
+                      </div>
+                    </div>
+                    <div style={{ height: 6, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(pct, 100)}%`, background: env.color, borderRadius: 9999, transition: "width 0.7s cubic-bezier(0.22,1,0.36,1)" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Bouton navigation */}
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button onClick={() => setActiveView("boursier")} style={{ padding: "12px 24px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              Voir mon PEA / CTO →
+            </button>
+            <button onClick={() => setActiveView("av")} style={{ padding: "12px 24px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              Gérer mon Assurance-Vie →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Vue PEA/CTO ── */}
+      {activeView === "boursier" && (<>
 
       {/* ── Header ── */}
       <div style={{
@@ -1931,6 +2133,304 @@ export default function PortfolioPage() {
             </div>
           )}
           <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 16 }}>{analysis.disclaimer}</p>
+        </div>
+      )}
+
+      </>)}
+
+      {/* ══════════════════════════════════════════════════════
+          VUE ASSURANCE-VIE
+      ══════════════════════════════════════════════════════ */}
+      {activeView === "av" && (
+        <div>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, marginBottom: 28 }}>
+            <div>
+              <h2 style={{ fontSize: 28, fontWeight: 400, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", color: "var(--ink)", marginBottom: 6, lineHeight: 1.1 }}>
+                Mes <em style={{ fontStyle: "italic", color: "var(--accent)" }}>contrats</em>.
+              </h2>
+              <p style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", margin: 0 }}>
+                {avContracts.length} contrat{avContracts.length !== 1 ? "s" : ""} — valeur totale : {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(avTotalValue(avContracts))}
+              </p>
+            </div>
+            <button onClick={() => setShowAddContract(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              <Plus size={14} />Ajouter un contrat
+            </button>
+          </div>
+
+          {/* Empty state */}
+          {avContracts.length === 0 && (
+            <div style={{ textAlign: "center", padding: "80px 24px", border: "1.5px dashed var(--line)", borderRadius: 20, marginBottom: 24 }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>🏦</div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "var(--ink)" }}>Aucun contrat</h3>
+              <p style={{ color: "var(--muted)", fontSize: 14, marginBottom: 24 }}>Ajoutez vos contrats d'assurance-vie pour les suivre et les analyser.</p>
+              <button onClick={() => setShowAddContract(true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                <Plus size={15} />Ajouter un contrat
+              </button>
+            </div>
+          )}
+
+          {/* Liste des contrats */}
+          {avContracts.map(contract => (
+            <div key={contract.id} style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, marginBottom: 20, overflow: "hidden" }}>
+              {/* En-tête contrat */}
+              <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", marginBottom: 2 }}>{contract.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>{contract.insurer}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>Valeur estimée</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-instrument, serif)" }}>
+                      {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(avContractValue(contract))}
+                    </div>
+                  </div>
+                  <button onClick={() => setAvContracts(cs => cs.filter(c => c.id !== contract.id))} style={{ width: 30, height: 30, borderRadius: 7, border: "none", background: "rgba(184,74,58,0.08)", color: "var(--signal-down)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Tableau des lignes */}
+              {contract.holdings.length > 0 && (
+                <div style={{ overflowX: "auto" }}>
+                  {/* Header */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1.2fr 2fr 1fr 1fr 1fr 28px", columnGap: 8, padding: "10px 22px", fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.07em", borderBottom: "1px solid var(--line)" }}>
+                    <span>TYPE</span>
+                    <span>NOM</span>
+                    <span style={{ textAlign: "right" }}>QUANTITÉ</span>
+                    <span style={{ textAlign: "right" }}>PRU (€)</span>
+                    <span style={{ textAlign: "right" }}>VALEUR</span>
+                    <span />
+                  </div>
+                  {contract.holdings.map((h, hi) => (
+                    <div key={h.id} style={{ display: "grid", gridTemplateColumns: "1.2fr 2fr 1fr 1fr 1fr 28px", columnGap: 8, padding: "12px 22px", alignItems: "center", borderBottom: hi < contract.holdings.length - 1 ? "1px solid var(--line)" : "none" }}>
+                      <div>
+                        <span style={{ padding: "3px 8px", borderRadius: 5, fontSize: 10, fontWeight: 700, background: `${AV_TYPE_COLOR[h.type]}22`, color: AV_TYPE_COLOR[h.type] }}>
+                          {AV_TYPE_LABEL[h.type]}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{h.name}</div>
+                      <div style={{ textAlign: "right", fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>{h.quantity}</div>
+                      <div style={{ textAlign: "right", fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>{h.pru.toFixed(2)} €</div>
+                      <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)" }}>
+                        {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(h.quantity * h.pru)}
+                      </div>
+                      <button onClick={() => setAvContracts(cs => cs.map(c => c.id === contract.id ? { ...c, holdings: c.holdings.filter(x => x.id !== h.id) } : c))} style={{ width: 24, height: 24, borderRadius: 5, border: "none", background: "rgba(184,74,58,0.07)", color: "var(--signal-down)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Actions contrat */}
+              <div style={{ padding: "14px 22px", borderTop: contract.holdings.length > 0 ? "1px solid var(--line)" : "none", display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button onClick={() => { setShowAddHolding(contract.id); setAddHType("fonds_euros"); setAddHName(""); setAddHQty(""); setAddHPRU(""); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                  <Plus size={13} />Ajouter une ligne
+                </button>
+                <button
+                  disabled={avAnalyzing || contract.holdings.length === 0}
+                  onClick={async () => {
+                    setAvAnalyzing(true);
+                    setAvAnalysisError(null);
+                    setAvAnalysis(null);
+                    try {
+                      const res = await fetch("/api/av/analyze", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ contracts: [contract] }),
+                      });
+                      const d = await res.json();
+                      if (d.error) setAvAnalysisError(d.error);
+                      else if (d.analysis) setAvAnalysis(d.analysis as AVAnalysis);
+                    } catch { setAvAnalysisError("Erreur inattendue. Réessayez."); }
+                    finally { setAvAnalyzing(false); }
+                  }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: avAnalyzing || contract.holdings.length === 0 ? "not-allowed" : "pointer", opacity: contract.holdings.length === 0 ? 0.5 : 1 }}>
+                  <Sparkles size={13} />{avAnalyzing ? "Analyse en cours…" : "Analyser ce contrat (IA)"}
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {/* Résultat analyse IA */}
+          {avAnalysisError && (
+            <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(184,74,58,0.07)", border: "1px solid rgba(184,74,58,0.25)", fontSize: 13, color: "var(--signal-down)", marginBottom: 16 }}>
+              {avAnalysisError}
+            </div>
+          )}
+
+          {avAnalyzing && (
+            <div style={{ textAlign: "center", padding: "32px 0", color: "var(--muted)", fontSize: 13, marginBottom: 16 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid var(--line)", borderTopColor: "var(--accent)", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+              L&apos;IA analyse votre contrat d&apos;assurance-vie…
+            </div>
+          )}
+
+          {avAnalysis && (
+            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 28px", marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Sparkles size={16} color="#fff" />
+                </div>
+                <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Analyse IA — Assurance-Vie</h2>
+              </div>
+
+              {/* Score + summary */}
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 20, marginBottom: 20, alignItems: "center" }}>
+                <div style={{ position: "relative", width: 80, height: 80 }}>
+                  <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="var(--line)" strokeWidth="7" />
+                    <circle cx="40" cy="40" r="32" fill="none"
+                      stroke={avAnalysis.allocationScore >= 65 ? "var(--signal-up)" : avAnalysis.allocationScore >= 40 ? "#b07d00" : "var(--signal-down)"}
+                      strokeWidth="7"
+                      strokeDasharray={`${(avAnalysis.allocationScore / 100) * 201} 201`}
+                      strokeLinecap="round" />
+                  </svg>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>{avAnalysis.allocationScore}</span>
+                    <span style={{ fontSize: 9, color: "var(--muted)" }}>/100</span>
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: 8 }}>{avAnalysis.summary}</p>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "var(--accent-soft)", color: "var(--accent)", border: "1px solid rgba(45,125,90,0.2)" }}>
+                      Fonds €: {avAnalysis.fondsEurosPct.toFixed(0)} %
+                    </span>
+                    <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "rgba(201,162,78,0.10)", color: "#7A5A1F", border: "1px solid rgba(201,162,78,0.30)" }}>
+                      UC: {avAnalysis.ucPct.toFixed(0)} %
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Risque principal */}
+              {avAnalysis.mainRisk && (
+                <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(184,74,58,0.05)", border: "1.5px solid rgba(184,74,58,0.18)", marginBottom: 16 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-down)" }}>Risque principal : </span>
+                  <span style={{ fontSize: 13, color: "var(--muted)" }}>{avAnalysis.mainRisk}</span>
+                </div>
+              )}
+
+              {/* Recommandations */}
+              {avAnalysis.recommendations?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>Recommandations</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {avAnalysis.recommendations.map((r, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", borderRadius: 10, background: "var(--paper-3)", border: "1.5px solid var(--line)" }}>
+                        <span style={{ padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: "rgba(45,125,90,0.10)", color: "var(--accent)", flexShrink: 0 }}>{r.type}</span>
+                        <div>
+                          <span style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{r.target}</span>
+                          <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 6 }}>{r.reason}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 12 }}>{avAnalysis.disclaimer}</p>
+            </div>
+          )}
+
+          {/* Modal ajout contrat */}
+          {showAddContract && (
+            <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,22,40,0.40)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+              onClick={e => { if (e.target === e.currentTarget) setShowAddContract(false); }}>
+              <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 20, width: "100%", maxWidth: 420, boxShadow: "0 24px 64px rgba(10,22,40,0.18)" }}>
+                <div style={{ padding: "22px 24px 18px", borderBottom: "1px solid var(--line)" }}>
+                  <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Nouveau contrat</h2>
+                  <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>Linxea Avenir, Boursorama Vie…</p>
+                </div>
+                <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <label style={{ ...labelStyle }}>Nom du contrat</label>
+                    <input value={newContractName} onChange={e => setNewContractName(e.target.value)} placeholder="ex: Linxea Avenir 2" style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <label style={{ ...labelStyle }}>Assureur</label>
+                    <input value={newContractInsurer} onChange={e => setNewContractInsurer(e.target.value)} placeholder="ex: Spirica, Generali…" style={{ ...inputStyle }} />
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                    <button onClick={() => setShowAddContract(false)} style={{ flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
+                    <button
+                      disabled={!newContractName.trim()}
+                      onClick={() => {
+                        if (!newContractName.trim()) return;
+                        setAvContracts(cs => [...cs, { id: crypto.randomUUID(), name: newContractName.trim(), insurer: newContractInsurer.trim(), holdings: [] }]);
+                        setNewContractName(""); setNewContractInsurer(""); setShowAddContract(false);
+                      }}
+                      style={{ flex: 2, padding: "12px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: !newContractName.trim() ? 0.5 : 1 }}>
+                      Créer le contrat
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal ajout ligne dans un contrat */}
+          {showAddHolding !== null && (
+            <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,22,40,0.40)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+              onClick={e => { if (e.target === e.currentTarget) setShowAddHolding(null); }}>
+              <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 20, width: "100%", maxWidth: 420, boxShadow: "0 24px 64px rgba(10,22,40,0.18)" }}>
+                <div style={{ padding: "22px 24px 18px", borderBottom: "1px solid var(--line)" }}>
+                  <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Ajouter une ligne</h2>
+                  <p style={{ fontSize: 13, color: "var(--muted)", margin: "4px 0 0" }}>
+                    {avContracts.find(c => c.id === showAddHolding)?.name}
+                  </p>
+                </div>
+                <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+                  <div>
+                    <label style={{ ...labelStyle }}>Type</label>
+                    <select value={addHType} onChange={e => setAddHType(e.target.value as AVHoldingType)} style={{ ...inputStyle }}>
+                      {(Object.entries(AV_TYPE_LABEL) as [AVHoldingType, string][]).map(([k, v]) => (
+                        <option key={k} value={k}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ ...labelStyle }}>Nom du fonds / support</label>
+                    <input value={addHName} onChange={e => setAddHName(e.target.value)} placeholder="ex: Fonds euros Sécurité Pierre Plus" style={{ ...inputStyle }} />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ ...labelStyle }}>Quantité / parts</label>
+                      <input type="number" value={addHQty} onChange={e => setAddHQty(e.target.value)} placeholder="ex: 100" min="0" step="any" style={{ ...inputStyle }} />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle }}>PRU (€)</label>
+                      <input type="number" value={addHPRU} onChange={e => setAddHPRU(e.target.value)} placeholder="ex: 1.00" min="0" step="any" style={{ ...inputStyle }} />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                    Valeur estimée : {addHQty && addHPRU ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(parseFloat(addHQty) * parseFloat(addHPRU)) : "—"}
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                    <button onClick={() => setShowAddHolding(null)} style={{ flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
+                    <button
+                      disabled={!addHName.trim() || !addHQty || !addHPRU}
+                      onClick={() => {
+                        if (!addHName.trim() || !addHQty || !addHPRU) return;
+                        const contractId = showAddHolding;
+                        setAvContracts(cs => cs.map(c => c.id === contractId ? {
+                          ...c,
+                          holdings: [...c.holdings, { id: crypto.randomUUID(), type: addHType, name: addHName.trim(), quantity: parseFloat(addHQty), pru: parseFloat(addHPRU) }],
+                        } : c));
+                        setAddHName(""); setAddHQty(""); setAddHPRU(""); setShowAddHolding(null);
+                      }}
+                      style={{ flex: 2, padding: "12px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: !addHName.trim() || !addHQty || !addHPRU ? 0.5 : 1 }}>
+                      Ajouter
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
