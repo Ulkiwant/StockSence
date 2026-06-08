@@ -56,6 +56,31 @@ function localSearch(q: string): { symbol: string; name: string; exchange: strin
     .map(({ symbol, name, exchange }) => ({ symbol, name, exchange }));
 }
 
+/** Bourses principales — les correspondances exactes de ticker ici remontent en priorité */
+const MAJOR_EXCHANGES = ["NYSE", "NMS", "NASDAQ", "NYQ", "NGM", "PCX", "Euronext", "PAR", "AMS", "XETRA"];
+
+/**
+ * Trie les résultats Yahoo Finance :
+ * - Correspondance exacte de ticker sur une bourse majeure → score 3
+ * - Correspondance exacte de ticker toutes bourses → score 2
+ * - Correspondance dans le nom → score 1
+ * Évite qu'une entreprise OTC "vole" le ticker d'une cotation NYSE connue.
+ */
+function sortResults(
+  results: { symbol: string; name: string; exchange: string }[],
+  query: string
+): { symbol: string; name: string; exchange: string }[] {
+  const q = query.toUpperCase().trim();
+  return [...results].sort((a, b) => {
+    const scoreOf = (r: { symbol: string; exchange: string }) => {
+      const isMajor = MAJOR_EXCHANGES.some(ex => r.exchange?.toUpperCase().includes(ex.toUpperCase()));
+      if (r.symbol.toUpperCase() === q) return isMajor ? 3 : 2;
+      return 1;
+    };
+    return scoreOf(b) - scoreOf(a);
+  });
+}
+
 export async function GET(req: NextRequest) {
   // 30 recherches/minute par IP
   if (!checkRateLimit(getRateLimitKey(req), 30, 60)) {
@@ -75,7 +100,9 @@ export async function GET(req: NextRequest) {
     // Dédoublonner : ne pas inclure les locaux déjà dans Yahoo
     const yahooSymbols = new Set(yahooResults.map(r => r.symbol));
     const extraLocal = local.filter(l => !yahooSymbols.has(l.symbol));
-    return Response.json([...yahooResults, ...extraLocal].slice(0, 8));
+    // Trier pour remonter les correspondances exactes ticker sur NYSE/NASDAQ
+    const merged = sortResults([...yahooResults, ...extraLocal], q);
+    return Response.json(merged.slice(0, 8));
   }
 
   // Yahoo vide → retourner les locaux
