@@ -1118,7 +1118,7 @@ export default function AdvisorPage() {
           }}
         />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <p style={{ fontSize: 17, color: "var(--ink)", fontWeight: 600 }}>L'IA construit ton portefeuille…</p>
+        <p style={{ fontSize: 17, color: "var(--ink)", fontWeight: 600 }}>Construction de ton portefeuille en cours…</p>
         <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 360, textAlign: "center" }}>
           Analyse de ton profil, sélection des actifs, calibration du risque. Ça prend 10-15 secondes.
         </p>
