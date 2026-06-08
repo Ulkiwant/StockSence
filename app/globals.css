@@ -1,0 +1,419 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════
+   DESIGN TOKENS — Institutional Light Theme
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  /* Palette principale */
+  --ink:            #0a1628;
+  --paper:          #f5f1ea;
+  --paper-2:        #ece6db;
+  --paper-3:        #e4ddd0;
+  --line:           #d8d0c0;
+  --muted:          #6b6356;
+  --accent:         #2d7d5a;
+  --accent-soft:    #d4e5dc;
+  --accent-hover:   #236347;
+  --signal-up:      #2d7d5a;
+  --signal-down:    #b84a3a;
+  --signal-neutral: #8b7a5e;
+
+  /* Aliases pour compatibilité */
+  --bg-primary:     var(--paper);
+  --bg-card:        var(--paper-2);
+  --bg-card-hover:  var(--paper-3);
+  --bg-input:       #fff;
+  --text-primary:   var(--ink);
+  --text-secondary: var(--muted);
+  --text-muted:     #8b7a5e;
+  --text-disabled:  #b5a898;
+  --border:         var(--line);
+  --border-hover:   #c5bcac;
+  --border-subtle:  #e0d9cc;
+  --border-default: var(--line);
+  --border-accent:  rgba(45, 125, 90, 0.30);
+
+  /* CTA / boutons primaires */
+  --cta-bg:           var(--accent-soft);
+  --cta-bg-hover:     #c8ddd4;
+  --cta-border:       rgba(45, 125, 90, 0.35);
+  --cta-border-hover: rgba(45, 125, 90, 0.60);
+  --cta-text:         var(--accent);
+
+  /* Signaux */
+  --success: var(--signal-up);
+  --danger:  var(--signal-down);
+  --warning: #b87a3a;
+
+  /* Anciens accents (gardés pour composants non-migrés) */
+  --accent-green:  var(--signal-up);
+  --accent-red:    var(--signal-down);
+  --accent-blue:   #2563eb;
+  --accent-purple: #6d28d9;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESET
+   ═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; padding: 0; margin: 0; }
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-geist, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+a { color: inherit; text-decoration: none; }
+
+::selection { background: rgba(45, 125, 90, 0.18); }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════ */
+.font-serif-italic { font-family: var(--font-instrument, Georgia, serif); font-style: italic; }
+.font-mono         { font-family: var(--font-geist-mono, "Courier New", monospace); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* ═══════════════════════════════════════════════════════════
+   CARDS
+   ═══════════════════════════════════════════════════════════ */
+.card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 2px 12px rgba(10, 22, 40, 0.06);
+}
+
+.card-ink {
+  background: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOUTONS
+   ═══════════════════════════════════════════════════════════ */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 9999px;
+  border: 1px solid var(--cta-border);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+.btn-primary:hover  { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled, .btn-primary[disabled] { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+.btn-secondary:hover  { background: var(--paper-3); border-color: var(--muted); transform: translateY(-1px); }
+.btn-secondary:active { transform: translateY(0); }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.btn-ghost:hover { background: var(--paper-3); color: var(--ink); }
+
+/* ═══════════════════════════════════════════════════════════
+   SKELETON / LOADING
+   ═══════════════════════════════════════════════════════════ */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--paper-2) 25%, var(--paper-3) 50%, var(--paper-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLL REVEAL
+   ═══════════════════════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible { opacity: 1; transform: none; }
+.reveal-delay-1 { transition-delay: 0.08s; }
+.reveal-delay-2 { transition-delay: 0.16s; }
+.reveal-delay-3 { transition-delay: 0.24s; }
+.reveal-delay-4 { transition-delay: 0.32s; }
+
+/* ═══════════════════════════════════════════════════════════
+   GLOSSAIRE
+   ═══════════════════════════════════════════════════════════ */
+.glossary-card {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.glossary-card:hover {
+  border-color: rgba(45, 125, 90, 0.30);
+  box-shadow: 0 2px 12px rgba(10, 22, 40, 0.06);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TICKER TAPE
+   ═══════════════════════════════════════════════════════════ */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-tape-track {
+  display: flex;
+  animation: marquee 60s linear infinite;
+  width: max-content;
+}
+.ticker-tape-track:hover { animation-play-state: paused; }
+
+/* ═══════════════════════════════════════════════════════════
+   GAUGE ANIMATION
+   ═══════════════════════════════════════════════════════════ */
+@keyframes gauge-fill {
+  from { stroke-dashoffset: 283; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MISC UTILITIES
+   ═══════════════════════════════════════════════════════════ */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.letter-tight { letter-spacing: -0.02em; }
+
+/* Dividers */
+.divider-v {
+  width: 1px;
+  background: var(--line);
+  align-self: stretch;
+}
+
+/* Section ink (dark inversion) */
+.section-ink {
+  background: var(--ink);
+  color: #fff;
+}
+.section-ink .text-muted { color: rgba(255, 255, 255, 0.55); }
+
+/* Input styles */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(45, 125, 90, 0.12);
+}
+input::placeholder { color: var(--muted); opacity: 0.7; }
+
+/* Tabs */
+.tab-pill {
+  padding: 6px 16px;
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--muted);
+  background: transparent;
+}
+.tab-pill:hover { color: var(--ink); background: var(--paper-3); }
+.tab-pill.active {
+  color: var(--ink);
+  background: var(--paper-2);
+  border-color: var(--line);
+  font-weight: 600;
+}
+
+/* Animated bars (score decomposition) */
+@keyframes bar-grow {
+  from { width: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤ 768px)
+   Classes utilitaires + overrides CSS pour les mises en page
+   Les styles inline React ne sont PAS affectés ici ; on cible
+   les className ajoutés spécifiquement pour le mobile.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Utilitaires visibilité */
+.hide-mobile  { display: initial; }
+.show-mobile  { display: none; }
+
+@media (max-width: 768px) {
+  /* ── Base ── */
+  html, body { overflow-x: hidden; font-size: 15px; }
+
+  .hide-mobile { display: none !important; }
+  .show-mobile { display: flex !important; }
+
+  /* ── Grilles → 1 colonne ── */
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+    padding: 40px 20px 48px !important;
+  }
+  .chart-row {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .two-col {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .kpi-strip {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .stats-strip {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 24px !important;
+  }
+  .steps-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .features-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .faq-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  /* ── Padding des sections ── */
+  .section-pad { padding: 56px 20px !important; }
+  .page-pad    { padding: 24px 16px 64px !important; }
+  .card-pad    { padding: 18px 16px !important; }
+
+  /* ── Typographie ── */
+  .serif-display {
+    font-size: clamp(28px, 8vw, 44px) !important;
+    letter-spacing: -0.02em !important;
+  }
+  .section-title {
+    font-size: clamp(26px, 7vw, 40px) !important;
+  }
+  .hero-price {
+    font-size: 40px !important;
+  }
+
+  /* ── Tableaux → scroll horizontal ── */
+  .table-scroll-mobile {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-scroll-mobile > * {
+    min-width: 600px;
+  }
+
+  /* ── Navbar ── */
+  .nav-links-desktop { display: none !important; }
+  .nav-toggles       { display: none !important; }
+
+  /* ── CTA block ── */
+  .cta-block-grid {
+    grid-template-columns: 1fr !important;
+    padding: 48px 24px !important;
+    gap: 32px !important;
+  }
+
+  /* ── Cards ── */
+  .card { border-radius: 14px !important; }
+  .showcase-card { border-radius: 16px !important; }
+
+  /* ── Sticky sidebar → position normale ── */
+  .sticky-sidebar { position: static !important; }
+
+  /* ── Buttons ── */
+  .btn-row {
+    flex-direction: column !important;
+    width: 100%;
+  }
+  .btn-row > * { width: 100% !important; justify-content: center !important; }
+}
+
+/* Tablette (769–1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero-grid    { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+  .steps-grid   { grid-template-columns: 1fr !important; }
+  .features-grid{ grid-template-columns: 1fr 1fr !important; }
+}
