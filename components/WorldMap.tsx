@@ -123,8 +123,8 @@ export default function WorldMap({ regionWeights }: Props) {
 
   return (
     <ComposableMap
-      projectionConfig={{ scale: 145, center: [10, 15] }}
-      viewBox="0 0 800 430"
+      projectionConfig={{ scale: 145, center: [10, 0] }}
+      viewBox="0 60 800 450"
       style={{ width: "100%", height: "auto" }}
     >
       <Geographies geography={GEO_URL}>
