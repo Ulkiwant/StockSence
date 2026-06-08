@@ -98,11 +98,14 @@ ${p.existingHoldings?.length
 OBJECTIF :
 - Objectif principal : ${p.goal}
 
-ACTIONS IMPOSÉES PAR L'UTILISATEUR (à intégrer obligatoirement avec un poids approprié) :
+ACTIONS IMPOSÉES PAR L'UTILISATEUR (à intégrer obligatoirement) :
 ${p.forcedStocks?.length
-  ? p.forcedStocks.map((s: { symbol: string; name: string; signal: string; upside: number }) => `- ${s.symbol} (${s.name}) : signal ${s.signal}, upside estimé ${s.upside?.toFixed(1)}%`).join("\n")
+  ? p.forcedStocks.map((s: { symbol: string; name: string; signal: string; upside: number; currentPrice?: number; fairValue?: number; currency?: string }) =>
+      `- Ticker: ${s.symbol} | Nom EXACT à utiliser: "${s.name}" | Signal: ${s.signal} | Upside: ${s.upside?.toFixed(1)}% | Cours: ${s.currentPrice?.toFixed(2) ?? "N/A"} ${s.currency ?? ""} | Valeur estimée: ${s.fairValue?.toFixed(2) ?? "N/A"} ${s.currency ?? ""}`
+    ).join("\n")
   : "Aucune action imposée."}
-→ Si des actions sont imposées, les inclure avec un poids entre 5% et 20% chacune, ajuster les autres lignes en conséquence.
+→ RÈGLE ABSOLUE : dans le JSON de réponse, le champ "name" de chaque action imposée DOIT être exactement le nom fourni ci-dessus entre guillemets. Ne jamais le remplacer par un autre nom basé sur ta connaissance du ticker — le nom fourni est la source de vérité.
+→ Inclure chaque action imposée avec un poids entre 5% et 20%, ajuster les autres lignes en conséquence.
 
 ═══ RÈGLES STRICTES ═══
 1. La somme des pourcentages = EXACTEMENT 100

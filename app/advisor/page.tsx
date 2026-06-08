@@ -610,7 +610,13 @@ export default function AdvisorPage() {
           // Situation familiale
           family: answers.familySituation ?? "Célibataire sans enfant",
           forcedStocks: confirmedForced.map((s) => ({
-            symbol: s.symbol, name: s.name, signal: s.signal, upside: s.upside,
+            symbol: s.symbol,
+            name: s.name,          // nom EXACT — l'IA doit l'utiliser tel quel
+            signal: s.signal,
+            upside: s.upside,
+            currentPrice: s.currentPrice,
+            fairValue: s.fairValue,
+            currency: s.currency,
           })),
           geography: "Mondial",
           esgInterest: "Non concerné",
