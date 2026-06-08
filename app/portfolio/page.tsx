@@ -243,7 +243,7 @@ const REC_COLORS: Record<string, string> = {
 };
 
 /* ── Sector tab options ── */
-const ALLOC_TABS = ["Secteur", "Actif", "Pays"] as const;
+const ALLOC_TABS = ["Secteur", "Actif", "Pays", "Valeur"] as const;
 
 /* ── Détection géographique depuis le symbole et le nom ── */
 function detectGeography(symbol: string, name: string, assetType: string): string {
@@ -598,6 +598,7 @@ export default function PortfolioPage() {
       }
       if (tab === "Actif") return assetLabel(h.asset_type || "stock");
       if (tab === "Pays")  return detectGeography(h.symbol, h.name, h.asset_type);
+      if (tab === "Valeur") return h.name || h.symbol; // par position individuelle
       return "Autre";
     };
     const map = enriched.reduce<Record<string, number>>((acc, h) => {
@@ -2255,6 +2256,97 @@ export default function PortfolioPage() {
             </div>
           ))}
 
+          {/* ── Graphiques répartition AV ── */}
+          {avContracts.length > 0 && avTotalValue(avContracts) > 0 && (() => {
+            // Données "Par type"
+            const byType: Record<string, number> = {};
+            avContracts.forEach(c => c.holdings.forEach(h => {
+              byType[h.type] = (byType[h.type] ?? 0) + h.quantity * h.pru;
+            }));
+            const total = avTotalValue(avContracts);
+            const typeData = (Object.entries(byType) as [AVHoldingType, number][])
+              .sort((a, b) => b[1] - a[1])
+              .map(([type, val]) => ({ label: AV_TYPE_LABEL[type], pct: (val / total) * 100, color: AV_TYPE_COLOR[type], val }));
+
+            // Données "Par fonds" (top 7)
+            const byFonds: { name: string; val: number; type: AVHoldingType }[] = [];
+            avContracts.forEach(c => c.holdings.forEach(h => {
+              const existing = byFonds.find(f => f.name === h.name);
+              if (existing) existing.val += h.quantity * h.pru;
+              else byFonds.push({ name: h.name, val: h.quantity * h.pru, type: h.type });
+            }));
+            const FONDS_COLORS = ["#2d7d5a","#C9A24E","#5B8ADB","#E0705B","#9B6DB5","#4ABFAD","#D4A853"];
+            const fondsData = byFonds.sort((a, b) => b.val - a.val).slice(0, 7)
+              .map((f, i) => ({ ...f, pct: (f.val / total) * 100, color: AV_TYPE_COLOR[f.type] ?? FONDS_COLORS[i % FONDS_COLORS.length] }));
+
+            const renderDonut = (data: { label: string; pct: number; color: string; val: number }[], title: string, subtitle: string) => {
+              const size = 130, r = 48, sw = 16, cx = size / 2, cy = size / 2;
+              const circ = 2 * Math.PI * r;
+              let cumOffset = 0;
+              return (
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 14, fontFamily: "var(--font-instrument, serif)" }}>{title}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ flexShrink: 0 }}>
+                      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
+                        {data.map((d, i) => {
+                          const dash = (d.pct / 100) * circ;
+                          const rotation = (cumOffset / 100) * 360 - 90;
+                          cumOffset += d.pct;
+                          return (
+                            <circle key={i} cx={cx} cy={cy} r={r}
+                              fill="none" stroke={d.color} strokeWidth={sw}
+                              strokeDasharray={`${dash} ${circ - dash}`}
+                              transform={`rotate(${rotation} ${cx} ${cy})`}
+                              strokeLinecap="butt"
+                              style={{ transition: "stroke-dasharray 0.6s ease" }}
+                            />
+                          );
+                        })}
+                        <circle cx={cx} cy={cy} r={r - sw / 2 - 2} fill="var(--paper-2)" />
+                        <text x={cx} y={cy - 7} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>{subtitle}</text>
+                        <text x={cx} y={cy + 8} textAnchor="middle" fontSize={11} fontWeight="700" fill="var(--ink)" fontFamily="var(--font-geist-mono, monospace)">{new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(total / 1000)}k</text>
+                        <text x={cx} y={cy + 20} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)">€</text>
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
+                      {data.map((d, i) => (
+                        <div key={i}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color, flexShrink: 0 }} />
+                              <span style={{ fontSize: 11, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.label}>{d.label}</span>
+                            </div>
+                            <span style={{ fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)", fontWeight: 700, flexShrink: 0, marginLeft: 6 }}>
+                              {d.pct.toFixed(1)} %
+                            </span>
+                          </div>
+                          <div style={{ height: 3, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${Math.min(d.pct, 100)}%`, background: d.color, borderRadius: 9999, transition: "width 0.7s cubic-bezier(0.22,1,0.36,1)" }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            };
+
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 24 }}>
+                <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 20 }}>
+                  {renderDonut(typeData, "Répartition par type", "AV")}
+                </div>
+                {fondsData.length > 1 && (
+                  <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, padding: 20 }}>
+                    {renderDonut(fondsData.map(f => ({ ...f, label: f.name })), "Répartition par fonds", "AV")}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Résultat analyse IA */}
           {avAnalysisError && (
             <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(184,74,58,0.07)", border: "1px solid rgba(184,74,58,0.25)", fontSize: 13, color: "var(--signal-down)", marginBottom: 16 }}>
@@ -2385,45 +2477,122 @@ export default function PortfolioPage() {
                   </p>
                 </div>
                 <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+                  {/* Sélecteur de type — pills visuelles */}
                   <div>
-                    <label style={{ ...labelStyle }}>Type</label>
-                    <select value={addHType} onChange={e => setAddHType(e.target.value as AVHoldingType)} style={{ ...inputStyle }}>
+                    <label style={{ ...labelStyle }}>Type de support</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
                       {(Object.entries(AV_TYPE_LABEL) as [AVHoldingType, string][]).map(([k, v]) => (
-                        <option key={k} value={k}>{v}</option>
+                        <button key={k} onClick={() => { setAddHType(k); setAddHQty(""); setAddHPRU(""); }}
+                          style={{
+                            padding: "10px 8px", borderRadius: 10, border: `1.5px solid ${addHType === k ? AV_TYPE_COLOR[k] : "var(--line)"}`,
+                            background: addHType === k ? `${AV_TYPE_COLOR[k]}18` : "transparent",
+                            color: addHType === k ? AV_TYPE_COLOR[k] : "var(--muted)",
+                            fontSize: 12, fontWeight: addHType === k ? 700 : 500, cursor: "pointer",
+                            display: "flex", alignItems: "center", gap: 6,
+                          }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: addHType === k ? AV_TYPE_COLOR[k] : "var(--line)", flexShrink: 0 }} />
+                          {v}
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
+
+                  {/* Nom du fonds — toujours affiché */}
                   <div>
-                    <label style={{ ...labelStyle }}>Nom du fonds / support</label>
-                    <input value={addHName} onChange={e => setAddHName(e.target.value)} placeholder="ex: Fonds euros Sécurité Pierre Plus" style={{ ...inputStyle }} />
+                    <label style={{ ...labelStyle }}>
+                      {addHType === "fonds_euros" ? "Nom du fonds euro" :
+                       addHType === "uc" ? "Nom du fonds / UC" :
+                       addHType === "scpi" ? "Nom de la SCPI" :
+                       "Nom du produit structuré"}
+                    </label>
+                    <input
+                      value={addHName} onChange={e => setAddHName(e.target.value)}
+                      placeholder={
+                        addHType === "fonds_euros" ? "ex: Sécurité Pierre Plus" :
+                        addHType === "uc" ? "ex: ROBECO US LRG CAP EQ DH EUR" :
+                        addHType === "scpi" ? "ex: Primonial REIM" :
+                        "ex: Autocall Phoenix BNP"
+                      }
+                      style={{ ...inputStyle }} />
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+                  {/* Champs contextuels selon le type */}
+                  {(addHType === "fonds_euros" || addHType === "structured") ? (
+                    /* Fonds euros / Structuré : juste le montant total */
                     <div>
-                      <label style={{ ...labelStyle }}>Quantité / parts</label>
-                      <input type="number" value={addHQty} onChange={e => setAddHQty(e.target.value)} placeholder="ex: 100" min="0" step="any" style={{ ...inputStyle }} />
+                      <label style={{ ...labelStyle }}>Montant investi (€)</label>
+                      <input type="number" value={addHPRU} onChange={e => setAddHPRU(e.target.value)}
+                        placeholder="ex: 5000" min="0" step="any" style={{ ...inputStyle }} />
+                      <p style={{ fontSize: 11, color: "var(--muted)", margin: "6px 0 0" }}>
+                        {addHType === "fonds_euros" ? "Valeur garantie de ton fonds euro — généralement indiquée sur ton espace client." : "Capital investi dans le produit structuré."}
+                      </p>
                     </div>
-                    <div>
-                      <label style={{ ...labelStyle }}>PRU (€)</label>
-                      <input type="number" value={addHPRU} onChange={e => setAddHPRU(e.target.value)} placeholder="ex: 1.00" min="0" step="any" style={{ ...inputStyle }} />
+                  ) : (
+                    /* UC / SCPI : nb parts + PRU */
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div>
+                        <label style={{ ...labelStyle }}>Nombre de parts</label>
+                        <input type="number" value={addHQty} onChange={e => setAddHQty(e.target.value)}
+                          placeholder="ex: 4.0431" min="0" step="any" style={{ ...inputStyle }} />
+                      </div>
+                      <div>
+                        <label style={{ ...labelStyle }}>
+                          {addHType === "scpi" ? "Prix de part (€)" : "PRU (€ / part)"}
+                        </label>
+                        <input type="number" value={addHPRU} onChange={e => setAddHPRU(e.target.value)}
+                          placeholder="ex: 99.70" min="0" step="any" style={{ ...inputStyle }} />
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--muted)" }}>
-                    Valeur estimée : {addHQty && addHPRU ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(parseFloat(addHQty) * parseFloat(addHPRU)) : "—"}
-                  </div>
+                  )}
+
+                  {/* Valeur calculée */}
+                  {(() => {
+                    let val: number | null = null;
+                    if (addHType === "fonds_euros" || addHType === "structured") {
+                      val = addHPRU ? parseFloat(addHPRU) : null;
+                    } else {
+                      val = addHQty && addHPRU ? parseFloat(addHQty) * parseFloat(addHPRU) : null;
+                    }
+                    return (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 10, background: "var(--paper-3)", fontSize: 13 }}>
+                        <span style={{ color: "var(--muted)" }}>Valeur totale :</span>
+                        <span style={{ fontWeight: 700, color: val ? "var(--accent)" : "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+                          {val ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(val) : "—"}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
                   <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-                    <button onClick={() => setShowAddHolding(null)} style={{ flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer" }}>Annuler</button>
+                    <button onClick={() => { setShowAddHolding(null); setAddHName(""); setAddHQty(""); setAddHPRU(""); }}
+                      style={{ flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer" }}>
+                      Annuler
+                    </button>
                     <button
-                      disabled={!addHName.trim() || !addHQty || !addHPRU}
+                      disabled={(() => {
+                        if (!addHName.trim()) return true;
+                        if (addHType === "fonds_euros" || addHType === "structured") return !addHPRU;
+                        return !addHQty || !addHPRU;
+                      })()}
                       onClick={() => {
-                        if (!addHName.trim() || !addHQty || !addHPRU) return;
                         const contractId = showAddHolding;
+                        let qty: number, pru: number;
+                        if (addHType === "fonds_euros" || addHType === "structured") {
+                          qty = 1;
+                          pru = parseFloat(addHPRU);
+                        } else {
+                          qty = parseFloat(addHQty);
+                          pru = parseFloat(addHPRU);
+                        }
+                        if (!addHName.trim() || isNaN(qty) || isNaN(pru)) return;
                         setAvContracts(cs => cs.map(c => c.id === contractId ? {
                           ...c,
-                          holdings: [...c.holdings, { id: crypto.randomUUID(), type: addHType, name: addHName.trim(), quantity: parseFloat(addHQty), pru: parseFloat(addHPRU) }],
+                          holdings: [...c.holdings, { id: crypto.randomUUID(), type: addHType, name: addHName.trim(), quantity: qty, pru }],
                         } : c));
                         setAddHName(""); setAddHQty(""); setAddHPRU(""); setShowAddHolding(null);
                       }}
-                      style={{ flex: 2, padding: "12px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: !addHName.trim() || !addHQty || !addHPRU ? 0.5 : 1 }}>
+                      style={{ flex: 2, padding: "12px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                       Ajouter
                     </button>
                   </div>
