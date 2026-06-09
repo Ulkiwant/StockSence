@@ -933,174 +933,6 @@ export default function PortfolioPage() {
 
         </div>
       )}
-
-      {/* ── Répartition de l'investissement — 3 donuts ── */}
-      {enriched.length > 0 && (() => {
-
-        // Palettes thématiques par graphique (inspiré BoursoBank)
-        const VALEUR_PALETTE  = ["#4a7c59","#6aab7a","#8ecf9e","#b8e6c4","#d4f0db","#c0c0c0"];
-        const SECTEUR_PALETTE = ["#2d7d5a","#4a9e72","#6fbe8f","#95d9ad","#b8eeca","#c0bcb5","#a8c4b0","#7aaa90","#5a8870","#3d6b55"];
-        const ACTIF_PALETTE   = ["#2d7d5a","#c9a24e","#8B5CF6","#4a9eff","#e07060"];
-
-        const applyPalette = (items: {name:string;pct:number}[], palette: string[]) =>
-          items.map((d, i) => ({ label: d.name, pct: d.pct, color: palette[i % palette.length] }));
-
-        const renderDonut = (
-          items: { label: string; pct: number; color: string }[],
-          subtitle: string,
-          title: string,
-          centerLabel: string
-        ) => {
-          const size = 220, r = 82, sw = 22, cx = size / 2, cy = size / 2;
-          const circ = 2 * Math.PI * r;
-          let cumOffset = 0;
-          const top5 = items.slice(0, 5);
-          const otherPct = items.slice(5).reduce((s, d) => s + d.pct, 0);
-          const display = otherPct > 0.5 ? [...top5, { label: "Autre", pct: otherPct, color: "#94A3B8" }] : top5;
-          return (
-            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 24px 28px", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-              {/* En-tête */}
-              <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>
-                {subtitle}
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)", marginBottom: 20, fontFamily: "var(--font-instrument, serif)" }}>
-                {title}
-              </div>
-
-              {/* Légende — sans barres */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24, flex: 1 }}>
-                {display.map((d, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-                      <div style={{ width: 11, height: 11, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.label}>
-                        {d.label.length > 30 ? d.label.slice(0, 28) + "…" : d.label}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)", fontWeight: 600, flexShrink: 0 }}>
-                      {d.pct.toFixed(2)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Grand donut centré */}
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                  {/* Track */}
-                  <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
-                  {/* Reset cumOffset */}
-                  {(() => { cumOffset = 0; return null; })()}
-                  {/* Segments */}
-                  {display.map((d, i) => {
-                    const dash = (d.pct / 100) * circ;
-                    const rotation = (cumOffset / 100) * 360 - 90;
-                    cumOffset += d.pct;
-                    return (
-                      <circle key={i} cx={cx} cy={cy} r={r}
-                        fill="none" stroke={d.color} strokeWidth={sw}
-                        strokeDasharray={`${dash} ${circ - dash}`}
-                        transform={`rotate(${rotation} ${cx} ${cy})`}
-                        strokeLinecap="butt"
-                        style={{ transition: "stroke-dasharray 0.6s ease" }}
-                      />
-                    );
-                  })}
-                  {/* Centre */}
-                  <circle cx={cx} cy={cy} r={r - sw / 2 - 3} fill="var(--paper-2)" />
-                  <text x={cx} y={cy - 8} textAnchor="middle" fontSize={10} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)" letterSpacing="0.06em" style={{ textTransform: "uppercase" }}>{centerLabel.toUpperCase()}</text>
-                  <text x={cx} y={cy + 16} textAnchor="middle" fontSize={28} fontWeight="700" fill="var(--ink)" fontFamily="var(--font-instrument, serif)">{display.length}</text>
-                </svg>
-              </div>
-            </div>
-          );
-        };
-
-        const byValeur  = buildAllocData("Valeur");
-        const bySecteur = buildAllocData("Secteur");
-        const byActif   = buildAllocData("Actif");
-
-        return (
-          <div style={{ marginBottom: 28 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 400, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", color: "var(--ink)", marginBottom: 20 }}>
-              Répartition de l&apos;investissement
-            </h2>
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
-              {renderDonut(applyPalette(byValeur,  VALEUR_PALETTE),  "Quelle est la répartition", "par valeur ?",          "fonds")}
-              {renderDonut(applyPalette(bySecteur, SECTEUR_PALETTE), "Quelle est la répartition", "par secteur ?",         "secteurs")}
-              {renderDonut(applyPalette(byActif,   ACTIF_PALETTE),   "Quelle est la répartition", "par classe d'actifs ?", "classes")}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ── Répartition géographique — Planisphère ── */}
-      {enriched.length > 0 && (() => {
-        const GEO_LEGEND_COLORS: Record<string, string> = {
-          "Europe":             "#1a4a7a",
-          "Amérique du Nord":   "#2a6aad",
-          "Asie-Océanie":       "#4a9eff",
-          "Amérique du Sud":    "#63b3f0",
-          "Marchés émergents":  "#8ecef7",
-          "Mondial":            "#5b7fa8",
-          "Autre":              "#94A3B8",
-        };
-        // Group by region
-        const regionMap: Record<string, number> = {};
-        enriched.forEach(h => {
-          const country = detectGeography(h.symbol, h.name, h.asset_type);
-          const region = geoRegion(country);
-          regionMap[region] = (regionMap[region] ?? 0) + h.marketValue;
-        });
-        const geoData = Object.entries(regionMap)
-          .map(([region, val]) => ({ region, val, pct: totalVal > 0 ? (val / totalVal) * 100 : 0, color: GEO_LEGEND_COLORS[region] ?? "#94A3B8" }))
-          .sort((a, b) => b.pct - a.pct);
-
-        const regionWeights: Record<string, number> = {};
-        geoData.forEach(g => { regionWeights[g.region] = g.pct; });
-
-        return (
-          <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 26px", marginBottom: 28 }}>
-            <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
-              Quelle est la répartition
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 20, fontFamily: "var(--font-instrument, serif)" }}>
-              géographique de mon portefeuille ?
-            </div>
-            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 28, alignItems: isMobile ? "stretch" : "center" }}>
-              {/* Planisphère */}
-              <div style={{ flex: 2, minWidth: 0 }}>
-                <WorldMap regionWeights={regionWeights} />
-              </div>
-              {/* Légende */}
-              <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 14 }}>
-                {geoData.map(g => (
-                  <div key={g.region}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: g.color }} />
-                        <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>{g.region}</span>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
-                        <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: g.color, fontWeight: 700 }}>
-                          {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(g.val)}
-                        </span>
-                        <span style={{ fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>
-                          {g.pct.toFixed(2)} %
-                        </span>
-                      </div>
-                    </div>
-                    <div style={{ height: 4, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${Math.min(g.pct, 100)}%`, background: g.color, borderRadius: 9999, transition: "width 0.8s cubic-bezier(0.22,1,0.36,1)" }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
       {/* ── Holdings table ── */}
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1908,200 +1740,6 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {/* ── Dividendes détail ── */}
-      {dividendHoldings.length > 0 && (
-        <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 24px", marginBottom: 28 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)", margin: "0 0 4px" }}>
-                💰 Dividendes
-              </h2>
-              <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
-                Revenus versés par vos actions, indépendamment de la hausse du cours
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>Estimé / an</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--signal-up)", fontFamily: "var(--font-instrument, serif)" }}>{fmtEur(totalAnnualDividend)}</div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>D'ici fin {new Date().getFullYear()}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-instrument, serif)" }}>{fmtEur(dividendToReceive)}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tableau détail par action */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", borderBottom: "1px solid var(--line)", paddingBottom: 8, marginBottom: 4, fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            <span>Entreprise</span>
-            <span style={{ textAlign: "right" }}>Rendement</span>
-            <span style={{ textAlign: "right" }}>/ an (estimé)</span>
-            <span style={{ textAlign: "right" }}>D'ici fin {new Date().getFullYear()}</span>
-          </div>
-          {dividendHoldings
-            .sort((a, b) => (b.marketValue * (b.dividendYield ?? 0)) - (a.marketValue * (a.dividendYield ?? 0)))
-            .map((h, i) => {
-              const annual  = h.marketValue * (h.dividendYield ?? 0);
-              const toYear  = (annual / 12) * monthsLeft;
-              const yieldPct = ((h.dividendYield ?? 0) * 100).toFixed(2);
-              return (
-                <div key={h.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "10px 0", borderBottom: i < dividendHoldings.length - 1 ? "1px dashed var(--line)" : "none", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                    <CompanyLogo symbol={h.symbol} name={h.name} size={26} radius={6} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={h.name}>{h.name}</span>
-                  </div>
-                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--signal-up)", fontWeight: 600 }}>{yieldPct} %</div>
-                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)", fontWeight: 600 }}>{fmtEur(annual)}</div>
-                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--accent)", fontWeight: 600 }}>{fmtEur(toYear)}</div>
-                </div>
-              );
-            })}
-
-          <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: "var(--paper-3)", fontSize: 11, color: "var(--muted)", lineHeight: 1.6 }}>
-            ℹ️ Les montants sont calculés à partir du rendement dividende des 12 derniers mois et de la valeur actuelle de vos positions. Ils peuvent varier selon les décisions des entreprises. Ces projections ne constituent pas une garantie.
-          </div>
-        </div>
-      )}
-
-      {/* ── Scenario Analysis ── */}
-      {enriched.length > 0 && (
-        <ScenarioAnalysis
-          positions={enriched.map((h) => ({
-            symbol: h.symbol,
-            name: h.name,
-            marketValue: h.marketValue,
-            asset_type: h.asset_type,
-            beta: undefined,
-            sector: h.sector,
-          }))}
-          totalValue={totals.value}
-          monthlyContribution={0}
-        />
-      )}
-
-      {/* ── AI Analysis ── */}
-      {analysis && (
-        <div style={{
-          background: "var(--paper-2)", border: "1.5px solid var(--line)",
-          borderRadius: 16, padding: 28, marginTop: 24,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 9,
-              background: "var(--accent)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Sparkles size={16} color="#fff" />
-            </div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)" }}>Analyse IA du portefeuille</h2>
-          </div>
-          <div style={{
-            display: "grid", gridTemplateColumns: "auto 1fr",
-            gap: 20, marginBottom: 24, alignItems: "center",
-          }}>
-            <div style={{ position: "relative", width: 80, height: 80 }}>
-              <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
-                <circle cx="40" cy="40" r="32" fill="none" stroke="var(--line)" strokeWidth="7" />
-                <circle cx="40" cy="40" r="32" fill="none"
-                  stroke={analysis.globalScore >= 65 ? "var(--signal-up)" : analysis.globalScore >= 40 ? "var(--signal-neutral)" : "var(--signal-down)"}
-                  strokeWidth="7" strokeDasharray={`${(analysis.globalScore / 100) * 201} 201`} strokeLinecap="round" />
-              </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>{analysis.globalScore}</span>
-                <span style={{ fontSize: 9, color: "var(--muted)" }}>/100</span>
-              </div>
-            </div>
-            <div>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: 8 }}>{analysis.summary}</p>
-              <span style={{
-                fontSize: 12, padding: "3px 10px", borderRadius: 20,
-                background: "var(--accent-soft)", color: "var(--accent)",
-                border: "1px solid rgba(45,125,90,0.2)",
-              }}>
-                Diversification : {analysis.diversification}
-              </span>
-            </div>
-          </div>
-          {analysis.recommendations?.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <h3 style={{
-                fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 12,
-                textTransform: "uppercase", letterSpacing: "0.5px",
-              }}>Recommandations</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {analysis.recommendations.map((r, i) => {
-                  const holding = enriched.find(h => h.symbol === r.symbol);
-                  const displayName = holding?.name && holding.name !== r.symbol ? holding.name : r.symbol;
-                  return (
-                    <div key={i} style={{
-                      display: "flex", alignItems: "flex-start", gap: 12,
-                      padding: "12px 16px", borderRadius: 10,
-                      background: "var(--paper-3)", border: "1.5px solid var(--line)",
-                    }}>
-                      <span style={{
-                        padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700,
-                        background: `${REC_COLORS[r.type] ?? "#8b7a5e"}20`,
-                        color: REC_COLORS[r.type] ?? "#8b7a5e", flexShrink: 0,
-                      }}>{r.type}</span>
-                      <div>
-                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{displayName}</span>
-                        {holding?.name && holding.name !== r.symbol && (
-                          <span style={{
-                            fontSize: 11, color: "var(--muted)", background: "var(--paper-3)",
-                            padding: "1px 5px", borderRadius: 4, marginLeft: 6,
-                          }}>{r.symbol}</span>
-                        )}
-                        <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 6 }}>{r.reason}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            {analysis.strengths?.length > 0 && (
-              <div>
-                <h3 style={{
-                  fontSize: 12, fontWeight: 600, color: "var(--signal-up)", marginBottom: 8,
-                  display: "flex", alignItems: "center", gap: 6,
-                }}>
-                  <TrendingUp size={13} />Points forts
-                </h3>
-                {analysis.strengths.map((s, i) => (
-                  <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
-                    <span style={{ color: "var(--signal-up)" }}>✓</span>{s}
-                  </div>
-                ))}
-              </div>
-            )}
-            {analysis.missingExposures?.length > 0 && (
-              <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-neutral)", marginBottom: 8 }}>
-                  Expositions manquantes
-                </h3>
-                {analysis.missingExposures.map((s, i) => (
-                  <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
-                    <span style={{ color: "var(--signal-neutral)" }}>+</span>{s}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          {analysis.mainRisk && (
-            <div style={{
-              marginTop: 16, padding: "12px 16px", borderRadius: 10,
-              background: "rgba(184,74,58,0.05)", border: "1.5px solid rgba(184,74,58,0.18)",
-            }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-down)" }}>Risque principal : </span>
-              <span style={{ fontSize: 13, color: "var(--muted)" }}>{analysis.mainRisk}</span>
-            </div>
-          )}
-          <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 16 }}>{analysis.disclaimer}</p>
-        </div>
-      )}
-
       {/* ── Où investir X€ ? ── */}
       {enriched.length > 0 && (
         <div style={{
@@ -2251,6 +1889,366 @@ export default function PortfolioPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ── Répartition de l'investissement — 3 donuts ── */}
+      {enriched.length > 0 && (() => {
+
+        // Palettes thématiques par graphique (inspiré BoursoBank)
+        const VALEUR_PALETTE  = ["#4a7c59","#6aab7a","#8ecf9e","#b8e6c4","#d4f0db","#c0c0c0"];
+        const SECTEUR_PALETTE = ["#2d7d5a","#4a9e72","#6fbe8f","#95d9ad","#b8eeca","#c0bcb5","#a8c4b0","#7aaa90","#5a8870","#3d6b55"];
+        const ACTIF_PALETTE   = ["#2d7d5a","#c9a24e","#8B5CF6","#4a9eff","#e07060"];
+
+        const applyPalette = (items: {name:string;pct:number}[], palette: string[]) =>
+          items.map((d, i) => ({ label: d.name, pct: d.pct, color: palette[i % palette.length] }));
+
+        const renderDonut = (
+          items: { label: string; pct: number; color: string }[],
+          subtitle: string,
+          title: string,
+          centerLabel: string
+        ) => {
+          const size = 220, r = 82, sw = 22, cx = size / 2, cy = size / 2;
+          const circ = 2 * Math.PI * r;
+          let cumOffset = 0;
+          const top5 = items.slice(0, 5);
+          const otherPct = items.slice(5).reduce((s, d) => s + d.pct, 0);
+          const display = otherPct > 0.5 ? [...top5, { label: "Autre", pct: otherPct, color: "#94A3B8" }] : top5;
+          return (
+            <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "24px 24px 28px", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+              {/* En-tête */}
+              <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>
+                {subtitle}
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)", marginBottom: 20, fontFamily: "var(--font-instrument, serif)" }}>
+                {title}
+              </div>
+
+              {/* Légende — sans barres */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24, flex: 1 }}>
+                {display.map((d, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+                      <div style={{ width: 11, height: 11, borderRadius: "50%", background: d.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.label}>
+                        {d.label.length > 30 ? d.label.slice(0, 28) + "…" : d.label}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)", fontWeight: 600, flexShrink: 0 }}>
+                      {d.pct.toFixed(2)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Grand donut centré */}
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                  {/* Track */}
+                  <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
+                  {/* Reset cumOffset */}
+                  {(() => { cumOffset = 0; return null; })()}
+                  {/* Segments */}
+                  {display.map((d, i) => {
+                    const dash = (d.pct / 100) * circ;
+                    const rotation = (cumOffset / 100) * 360 - 90;
+                    cumOffset += d.pct;
+                    return (
+                      <circle key={i} cx={cx} cy={cy} r={r}
+                        fill="none" stroke={d.color} strokeWidth={sw}
+                        strokeDasharray={`${dash} ${circ - dash}`}
+                        transform={`rotate(${rotation} ${cx} ${cy})`}
+                        strokeLinecap="butt"
+                        style={{ transition: "stroke-dasharray 0.6s ease" }}
+                      />
+                    );
+                  })}
+                  {/* Centre */}
+                  <circle cx={cx} cy={cy} r={r - sw / 2 - 3} fill="var(--paper-2)" />
+                  <text x={cx} y={cy - 8} textAnchor="middle" fontSize={10} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)" letterSpacing="0.06em" style={{ textTransform: "uppercase" }}>{centerLabel.toUpperCase()}</text>
+                  <text x={cx} y={cy + 16} textAnchor="middle" fontSize={28} fontWeight="700" fill="var(--ink)" fontFamily="var(--font-instrument, serif)">{display.length}</text>
+                </svg>
+              </div>
+            </div>
+          );
+        };
+
+        const byValeur  = buildAllocData("Valeur");
+        const bySecteur = buildAllocData("Secteur");
+        const byActif   = buildAllocData("Actif");
+
+        return (
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 400, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", color: "var(--ink)", marginBottom: 20 }}>
+              Répartition de l&apos;investissement
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
+              {renderDonut(applyPalette(byValeur,  VALEUR_PALETTE),  "Quelle est la répartition", "par valeur ?",          "fonds")}
+              {renderDonut(applyPalette(bySecteur, SECTEUR_PALETTE), "Quelle est la répartition", "par secteur ?",         "secteurs")}
+              {renderDonut(applyPalette(byActif,   ACTIF_PALETTE),   "Quelle est la répartition", "par classe d'actifs ?", "classes")}
+            </div>
+          </div>
+        );
+      })()}
+      {/* ── Répartition géographique — Planisphère ── */}
+      {enriched.length > 0 && (() => {
+        const GEO_LEGEND_COLORS: Record<string, string> = {
+          "Europe":             "#1a4a7a",
+          "Amérique du Nord":   "#2a6aad",
+          "Asie-Océanie":       "#4a9eff",
+          "Amérique du Sud":    "#63b3f0",
+          "Marchés émergents":  "#8ecef7",
+          "Mondial":            "#5b7fa8",
+          "Autre":              "#94A3B8",
+        };
+        // Group by region
+        const regionMap: Record<string, number> = {};
+        enriched.forEach(h => {
+          const country = detectGeography(h.symbol, h.name, h.asset_type);
+          const region = geoRegion(country);
+          regionMap[region] = (regionMap[region] ?? 0) + h.marketValue;
+        });
+        const geoData = Object.entries(regionMap)
+          .map(([region, val]) => ({ region, val, pct: totalVal > 0 ? (val / totalVal) * 100 : 0, color: GEO_LEGEND_COLORS[region] ?? "#94A3B8" }))
+          .sort((a, b) => b.pct - a.pct);
+
+        const regionWeights: Record<string, number> = {};
+        geoData.forEach(g => { regionWeights[g.region] = g.pct; });
+
+        return (
+          <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 26px", marginBottom: 28 }}>
+            <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+              Quelle est la répartition
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", marginBottom: 20, fontFamily: "var(--font-instrument, serif)" }}>
+              géographique de mon portefeuille ?
+            </div>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 28, alignItems: isMobile ? "stretch" : "center" }}>
+              {/* Planisphère */}
+              <div style={{ flex: 2, minWidth: 0 }}>
+                <WorldMap regionWeights={regionWeights} />
+              </div>
+              {/* Légende */}
+              <div style={{ flex: 1, minWidth: 200, display: "flex", flexDirection: "column", gap: 14 }}>
+                {geoData.map(g => (
+                  <div key={g.region}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: g.color }} />
+                        <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>{g.region}</span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
+                        <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: g.color, fontWeight: 700 }}>
+                          {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(g.val)}
+                        </span>
+                        <span style={{ fontSize: 11, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--muted)" }}>
+                          {g.pct.toFixed(2)} %
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ height: 4, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(g.pct, 100)}%`, background: g.color, borderRadius: 9999, transition: "width 0.8s cubic-bezier(0.22,1,0.36,1)" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── AI Analysis ── */}
+      {analysis && (
+        <div style={{
+          background: "var(--paper-2)", border: "1.5px solid var(--line)",
+          borderRadius: 16, padding: 28, marginTop: 24,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 9,
+              background: "var(--accent)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Sparkles size={16} color="#fff" />
+            </div>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)" }}>Analyse IA du portefeuille</h2>
+          </div>
+          <div style={{
+            display: "grid", gridTemplateColumns: "auto 1fr",
+            gap: 20, marginBottom: 24, alignItems: "center",
+          }}>
+            <div style={{ position: "relative", width: 80, height: 80 }}>
+              <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
+                <circle cx="40" cy="40" r="32" fill="none" stroke="var(--line)" strokeWidth="7" />
+                <circle cx="40" cy="40" r="32" fill="none"
+                  stroke={analysis.globalScore >= 65 ? "var(--signal-up)" : analysis.globalScore >= 40 ? "var(--signal-neutral)" : "var(--signal-down)"}
+                  strokeWidth="7" strokeDasharray={`${(analysis.globalScore / 100) * 201} 201`} strokeLinecap="round" />
+              </svg>
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: "var(--ink)" }}>{analysis.globalScore}</span>
+                <span style={{ fontSize: 9, color: "var(--muted)" }}>/100</span>
+              </div>
+            </div>
+            <div>
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: 8 }}>{analysis.summary}</p>
+              <span style={{
+                fontSize: 12, padding: "3px 10px", borderRadius: 20,
+                background: "var(--accent-soft)", color: "var(--accent)",
+                border: "1px solid rgba(45,125,90,0.2)",
+              }}>
+                Diversification : {analysis.diversification}
+              </span>
+            </div>
+          </div>
+          {analysis.recommendations?.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <h3 style={{
+                fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 12,
+                textTransform: "uppercase", letterSpacing: "0.5px",
+              }}>Recommandations</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {analysis.recommendations.map((r, i) => {
+                  const holding = enriched.find(h => h.symbol === r.symbol);
+                  const displayName = holding?.name && holding.name !== r.symbol ? holding.name : r.symbol;
+                  return (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "flex-start", gap: 12,
+                      padding: "12px 16px", borderRadius: 10,
+                      background: "var(--paper-3)", border: "1.5px solid var(--line)",
+                    }}>
+                      <span style={{
+                        padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700,
+                        background: `${REC_COLORS[r.type] ?? "#8b7a5e"}20`,
+                        color: REC_COLORS[r.type] ?? "#8b7a5e", flexShrink: 0,
+                      }}>{r.type}</span>
+                      <div>
+                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)" }}>{displayName}</span>
+                        {holding?.name && holding.name !== r.symbol && (
+                          <span style={{
+                            fontSize: 11, color: "var(--muted)", background: "var(--paper-3)",
+                            padding: "1px 5px", borderRadius: 4, marginLeft: 6,
+                          }}>{r.symbol}</span>
+                        )}
+                        <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 6 }}>{r.reason}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            {analysis.strengths?.length > 0 && (
+              <div>
+                <h3 style={{
+                  fontSize: 12, fontWeight: 600, color: "var(--signal-up)", marginBottom: 8,
+                  display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <TrendingUp size={13} />Points forts
+                </h3>
+                {analysis.strengths.map((s, i) => (
+                  <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
+                    <span style={{ color: "var(--signal-up)" }}>✓</span>{s}
+                  </div>
+                ))}
+              </div>
+            )}
+            {analysis.missingExposures?.length > 0 && (
+              <div>
+                <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-neutral)", marginBottom: 8 }}>
+                  Expositions manquantes
+                </h3>
+                {analysis.missingExposures.map((s, i) => (
+                  <div key={i} style={{ fontSize: 13, color: "var(--muted)", marginBottom: 5, display: "flex", gap: 6 }}>
+                    <span style={{ color: "var(--signal-neutral)" }}>+</span>{s}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {analysis.mainRisk && (
+            <div style={{
+              marginTop: 16, padding: "12px 16px", borderRadius: 10,
+              background: "rgba(184,74,58,0.05)", border: "1.5px solid rgba(184,74,58,0.18)",
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--signal-down)" }}>Risque principal : </span>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>{analysis.mainRisk}</span>
+            </div>
+          )}
+          <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 16 }}>{analysis.disclaimer}</p>
+        </div>
+      )}
+
+      {/* ── Dividendes détail ── */}
+      {dividendHoldings.length > 0 && (
+        <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 24px", marginBottom: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
+            <div>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)", margin: "0 0 4px" }}>
+                💰 Dividendes
+              </h2>
+              <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
+                Revenus versés par vos actions, indépendamment de la hausse du cours
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>Estimé / an</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--signal-up)", fontFamily: "var(--font-instrument, serif)" }}>{fmtEur(totalAnnualDividend)}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>D'ici fin {new Date().getFullYear()}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-instrument, serif)" }}>{fmtEur(dividendToReceive)}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tableau détail par action */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", borderBottom: "1px solid var(--line)", paddingBottom: 8, marginBottom: 4, fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <span>Entreprise</span>
+            <span style={{ textAlign: "right" }}>Rendement</span>
+            <span style={{ textAlign: "right" }}>/ an (estimé)</span>
+            <span style={{ textAlign: "right" }}>D'ici fin {new Date().getFullYear()}</span>
+          </div>
+          {dividendHoldings
+            .sort((a, b) => (b.marketValue * (b.dividendYield ?? 0)) - (a.marketValue * (a.dividendYield ?? 0)))
+            .map((h, i) => {
+              const annual  = h.marketValue * (h.dividendYield ?? 0);
+              const toYear  = (annual / 12) * monthsLeft;
+              const yieldPct = ((h.dividendYield ?? 0) * 100).toFixed(2);
+              return (
+                <div key={h.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "10px 0", borderBottom: i < dividendHoldings.length - 1 ? "1px dashed var(--line)" : "none", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <CompanyLogo symbol={h.symbol} name={h.name} size={26} radius={6} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={h.name}>{h.name}</span>
+                  </div>
+                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--signal-up)", fontWeight: 600 }}>{yieldPct} %</div>
+                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)", fontWeight: 600 }}>{fmtEur(annual)}</div>
+                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--accent)", fontWeight: 600 }}>{fmtEur(toYear)}</div>
+                </div>
+              );
+            })}
+
+          <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: "var(--paper-3)", fontSize: 11, color: "var(--muted)", lineHeight: 1.6 }}>
+            ℹ️ Les montants sont calculés à partir du rendement dividende des 12 derniers mois et de la valeur actuelle de vos positions. Ils peuvent varier selon les décisions des entreprises. Ces projections ne constituent pas une garantie.
+          </div>
+        </div>
+      )}
+
+      {/* ── Scenario Analysis ── */}
+      {enriched.length > 0 && (
+        <ScenarioAnalysis
+          positions={enriched.map((h) => ({
+            symbol: h.symbol,
+            name: h.name,
+            marketValue: h.marketValue,
+            asset_type: h.asset_type,
+            beta: undefined,
+            sector: h.sector,
+          }))}
+          totalValue={totals.value}
+          monthlyContribution={0}
+        />
       )}
 
       {/* ── Modal édition position ── */}
