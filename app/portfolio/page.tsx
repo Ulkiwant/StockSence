@@ -322,6 +322,14 @@ export default function PortfolioPage() {
   const [totals, setTotals] = useState({ value: 0, cost: 0, pnl: 0 });
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [investAmount, setInvestAmount] = useState("");
+  const [investLoading, setInvestLoading] = useState(false);
+  const [investResult, setInvestResult] = useState<{
+    intro: string;
+    suggestions: { symbol: string; name: string; type: string; montant_suggere: number; rationale: string; apport: string; risque: string }[];
+    avertissement: string;
+  } | null>(null);
+  const [investError, setInvestError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [period, setPeriod] = useState<typeof PERIODS[number]>("1mo");
   const [history, setHistory] = useState<HistoryPoint[]>([]);
@@ -505,6 +513,22 @@ export default function PortfolioPage() {
     setAnalyzing(false);
   };
 
+  const handleInvest = async () => {
+    const amount = parseFloat(investAmount);
+    if (!amount || amount <= 0) return;
+    setInvestLoading(true);
+    setInvestError(null);
+    setInvestResult(null);
+    const res = await fetch("/api/portfolio/invest", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount, holdings: enriched, totals }),
+    });
+    const data = await res.json();
+    if (data.error) setInvestError(data.error);
+    else setInvestResult(data);
+    setInvestLoading(false);
+  };
+
   /* ── Derived values ── */
   const totalPct = totals.cost > 0 ? (totals.pnl / totals.cost) * 100 : 0;
   const isUp = totals.pnl >= 0;
@@ -644,6 +668,19 @@ export default function PortfolioPage() {
             fontSize: 14, fontWeight: 500, cursor: "pointer",
           }}>
             <Download size={14} />Rapport mensuel
+          </button>
+          <button
+            onClick={handleAnalyze}
+            disabled={analyzing || !enriched.length}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "10px 20px", borderRadius: 9999,
+              border: "1.5px solid var(--accent)",
+              background: "transparent", color: "var(--accent)",
+              fontSize: 14, fontWeight: 600, cursor: "pointer",
+              opacity: analyzing || !enriched.length ? 0.5 : 1,
+            }}>
+            <Sparkles size={14} />{analyzing ? "Analyse en cours…" : "Diagnostiquer"}
           </button>
           <button onClick={() => setShowAdd(true)} style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -2062,6 +2099,157 @@ export default function PortfolioPage() {
             </div>
           )}
           <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 16 }}>{analysis.disclaimer}</p>
+        </div>
+      )}
+
+      {/* ── Où investir X€ ? ── */}
+      {enriched.length > 0 && (
+        <div style={{
+          background: "var(--paper-2)", border: "1.5px solid var(--line)",
+          borderRadius: 16, padding: 28, marginTop: 24,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 9,
+              background: "linear-gradient(135deg, #2d7d5a, #1a5c3e)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <TrendingUp size={16} color="#fff" />
+            </div>
+            <div>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Où investir mes prochains euros ?</h2>
+              <p style={{ fontSize: 12, color: "var(--muted)", margin: "2px 0 0" }}>L&apos;IA analyse votre portefeuille et propose des opportunités complémentaires</p>
+            </div>
+          </div>
+
+          {/* Input montant + bouton */}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 18, flexWrap: "wrap" }}>
+            <div style={{ position: "relative", flex: "0 0 auto" }}>
+              <input
+                type="number"
+                value={investAmount}
+                onChange={e => setInvestAmount(e.target.value)}
+                placeholder="500"
+                min="1"
+                step="any"
+                style={{
+                  width: 140,
+                  padding: "11px 36px 11px 14px",
+                  borderRadius: 10,
+                  border: "1.5px solid var(--line)",
+                  background: "var(--paper)",
+                  color: "var(--ink)",
+                  fontSize: 15,
+                  fontFamily: "var(--font-geist-mono, monospace)",
+                  fontWeight: 600,
+                  outline: "none",
+                }}
+              />
+              <span style={{
+                position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                fontSize: 14, color: "var(--muted)", pointerEvents: "none",
+              }}>€</span>
+            </div>
+            <button
+              onClick={handleInvest}
+              disabled={investLoading || !investAmount || parseFloat(investAmount) <= 0}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "11px 24px", borderRadius: 10,
+                border: "none", background: "var(--accent)",
+                color: "#fff", fontSize: 14, fontWeight: 600,
+                cursor: investLoading ? "wait" : "pointer",
+                opacity: investLoading || !investAmount ? 0.6 : 1,
+              }}>
+              <Sparkles size={14} />
+              {investLoading ? "Analyse en cours…" : "Obtenir des suggestions"}
+            </button>
+          </div>
+
+          {/* Erreur */}
+          {investError && (
+            <div style={{
+              marginTop: 16, padding: "12px 16px", borderRadius: 10,
+              background: "rgba(184,74,58,0.06)", border: "1.5px solid rgba(184,74,58,0.2)",
+              fontSize: 13, color: "var(--signal-down)",
+            }}>
+              {investError}
+            </div>
+          )}
+
+          {/* Résultats */}
+          {investResult && (
+            <div style={{ marginTop: 22 }}>
+              {/* Intro */}
+              <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.7, marginBottom: 18 }}>{investResult.intro}</p>
+
+              {/* Suggestion cards */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {investResult.suggestions.map((s, i) => {
+                  const risqueColor = s.risque === "Faible" ? "var(--signal-up)"
+                    : s.risque === "Modéré" ? "var(--signal-neutral)"
+                    : "var(--signal-down)";
+                  return (
+                    <div key={i} style={{
+                      display: "grid", gridTemplateColumns: "auto 1fr auto",
+                      gap: 14, alignItems: "start",
+                      padding: "16px 18px", borderRadius: 12,
+                      background: "var(--paper)", border: "1.5px solid var(--line)",
+                    }}>
+                      {/* Logo + symbol */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 52 }}>
+                        <CompanyLogo symbol={s.symbol} name={s.name} size={36} radius={9} />
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)",
+                          color: "var(--accent)", letterSpacing: "0.04em",
+                        }}>{s.symbol}</span>
+                      </div>
+
+                      {/* Content */}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{s.name}</span>
+                          <span style={{
+                            fontSize: 10, padding: "2px 7px", borderRadius: 6, fontWeight: 600,
+                            background: "var(--paper-3)", color: "var(--muted)",
+                            border: "1px solid var(--line)",
+                          }}>{s.type}</span>
+                        </div>
+                        <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 6px", lineHeight: 1.6 }}>{s.rationale}</p>
+                        <span style={{
+                          fontSize: 11, padding: "2px 8px", borderRadius: 6, fontWeight: 600,
+                          background: "var(--accent-soft)", color: "var(--accent)",
+                          border: "1px solid rgba(45,125,90,0.2)",
+                        }}>{s.apport}</span>
+                      </div>
+
+                      {/* Montant + risque */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                        <span style={{
+                          fontSize: 18, fontWeight: 800, color: "var(--accent)",
+                          fontFamily: "var(--font-instrument, serif)",
+                        }}>
+                          {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(s.montant_suggere)}
+                        </span>
+                        <span style={{
+                          fontSize: 11, padding: "2px 8px", borderRadius: 20, fontWeight: 700,
+                          color: risqueColor, border: `1px solid ${risqueColor}`,
+                          background: `${risqueColor}12`,
+                        }}>{s.risque}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Avertissement */}
+              <p style={{
+                fontSize: 11, color: "var(--muted)", marginTop: 14,
+                padding: "10px 14px", borderRadius: 8,
+                background: "var(--paper-3)", lineHeight: 1.6,
+              }}>{investResult.avertissement}</p>
+            </div>
+          )}
         </div>
       )}
 
