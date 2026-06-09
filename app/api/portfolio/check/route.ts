@@ -11,29 +11,55 @@ export async function POST(req: NextRequest) {
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { symbol, portfolioHoldings } = await req.json();
-
   if (!symbol) return Response.json({ error: "Symbol requis" }, { status: 400 });
 
-  // Fetch stock data for the proposed investment
-  let stockData;
+  // Fetch stock/ETF data
+  let stockData: NonNullable<Awaited<ReturnType<typeof getStockDetails>>> & {
+    valuation?: { signal?: string; fairValue?: number; upside?: number; score?: number };
+    operatingMargin?: number;
+    trailingPE?: number;
+  };
+
   try {
-    stockData = await getStockDetails(symbol) as (NonNullable<Awaited<ReturnType<typeof getStockDetails>>> & {
-      valuation?: {signal?:string;fairValue?:number;upside?:number;score?:number};
-      operatingMargin?: number;
-      trailingPE?: number;
-    });
+    const raw = await getStockDetails(symbol);
+    if (!raw) return Response.json({ error: "Introuvable" }, { status: 404 });
+    stockData = raw as typeof stockData;
   } catch {
-    return Response.json({ error: "Action introuvable" }, { status: 404 });
+    return Response.json({ error: "Introuvable" }, { status: 404 });
   }
-  if (!stockData) return Response.json({ error: "Action introuvable" }, { status: 404 });
+
+  const isETF = (stockData as { quoteType?: string }).quoteType === "ETF"
+             || (stockData as { quoteType?: string }).quoteType === "MUTUALFUND";
 
   // Build portfolio summary
-  const totalValue = portfolioHoldings?.reduce((s: number, h: {marketValue: number}) => s + h.marketValue, 0) ?? 0;
+  const totalValue = portfolioHoldings?.reduce((s: number, h: { marketValue: number }) => s + h.marketValue, 0) ?? 0;
   const holdingsSummary = portfolioHoldings?.length
-    ? portfolioHoldings.map((h: {name:string;symbol:string;sector:string;pct:number;signal?:string}) =>
+    ? portfolioHoldings.map((h: { name: string; symbol: string; sector: string; pct: number; signal?: string }) =>
         `- ${h.name} (${h.symbol}) · Secteur : ${h.sector || "?"} · ${h.pct?.toFixed(1) ?? "?"}% du portefeuille${h.signal ? ` · Signal : ${h.signal}` : ""}`
       ).join("\n")
     : "Portefeuille vide";
+
+  const assetSection = isETF
+    ? [
+        `═══ ETF / FONDS PROPOSÉ ═══`,
+        `Nom : ${stockData.name}`,
+        `Ticker : ${symbol}`,
+        `Type : ETF / Fonds indiciel`,
+        `Prix actuel : ${stockData.currentPrice?.toFixed(2) ?? "—"} ${stockData.currency ?? ""}`,
+        `(Métriques entreprise non applicables — analyser en termes d'exposition géographique, sectorielle et frais.)`,
+      ].join("\n")
+    : [
+        `═══ ACTION PROPOSÉE ═══`,
+        `Nom : ${stockData.name}`,
+        `Ticker : ${symbol}`,
+        `Secteur : ${stockData.sector || "—"}`,
+        `Prix actuel : ${stockData.currentPrice?.toFixed(2) ?? "—"} ${stockData.currency ?? ""}`,
+        `P/E : ${stockData.trailingPE?.toFixed(1) ?? "—"}`,
+        `Signal Finazen : ${stockData.valuation?.signal ?? "—"}`,
+        `Juste valeur estimée : ${stockData.valuation?.fairValue?.toFixed(2) ?? "—"} ${stockData.currency ?? ""}`,
+        `Upside estimé : ${stockData.valuation?.upside != null ? `${stockData.valuation.upside.toFixed(1)}%` : "—"}`,
+        `Marge opérationnelle : ${stockData.operatingMargin != null ? `${(stockData.operatingMargin * 100).toFixed(1)}%` : "—"}`,
+      ].join("\n");
 
   const prompt = `Tu es un conseiller en gestion de patrimoine. Un investisseur te demande si acheter "${stockData.name}" (${symbol}) est une bonne idée au vu de son portefeuille actuel. Réponds en français simple, sans jargon.
 
@@ -42,16 +68,7 @@ Valeur totale : ${totalValue > 0 ? `${totalValue.toFixed(0)} €` : "non renseig
 Positions :
 ${holdingsSummary}
 
-═══ ACTION PROPOSÉE ═══
-Nom : ${stockData.name}
-Ticker : ${symbol}
-Secteur : ${stockData.sector || "—"}
-Prix actuel : ${stockData.currentPrice?.toFixed(2) ?? "—"} ${stockData.currency ?? ""}
-P/E : ${stockData.trailingPE?.toFixed(1) ?? "—"}
-Signal Finazen : ${stockData.valuation?.signal ?? "—"}
-Juste valeur estimée : ${stockData.valuation?.fairValue?.toFixed(2) ?? "—"} ${stockData.currency ?? ""}
-Upside estimé : ${stockData.valuation?.upside != null ? `${stockData.valuation.upside.toFixed(1)}%` : "—"}
-Marge opérationnelle : ${stockData.operatingMargin != null ? `${(stockData.operatingMargin * 100).toFixed(1)}%` : "—"}
+${assetSection}
 
 ═══ INSTRUCTIONS ═══
 Réponds UNIQUEMENT en JSON valide avec cette structure exacte :
@@ -71,7 +88,7 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte :
 
   try {
     const message = await client.messages.create({
-      model: "claude-opus-4-5",
+      model: "claude-sonnet-4-6",
       max_tokens: 800,
       messages: [{ role: "user", content: prompt }],
     });

@@ -61,10 +61,15 @@ export async function searchStocks(query: string) {
 export async function getStockDetails(symbol: string): Promise<StockDetails | null> {
   try {
     const [quoteRaw, summaryRaw] = await Promise.all([
-      (yahooFinance.quote as any)(symbol),
+      (yahooFinance.quote as any)(symbol, {}, { validateResult: false }),
       (yahooFinance.quoteSummary as any)(symbol, {
         modules: ["financialData", "defaultKeyStatistics", "assetProfile", "summaryDetail"],
-      }),
+      }, { validateResult: false }).catch(() =>
+        // ETFs/Fonds n'ont pas tous les modules — fallback silencieux
+        (yahooFinance.quoteSummary as any)(symbol, {
+          modules: ["summaryDetail"],
+        }, { validateResult: false }).catch(() => ({}))
+      ),
     ]);
 
     const quote = quoteRaw as any;
