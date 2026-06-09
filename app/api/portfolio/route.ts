@@ -60,6 +60,21 @@ export async function POST(req: NextRequest) {
   return Response.json(data, { status: 201 });
 }
 
+export async function PATCH(req: NextRequest) {
+  if (!isConfigured()) return Response.json({ error: "Auth not configured" }, { status: 503 });
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const { id, quantity, avg_price } = await req.json();
+  if (!id || !quantity || !avg_price) return Response.json({ error: "Champs manquants" }, { status: 400 });
+  const { data } = await supabase
+    .from("holdings")
+    .update({ quantity: parseFloat(quantity), avg_price: parseFloat(avg_price) })
+    .eq("id", id).eq("user_id", user.id)
+    .select().single();
+  return Response.json(data);
+}
+
 export async function DELETE(req: NextRequest) {
   if (!isConfigured()) return Response.json({ error: "Auth not configured" }, { status: 503 });
   const supabase = await createServerSupabaseClient();

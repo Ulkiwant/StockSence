@@ -9,7 +9,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import dynamic from "next/dynamic";
-import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2, Check, Clock, AlertCircle } from "lucide-react";
+import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2, Check, Clock, AlertCircle, Pencil } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import CompanyLogo from "@/components/CompanyLogo";
 
@@ -438,6 +438,27 @@ export default function PortfolioPage() {
       }
     } catch { setResolveError("Erreur de résolution"); }
     setResolving(false);
+  };
+
+  /* ── Edit modal state ── */
+  const [showEdit, setShowEdit]   = useState<Holding | null>(null);
+  const [editQty,  setEditQty]    = useState("");
+  const [editPRU,  setEditPRU]    = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showEdit || !editQty || !editPRU) return;
+    setEditLoading(true);
+    await fetch("/api/portfolio", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: showEdit.id, quantity: editQty, avg_price: editPRU }),
+    });
+    setEditLoading(false);
+    setShowEdit(null);
+    setAnalysis(null);
+    loadHoldings();
   };
 
   /* Add / delete / analyze */
@@ -1301,12 +1322,23 @@ export default function PortfolioPage() {
                         whiteSpace: "nowrap",
                       }}>{sigLabel}</span>
                     </div>
-                    {/* Delete */}
-                    <button onClick={() => handleDelete(h.id)} style={{
-                      width: 26, height: 26, borderRadius: 6, border: "none",
-                      background: "rgba(184,74,58,0.08)", color: "var(--signal-down)",
-                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                    }}><Trash2 size={13} /></button>
+                    {/* Edit + Delete */}
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={() => {
+                        setShowEdit(h);
+                        setEditQty(String(h.quantity));
+                        setEditPRU(String(h.avg_price));
+                      }} style={{
+                        width: 26, height: 26, borderRadius: 6, border: "none",
+                        background: "rgba(45,125,90,0.10)", color: "var(--accent)",
+                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                      }}><Pencil size={12} /></button>
+                      <button onClick={() => handleDelete(h.id)} style={{
+                        width: 26, height: 26, borderRadius: 6, border: "none",
+                        background: "rgba(184,74,58,0.08)", color: "var(--signal-down)",
+                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                      }}><Trash2 size={13} /></button>
+                    </div>
                   </div>
                 );
               })}
@@ -2030,6 +2062,65 @@ export default function PortfolioPage() {
             </div>
           )}
           <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 16 }}>{analysis.disclaimer}</p>
+        </div>
+      )}
+
+      {/* ── Modal édition position ── */}
+      {showEdit && (
+        <div onClick={e => { if (e.target === e.currentTarget) setShowEdit(null); }}
+          style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(10,22,40,0.45)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 20, width: "100%", maxWidth: 420, boxShadow: "0 24px 80px rgba(0,0,0,0.18)" }}>
+
+            {/* Header */}
+            <div style={{ padding: "22px 24px 16px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>Modifier la position</div>
+                <div style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", marginTop: 2 }}>{showEdit.symbol} — {showEdit.name}</div>
+              </div>
+              <button onClick={() => setShowEdit(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 20, lineHeight: 1 }}>×</button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleEdit} style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <label style={{ ...labelStyle }}>Quantité</label>
+                <input
+                  type="number" value={editQty} onChange={e => setEditQty(e.target.value)}
+                  min="0" step="any" required
+                  style={{ ...inputStyle }}
+                />
+              </div>
+              <div>
+                <label style={{ ...labelStyle }}>Prix de revient unitaire ({showEdit.currency})</label>
+                <input
+                  type="number" value={editPRU} onChange={e => setEditPRU(e.target.value)}
+                  min="0" step="any" required
+                  style={{ ...inputStyle }}
+                />
+              </div>
+
+              {/* Aperçu */}
+              {editQty && editPRU && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "var(--paper-3)", fontSize: 13 }}>
+                  <span style={{ color: "var(--muted)" }}>Valeur totale investie</span>
+                  <span style={{ fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+                    {new Intl.NumberFormat("fr-FR", { style: "currency", currency: showEdit.currency || "EUR", maximumFractionDigits: 2 }).format(parseFloat(editQty) * parseFloat(editPRU))}
+                  </span>
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                <button type="button" onClick={() => setShowEdit(null)}
+                  style={{ flex: 1, padding: "12px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 14, cursor: "pointer" }}>
+                  Annuler
+                </button>
+                <button type="submit" disabled={editLoading || !editQty || !editPRU}
+                  style={{ flex: 2, padding: "12px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: editLoading ? 0.7 : 1 }}>
+                  {editLoading ? "Enregistrement…" : "Enregistrer"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
