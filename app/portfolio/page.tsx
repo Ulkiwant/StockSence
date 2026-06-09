@@ -1546,7 +1546,7 @@ export default function PortfolioPage() {
               </h2>
             </div>
             <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
-              Entrez le nom d&apos;une action ou d&apos;un ETF et l&apos;IA analyse si c&apos;est pertinent <strong style={{ color: "var(--ink)" }}>au vu de votre portefeuille actuel</strong> — doublon, diversification, risque.
+              Entrez le nom d&apos;une action ou d&apos;un ETF pour savoir si c&apos;est pertinent <strong style={{ color: "var(--ink)" }}>au vu de votre portefeuille actuel</strong> — doublon, diversification, risque.
             </p>
           </div>
 
@@ -1636,14 +1636,14 @@ export default function PortfolioPage() {
                   }}
                   style={{ width: "100%", padding: "13px", borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                 >
-                  <Sparkles size={16} /> Analyser avec l&apos;IA
+                  <Sparkles size={16} /> Analyser
                 </button>
               )}
 
               {checkLoading && (
                 <div style={{ textAlign: "center", padding: "32px 0", color: "var(--muted)", fontSize: 13 }}>
                   <div style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid var(--line)", borderTopColor: "var(--accent)", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-                  L&apos;IA analyse la pertinence de cet achat pour votre portefeuille…
+                  Analyse de la pertinence de cet achat pour votre portefeuille…
                 </div>
               )}
 
@@ -1756,7 +1756,7 @@ export default function PortfolioPage() {
             </div>
             <div>
               <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Où investir mes prochains euros ?</h2>
-              <p style={{ fontSize: 12, color: "var(--muted)", margin: "2px 0 0" }}>L&apos;IA analyse votre portefeuille et propose des opportunités complémentaires</p>
+              <p style={{ fontSize: 12, color: "var(--muted)", margin: "2px 0 0" }}>Analyse de votre portefeuille pour proposer des opportunités complémentaires</p>
             </div>
           </div>
 
