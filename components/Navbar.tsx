@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { href: "/debutant",  label: "🌱 Débuter",   exact: false },
   { href: "/watchlist", label: "Mes actions",  exact: false },
   { href: "/portfolio", label: "Portefeuille", exact: false },
-  { href: "/advisor",   label: "Conseiller",   exact: false },
+  { href: "/advisor",   label: "Profils",      exact: false },
   { href: "/faq",       label: "FAQ",          exact: false },
   { href: "/glossaire", label: "Glossaire",    exact: false },
   { href: "/tarifs",    label: "Tarifs",       exact: false },

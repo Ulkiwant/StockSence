@@ -427,9 +427,9 @@ export default function DebutantPage() {
   const STEPS_PLAN = [
     {
       n: "01", time: "2 min",
-      title: "Crée ton portefeuille personnalisé",
-      desc: "Notre conseiller te pose quelques questions et génère une allocation sur mesure — avec les proportions exactes à investir.",
-      cta: "Créer mon portefeuille →",
+      title: "Découvre ton profil d'investisseur",
+      desc: "Réponds à quelques questions pour situer ton profil parmi 4 profils-types et voir un exemple de répartition associé.",
+      cta: "Découvrir les profils →",
       href: "/advisor",
       accent: true,
     },
@@ -495,7 +495,7 @@ export default function DebutantPage() {
 
         {/* Allocation visuelle */}
         <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 16, padding: "20px 22px", marginBottom: 36 }}>
-          <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Allocation recommandée pour toi</div>
+          <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>Exemple de répartition pour ce profil-type</div>
           <div style={{ height: 10, borderRadius: 9999, overflow: "hidden", display: "flex", marginBottom: 12 }}>
             {profile.portfolio.map((p) => (
               <div key={p.label} style={{ width: `${p.pct}%`, background: p.color, transition: "width 0.4s ease" }} />
@@ -569,7 +569,7 @@ export default function DebutantPage() {
             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-hover)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.transform = "none"; }}
           >
-            Créer mon portefeuille maintenant
+            Découvrir mon profil d&apos;investisseur
             <ArrowRight size={16} strokeWidth={2.5} />
           </Link>
           <div style={{ fontSize: 12, color: "var(--muted)" }}>2 minutes · Sans inscription · Gratuit</div>

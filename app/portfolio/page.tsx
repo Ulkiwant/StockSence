@@ -702,7 +702,7 @@ export default function PortfolioPage() {
         }}>
           {/* Cell 1 — Valeur totale (green gradient) */}
           <div style={{
-            padding: "24px 26px",
+            padding: isMobile ? "18px 16px" : "24px 26px",
             borderRight: "1px solid var(--line)",
             background: "linear-gradient(135deg, rgba(45,125,90,0.10) 0%, transparent 70%)",
           }}>
@@ -712,7 +712,7 @@ export default function PortfolioPage() {
               textTransform: "uppercase",
             }}>VALEUR TOTALE</div>
             <div style={{
-              fontSize: 52, color: "var(--accent)",
+              fontSize: isMobile ? 26 : 52, color: "var(--accent)",
               fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
               fontWeight: 400, lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 8,
             }}>
@@ -731,13 +731,13 @@ export default function PortfolioPage() {
           </div>
 
           {/* Cell 2 — Gain total */}
-          <div style={{ padding: "24px 26px", borderRight: "1px solid var(--line)" }}>
+          <div style={{ padding: isMobile ? "18px 16px" : "24px 26px", borderRight: "1px solid var(--line)" }}>
             <div style={{
               fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em",
               fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase",
             }}>GAIN TOTAL</div>
             <div style={{
-              fontSize: 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
+              fontSize: isMobile ? 22 : 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
               fontWeight: 400, lineHeight: 1, marginBottom: 8,
               color: isUp ? "var(--signal-up)" : "var(--signal-down)",
             }}>
@@ -752,7 +752,7 @@ export default function PortfolioPage() {
           </div>
 
           {/* Cell 3 — Annualisé */}
-          <div style={{ padding: "24px 26px", borderRight: "1px solid var(--line)" }}>
+          <div style={{ padding: isMobile ? "18px 16px" : "24px 26px", borderRight: "1px solid var(--line)" }}>
             <div style={{
               fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em",
               fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase",
@@ -760,7 +760,7 @@ export default function PortfolioPage() {
               {historyYears > 0 && historyYears < 1 ? "PERF. CUMULÉE" : "ANNUALISÉ"}
             </div>
             <div style={{
-              fontSize: 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
+              fontSize: isMobile ? 22 : 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
               fontWeight: 400, lineHeight: 1, marginBottom: 4,
               color: annualizedReturn == null ? "var(--ink)" : annualizedReturn >= 0 ? "var(--signal-up)" : "var(--signal-down)",
             }}>
@@ -795,13 +795,13 @@ export default function PortfolioPage() {
           </div>
 
           {/* Cell 4 — Dividendes */}
-          <div style={{ padding: "24px 26px" }}>
+          <div style={{ padding: isMobile ? "18px 16px" : "24px 26px" }}>
             <div style={{
               fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em",
               fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase",
             }}>DIVIDENDES ESTIMÉS / AN</div>
             <div style={{
-              fontSize: 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
+              fontSize: isMobile ? 22 : 36, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
               fontWeight: 400, lineHeight: 1, marginBottom: 8,
               color: totalAnnualDividend > 0 ? "var(--signal-up)" : "var(--ink)",
             }}>
@@ -2137,7 +2137,7 @@ export default function PortfolioPage() {
               </div>
             </div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
             {analysis.strengths?.length > 0 && (
               <div>
                 <h3 style={{
@@ -2204,7 +2204,9 @@ export default function PortfolioPage() {
           </div>
 
           {/* Tableau détail par action */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", borderBottom: "1px solid var(--line)", paddingBottom: 8, marginBottom: 4, fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ overflowX: "auto" }}>
+          <div style={{ minWidth: isMobile ? 480 : undefined }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", columnGap: 8, borderBottom: "1px solid var(--line)", paddingBottom: 8, marginBottom: 4, fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             <span>Entreprise</span>
             <span style={{ textAlign: "right" }}>Rendement</span>
             <span style={{ textAlign: "right" }}>/ an (estimé)</span>
@@ -2217,7 +2219,7 @@ export default function PortfolioPage() {
               const toYear  = (annual / 12) * monthsLeft;
               const yieldPct = ((h.dividendYield ?? 0) * 100).toFixed(2);
               return (
-                <div key={h.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "10px 0", borderBottom: i < dividendHoldings.length - 1 ? "1px dashed var(--line)" : "none", alignItems: "center" }}>
+                <div key={h.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", columnGap: 8, padding: "10px 0", borderBottom: i < dividendHoldings.length - 1 ? "1px dashed var(--line)" : "none", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                     <CompanyLogo symbol={h.symbol} name={h.name} size={26} radius={6} />
                     <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={h.name}>{h.name}</span>
@@ -2228,6 +2230,8 @@ export default function PortfolioPage() {
                 </div>
               );
             })}
+          </div>
+          </div>
 
           <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: "var(--paper-3)", fontSize: 11, color: "var(--muted)", lineHeight: 1.6 }}>
             ℹ️ Les montants sont calculés à partir du rendement dividende des 12 derniers mois et de la valeur actuelle de vos positions. Ils peuvent varier selon les décisions des entreprises. Ces projections ne constituent pas une garantie.

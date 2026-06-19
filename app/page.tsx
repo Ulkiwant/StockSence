@@ -32,9 +32,9 @@ const HOLDINGS = [
 
 /* ── Step mini-cards ── */
 const STEP_CARDS = [
-  { rows: [["Horizon","10 ans"],["Montant initial","1 000 €"],["Profil détecté","Équilibré"]] },
+  { rows: [["Horizon","10 ans"],["Montant initial","1 000 €"],["Profil le plus proche","Équilibré"]] },
   { rows: [["ETF Monde","45 %"],["Actions de qualité","35 %"],["Obligations","20 %"]] },
-  { rows: [["Apple · achat conseillé","+12 %"],["Sanofi · à surveiller","−4 %"],["Rééquilibrage suggéré","2 lignes"]] },
+  { rows: [["Apple · décote estimée","12 %"],["Sanofi · à surveiller","−4 %"],["Écarts vs cibles","2 lignes"]] },
 ];
 
 /* ── Analysis demo scores ── */
@@ -47,11 +47,11 @@ const SCORES = [
 
 /* ── FAQ ── */
 const FAQ = [
-  { q: "Est-ce que Finazen gère mon argent ?",    a: "Non. Finazen est un outil d'analyse et de recommandation. Tu gardes le contrôle total et tu passes tes ordres chez ton courtier habituel (Boursorama, Trade Republic, Degiro, etc.)." },
+  { q: "Est-ce que Finazen gère mon argent ?",    a: "Non. Finazen est un outil d'analyse et d'aide à la décision pédagogique. Tu gardes le contrôle total et tu passes tes ordres chez ton courtier habituel (Boursorama, Trade Republic, Degiro, etc.)." },
   { q: "Combien faut-il pour commencer ?",        a: "À partir de 50 € grâce aux ETF fractionnés. Nos simulations partent souvent de 1 000 € car c'est un montant illustratif — mais le service marche à toute échelle." },
   { q: "D'où viennent vos données ?",             a: "Des bourses (Euronext, Nasdaq, NYSE) via des fournisseurs officiels. Les analyses sont produites par nos modèles, calibrés sur 30 ans d'historique." },
-  { q: "Est-ce que c'est risqué ?",               a: "Investir comporte des risques de perte en capital. Finazen te propose des allocations diversifiées calibrées à ton profil, mais aucun rendement n'est garanti." },
-  { q: "Qu'est-ce que le plan gratuit inclut vraiment ?",    a: "Le plan gratuit inclut 1 analyse de cours par jour, le score /100, la watchlist jusqu'à 3 actions, un portefeuille jusqu'à 3 positions, et 3 idées du jour. Les fonctionnalités avancées (Analyse IA, alertes, Conseiller illimité) sont réservées aux plans Investisseur et Premium." },
+  { q: "Est-ce que c'est risqué ?",               a: "Investir comporte des risques de perte en capital. Les profils-types proposés par Finazen présentent des exemples d'allocations diversifiées, mais aucun rendement n'est garanti." },
+  { q: "Qu'est-ce que le plan gratuit inclut vraiment ?",    a: "Le plan gratuit inclut 1 analyse de cours par jour, le score /100, la watchlist jusqu'à 3 actions, un portefeuille jusqu'à 3 positions, et 3 idées du jour. Les fonctionnalités avancées (Analyse IA, alertes, Profils d'investisseur illimité) sont réservées aux plans Investisseur et Premium." },
   { q: "Mes données sont-elles en sécurité ?",    a: "On ne te demande aucune information sensible (pas de RIB, pas d'accès courtier). Les emails sont chiffrés au repos, hébergés en France, conformément au RGPD." },
 ];
 
@@ -209,7 +209,7 @@ export default function HomePage() {
               "@id": "https://finazen.fr/#website",
               "url": "https://finazen.fr",
               "name": "Finazen",
-              "description": "Investir en bourse sans jargon — Analyse d'actions, portefeuille personnalisé et conseiller IA. Plan gratuit disponible.",
+              "description": "Investir en bourse sans jargon — Analyse d'actions, suivi de portefeuille et profils d'investisseur. Plan gratuit disponible.",
               "inLanguage": "fr-FR",
               "potentialAction": {
                 "@type": "SearchAction",
@@ -223,7 +223,7 @@ export default function HomePage() {
               "name": "Finazen",
               "url": "https://finazen.fr",
               "logo": { "@type": "ImageObject", "url": "https://finazen.fr/icon.svg" },
-              "description": "Finazen est une plateforme d'investissement en bourse accessible aux débutants. Analyse d'actions par IA, portefeuille personnalisé, watchlist et conseiller patrimonial.",
+              "description": "Finazen est une plateforme d'investissement en bourse accessible aux débutants. Analyse d'actions par IA, suivi de portefeuille, watchlist et profils d'investisseur.",
               "foundingDate": "2024",
               "areaServed": "FR",
               "knowsLanguage": "fr"
@@ -234,15 +234,15 @@ export default function HomePage() {
               "applicationCategory": "FinanceApplication",
               "operatingSystem": "Web, iOS (PWA), Android (PWA)",
               "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "description": "Plan gratuit disponible — fonctionnalités avancées à partir de 9,99 €/mois" },
-              "description": "Application web d'analyse boursière et de gestion de portefeuille. Valorisation d'actions par IA, signal achat/vente, conseiller patrimonial.",
+              "description": "Application web d'analyse boursière et de gestion de portefeuille. Valorisation d'actions par IA, signal achat/vente, profils d'investisseur.",
               "url": "https://finazen.fr",
               "screenshot": "https://finazen.fr/og-image.png",
               "featureList": [
                 "Analyse de valorisation d'actions par IA",
                 "Signal achat / neutre / vente",
-                "Portefeuille d'investissement personnalisé",
+                "Suivi de portefeuille d'investissement",
                 "Watchlist d'actions",
-                "Conseiller patrimonial IA",
+                "Profils d'investisseur (exemples de répartition)",
                 "Alertes email sur les signaux",
                 "Analyse de scénarios",
                 "Idées d'investissement quotidiennes"
@@ -251,7 +251,7 @@ export default function HomePage() {
             {
               "@type": "FAQPage",
               "mainEntity": [
-                { "@type": "Question", "name": "Est-ce que Finazen gère mon argent ?", "acceptedAnswer": { "@type": "Answer", "text": "Non. Finazen est un outil d'analyse et de recommandation. Vous gardez le contrôle total et passez vos ordres chez votre courtier habituel." } },
+                { "@type": "Question", "name": "Est-ce que Finazen gère mon argent ?", "acceptedAnswer": { "@type": "Answer", "text": "Non. Finazen est un outil d'analyse et d'aide à la décision pédagogique. Vous gardez le contrôle total et passez vos ordres chez votre courtier habituel." } },
                 { "@type": "Question", "name": "Finazen est-il gratuit ?", "acceptedAnswer": { "@type": "Answer", "text": "Finazen propose un plan gratuit incluant 1 analyse par jour, le score /100, une watchlist de 3 actions et un portefeuille de 3 positions. Les fonctionnalités avancées sont disponibles à partir de 9,99 €/mois." } },
                 { "@type": "Question", "name": "Comment Finazen analyse-t-il les actions ?", "acceptedAnswer": { "@type": "Answer", "text": "Finazen utilise des modèles de valorisation fondamentale (DCF, P/E, comparables sectoriels) combinés à l'intelligence artificielle pour calculer une juste valeur et générer un signal d'investissement." } }
               ]
@@ -295,8 +295,8 @@ export default function HomePage() {
           </h1>
 
           <p style={{ fontSize: 17, color: "var(--muted)", lineHeight: 1.65, maxWidth: 520, marginBottom: 36 }}>
-            Finazen te montre, <strong style={{ color: "var(--ink)", fontWeight: 600 }}>en deux minutes et sans jargon</strong>, comment
-            construire un portefeuille adapté à ton profil — avec les bonnes actions, au bon moment.
+            Finazen t&apos;aide, <strong style={{ color: "var(--ink)", fontWeight: 600 }}>en deux minutes et sans jargon</strong>, à
+            comprendre les marchés et à situer ton profil d&apos;investisseur parmi 4 profils-types.
           </p>
 
           {/* CTAs */}
@@ -312,7 +312,7 @@ export default function HomePage() {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--accent-hover)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--accent)"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
             >
-              Trouver mon portefeuille
+              Découvrir les profils types
               <span style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.20)", display: "grid", placeItems: "center" }}>
                 <ArrowRight size={12} strokeWidth={2.5} />
               </span>
@@ -421,13 +421,13 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           SEARCH SECTION (cible du bouton "Analyser")
       ══════════════════════════════════════════ */}
-      <section ref={searchRef} style={{ borderTop: "1px solid var(--line)", padding: "48px 32px 40px", background: "var(--paper-2)" }}>
+      <section ref={searchRef} className="home-search-section" style={{ borderTop: "1px solid var(--line)", padding: "48px 32px 40px", background: "var(--paper-2)" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <p style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", marginBottom: 16, fontWeight: 500 }}>
             Analysez n'importe quelle entreprise — entrez son nom et obtenez une analyse automatisée basée sur les données financières réelles.
           </p>
           <div style={{ position: "relative" }}>
-            <div style={{
+            <div className="home-search-bar" style={{
               display: "flex", alignItems: "center",
               background: "#fff", border: "1.5px solid var(--line)",
               borderRadius: 9999, padding: "12px 18px", gap: 10,
@@ -437,7 +437,7 @@ export default function HomePage() {
               onFocusCapture={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(45,125,90,0.12)"; }}
               onBlurCapture={(e)  => { e.currentTarget.style.borderColor = "var(--line)";   e.currentTarget.style.boxShadow = "0 2px 12px rgba(10,22,40,0.06)"; }}
             >
-              <Search size={17} strokeWidth={1.8} color="var(--muted)" />
+              <Search size={17} strokeWidth={1.8} color="var(--muted)" style={{ flexShrink: 0 }} />
               <input
                 ref={inputRef}
                 type="text"
@@ -445,7 +445,7 @@ export default function HomePage() {
                 onChange={(e) => search.setQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && search.results[0]) handleSearchGo(search.results[0].symbol); }}
                 placeholder="Apple, LVMH, Sanofi, L'Oréal, Airbus…"
-                style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "var(--ink)", fontSize: 15, fontFamily: "inherit" }}
+                style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: "var(--ink)", fontSize: 15, fontFamily: "inherit" }}
               />
               <button
                 onClick={() => { if (search.results[0]) handleSearchGo(search.results[0].symbol); }}
@@ -527,8 +527,8 @@ export default function HomePage() {
           {/* 3 cards */}
           <div className="steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
             {[
-              { n: 1, step: "Profil",         title: "Dis-nous ce que tu veux faire de ton argent.",      desc: "Quelques questions claires — durée, montant, tolérance au risque — et on calcule ton profil d'investisseur." },
-              { n: 2, step: "Recommandation", title: "Reçois un portefeuille prêt à acheter.",             desc: "Une sélection d'actions et d'ETF avec les pourcentages exacts, des explications en clair, et la performance attendue." },
+              { n: 1, step: "Profil",         title: "Dis-nous ce que tu veux faire de ton argent.",      desc: "Quelques questions claires — durée, montant, tolérance au risque — pour situer ton profil d'investisseur." },
+              { n: 2, step: "Exemple",        title: "Découvre à quoi ressemble ton profil.",             desc: "Un exemple de répartition entre actions et ETF, avec des explications en clair et une performance attendue à titre indicatif." },
               { n: 3, step: "Suivi",          title: "On t'alerte quand quelque chose bouge.",            desc: "Variations notables, opportunités, rééquilibrages : tu reçois une notification simple, lisible, sans bruit inutile." },
             ].map(({ n, step, title, desc }, i) => (
               <div key={n} style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 18, padding: 28, display: "flex", flexDirection: "column", gap: 14, transition: "transform 0.2s, border-color 0.2s" }}
@@ -881,12 +881,12 @@ export default function HomePage() {
                 { label: "Scénario optimiste",   rate: "10 %/an", data: simOptimiste, color: "#B07D00", bg: "#FDF8EC" },
               ].map(({ label, rate, data, color, bg }) => (
                 <div key={label} style={{ background: "#fff", border: `1.5px solid ${color === "var(--accent)" ? "rgba(45,125,90,0.25)" : "var(--line)"}`, borderRadius: 16, padding: "20px 22px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                    <div>
-                      <span style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)" }}>{label}</span>
-                      <span style={{ fontSize: 12, color, background: bg, border: `1px solid ${color === "var(--accent)" ? "rgba(45,125,90,0.2)" : "transparent"}`, borderRadius: 9999, padding: "2px 8px", marginLeft: 8 }}>{rate}</span>
+                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontWeight: 700, fontSize: 15, color: "var(--ink)", whiteSpace: "nowrap" }}>{label}</span>
+                      <span style={{ fontSize: 12, color, background: bg, border: `1px solid ${color === "var(--accent)" ? "rgba(45,125,90,0.2)" : "transparent"}`, borderRadius: 9999, padding: "2px 8px", whiteSpace: "nowrap" }}>{rate}</span>
                     </div>
-                    <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 28, color, lineHeight: 1 }}>
+                    <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 28, color, lineHeight: 1, whiteSpace: "nowrap" }}>
                       {data.total.toLocaleString("fr-FR")} €
                     </div>
                   </div>
@@ -939,7 +939,7 @@ export default function HomePage() {
               onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-hover)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent)")}
             >
-              Créer mon portefeuille personnalisé
+              Découvrir les profils types
               <ArrowRight size={14} strokeWidth={2.5} />
             </Link>
           </div>
@@ -967,7 +967,7 @@ export default function HomePage() {
           </div>
 
           {/* Allocation lines */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 16 }}>
+          <div className="alloc-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 16 }}>
             {[
               {
                 pct: 70, color: "#1F5C3E", label: "ETF Monde", ticker: "CW8.PA",
@@ -1012,7 +1012,7 @@ export default function HomePage() {
             <div style={{ width: "20%", background: "#6B7DB3" }} />
             <div style={{ width: "10%", background: "#C9A24E" }} />
           </div>
-          <div style={{ display: "flex", gap: 18, fontSize: 12, color: "var(--muted)", marginBottom: 32 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, fontSize: 12, color: "var(--muted)", marginBottom: 32 }}>
             {[["#1F5C3E","ETF Monde · 70 %"],["#6B7DB3","Obligations · 20 %"],["#C9A24E","Liquidités · 10 %"]].map(([c, l]) => (
               <span key={l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 8, height: 8, borderRadius: 2, background: c, flexShrink: 0 }} />{l}
@@ -1025,7 +1025,7 @@ export default function HomePage() {
               onMouseEnter={(e) => (e.currentTarget.style.background = "#1a2a1e")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "var(--ink)")}
             >
-              Créer mon portefeuille personnalisé
+              Découvrir les profils types
               <ArrowRight size={15} strokeWidth={2.5} />
             </Link>
           </div>
@@ -1097,11 +1097,11 @@ export default function HomePage() {
             <div style={{ position: "absolute", right: -100, bottom: -200, width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(closest-side, rgba(45,125,90,0.35), transparent 70%)", pointerEvents: "none" }} />
             <div>
               <h2 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(36px, 5vw, 64px)", lineHeight: 1.02, letterSpacing: "-0.02em", margin: "0 0 18px", color: "var(--paper)" }}>
-                Prêt à voir à quoi ressemble<br />
-                <em style={{ fontStyle: "italic", color: "#A8D0AF" }}>ton portefeuille</em> ?
+                Prêt à découvrir<br />
+                <em style={{ fontStyle: "italic", color: "#A8D0AF" }}>ton profil</em> ?
               </h2>
               <p style={{ color: "rgba(245,241,234,0.65)", fontSize: 17, margin: 0, maxWidth: 500 }}>
-                Deux minutes. Pas d&apos;inscription. Aucune carte bancaire. Et tu repars avec une allocation prête à investir.
+                Deux minutes. Pas d&apos;inscription. Aucune carte bancaire. Et tu repars avec un exemple de répartition pour ton profil.
               </p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative", zIndex: 1 }}>
@@ -1112,7 +1112,7 @@ export default function HomePage() {
                 fontWeight: 600, fontSize: 15, border: "none",
                 transition: "background 0.15s",
               }}>
-                Trouver mon portefeuille
+                Découvrir les profils types
                 <span style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(10,22,40,0.10)", display: "grid", placeItems: "center" }}>
                   <ArrowRight size={11} strokeWidth={2.5} />
                 </span>

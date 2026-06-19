@@ -409,6 +409,28 @@ input::placeholder { color: var(--muted); opacity: 0.7; }
     width: 100%;
   }
   .btn-row > * { width: 100% !important; justify-content: center !important; }
+
+  /* ── Fiche action : grilles denses → 1 colonne ── */
+  .stock-reason-grid { grid-template-columns: 1fr !important; }
+  .stock-metrics-grid { grid-template-columns: 1fr 1fr !important; }
+  .stock-fundamentals-grid { grid-template-columns: 1fr !important; }
+  .stock-tabs { -webkit-overflow-scrolling: touch; }
+  .stock-tabs button { padding: 8px 12px !important; font-size: 12.5px !important; }
+
+  /* ── Boutons nav questionnaire /advisor ── */
+  .advisor-prev-btn { padding: 10px 14px !important; font-size: 13px !important; }
+  .advisor-next-btn { padding: 12px 18px !important; font-size: 13.5px !important; gap: 6px !important; }
+
+  /* ── Allocation 3 colonnes → 1 colonne ── */
+  .alloc-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Barre de recherche homepage ── */
+  .home-search-section { padding: 32px 16px 28px !important; }
+  .home-search-bar { padding: 10px 14px !important; gap: 8px !important; }
+  .home-search-bar input { font-size: 14px !important; }
+  .home-search-bar button { padding: 8px 14px !important; font-size: 12px !important; }
 }
 
 /* Tablette (769–1024px) */

@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Conseiller IA — Portefeuille personnalisé en 3 minutes",
+  title: "Profils d'investisseur — Quel profil te correspond ?",
   description:
-    "Répondez à 9 questions simples. Notre IA construit un portefeuille d'investissement personnalisé selon votre profil, votre horizon et vos objectifs. Résultat complet avec un compte Investisseur ou Premium.",
+    "Répondez à quelques questions simples pour situer votre profil parmi 4 profils-types (Prudent, Équilibré, Dynamique, Offensif) et découvrir un exemple de répartition pour ce profil. Contenu pédagogique, sans recommandation personnalisée.",
   keywords: [
-    "conseiller financier IA",
-    "portefeuille investissement personnalisé",
+    "profil investisseur",
+    "profil d'investissement",
+    "exemple de répartition de portefeuille",
     "simulation portefeuille bourse",
     "investir débutant France",
     "PEA ETF portefeuille",
     "allocation d'actifs",
-    "profil investisseur",
   ],
   openGraph: {
-    title: "Conseiller IA Finazen — Ton portefeuille en 3 minutes",
+    title: "Profils d'investisseur — Finazen",
     description:
-      "9 questions simples, un portefeuille sur mesure. Adapté à ton profil, ton horizon et tes objectifs. Résultat visible avec un compte.",
+      "Quelques questions simples pour situer ton profil parmi 4 profils-types et découvrir un exemple de répartition pédagogique pour ce profil.",
     url: "https://finazen.fr/advisor",
   },
   alternates: { canonical: "https://finazen.fr/advisor" },

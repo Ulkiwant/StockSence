@@ -111,9 +111,15 @@ export default function MentionsLegalesPage() {
               ni une recommandation d'achat ou de vente de valeurs mobilières.
             </p>
             <p style={{ ...P_STYLE, marginTop: 8, marginBottom: 0 }}>
-              Finazen n'est pas un conseiller financier agréé. Tout investissement comporte des risques,
-              y compris la perte totale du capital investi. Les performances passées ne préjugent pas des
-              performances futures. Consultez un professionnel agréé avant toute décision d'investissement.
+              Finazen n'est pas un conseiller en investissements financiers (CIF) au sens de l'article
+              L.541-1 du Code monétaire et financier et n'est pas inscrit à l'ORIAS. Les profils-types et
+              exemples de répartition proposés sont des contenus génériques à visée pédagogique, non
+              adaptés à votre situation personnelle, et ne constituent pas une recommandation personnalisée.
+            </p>
+            <p style={{ ...P_STYLE, marginTop: 8, marginBottom: 0 }}>
+              Tout investissement comporte des risques, y compris la perte totale du capital investi. Les
+              performances passées ne préjugent pas des performances futures. Consultez un professionnel
+              agréé (CIF inscrit à l'ORIAS) avant toute décision d'investissement.
             </p>
           </div>
         </div>

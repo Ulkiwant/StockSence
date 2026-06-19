@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
 import SessionGuard from "@/components/SessionGuard";
+import PwaRegister from "@/components/PwaRegister";
+import InstallBanner from "@/components/InstallBanner";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -28,7 +30,7 @@ const SITE_URL = "https://finazen.fr";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Finazen — Investir en bourse sans jargon | Analyse d'actions et portefeuille personnalisé",
+    default: "Finazen — Investir en bourse sans jargon | Analyse d'actions et profils d'investisseur",
     template: "%s | Finazen",
   },
   description:
@@ -40,11 +42,11 @@ export const metadata: Metadata = {
     "valorisation action",
     "portefeuille investissement",
     "ETF investissement",
-    "conseiller financier IA",
+    "profil investisseur",
     "bourse sans jargon",
     "analyser action bourse",
     "signal achat vente action",
-    "portefeuille personnalisé",
+    "exemple de répartition de portefeuille",
     "PEA investissement",
     "LVMH analyse",
     "Apple valorisation",
@@ -76,7 +78,7 @@ export const metadata: Metadata = {
     siteName: "Finazen",
     title: "Finazen — Investir en bourse sans jargon",
     description:
-      "Analysez n'importe quelle action, construisez votre portefeuille sur mesure et obtenez des recommandations IA personnalisées. Plan gratuit disponible, sans carte bancaire.",
+      "Analysez n'importe quelle action, suivez votre portefeuille et découvrez à quel profil d'investisseur vous correspondez. Plan gratuit disponible, sans carte bancaire.",
     images: [
       {
         url: "/og-image.png",
@@ -90,7 +92,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Finazen — Investir en bourse sans jargon",
     description:
-      "Analysez vos actions, valorisez votre portefeuille et obtenez des recommandations IA. Gratuit pour les débutants.",
+      "Analysez vos actions, valorisez votre portefeuille et découvrez votre profil d'investisseur. Gratuit pour les débutants.",
     images: ["/og-image.png"],
     creator: "@finazen_fr",
   },
@@ -98,6 +100,12 @@ export const metadata: Metadata = {
     google: "F1JYaMDq00FniUf4d4UYv3h3wMubnmecdAvzdA-28LM",
   },
   category: "finance",
+  themeColor: "#0a1628",
+  appleWebApp: {
+    capable: true,
+    title: "Finazen",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export default function RootLayout({
@@ -111,15 +119,19 @@ export default function RootLayout({
         {/* Favicon supplémentaire pour compatibilité */}
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="shortcut icon" href="/favicon.ico" />
+        {/* PWA — icône iOS (apple-touch-icon généré par app/apple-icon.tsx) */}
+        <link rel="apple-touch-icon" href="/apple-icon" />
         {/* Préconnexion aux polices */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body style={{ background: "var(--paper)", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <PwaRegister />
         <Navbar />
         <OnboardingOverlay />
         <SessionGuard />
         <main style={{ flex: 1 }}>{children}</main>
+        <InstallBanner />
       </body>
     </html>
   );

@@ -10,7 +10,7 @@ const COLS = [
       { label: "Analyser une action", href: "/" },
       { label: "Mon portefeuille",    href: "/portfolio" },
       { label: "Ma watchlist",        href: "/watchlist" },
-      { label: "Conseiller IA",       href: "/advisor" },
+      { label: "Profils d'investisseur", href: "/advisor" },
       { label: "Alertes email",       href: "/parametres/alertes" },
     ],
   },

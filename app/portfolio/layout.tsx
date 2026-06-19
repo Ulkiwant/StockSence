@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Mon portefeuille — Performance et analyse",
   description:
-    "Visualisez la performance de votre portefeuille boursier, analysez la répartition sectorielle et géographique, et recevez des recommandations IA pour optimiser vos investissements.",
+    "Visualisez la performance de votre portefeuille boursier et analysez sa répartition sectorielle et géographique.",
   keywords: [
     "portefeuille boursier",
     "suivi performance portefeuille",

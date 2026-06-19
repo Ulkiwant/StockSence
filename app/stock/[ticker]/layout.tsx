@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch { /* fallback au ticker */ }
 
   const title = `${companyName} (${symbol}) — Analyse et valorisation boursière`;
-  const description = `Analysez ${companyName} : juste valeur, signal achat/vente, fondamentaux financiers et recommandations IA. Gratuit sur Finazen.`;
+  const description = `Analysez ${companyName} : juste valeur estimée, signal achat/vente et fondamentaux financiers. Gratuit sur Finazen.`;
 
   return {
     title,

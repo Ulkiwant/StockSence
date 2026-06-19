@@ -64,7 +64,7 @@ export default function ConfidentialitePage() {
               "Adresse email (lors de la création de compte via Supabase Auth)",
               "Données de watchlist et de portefeuille simulé (action, quantité, prix d'achat)",
               "Préférences d'alertes email (seuils de variation, signaux)",
-              "Profil investisseur du Conseiller IA (horizon, tolérance au risque — non lié à votre identité)",
+              "Réponses au questionnaire de profil d'investisseur (horizon, tolérance au risque — non liées à votre identité)",
               "Logs de connexion anonymisés (adresse IP, navigateur) à des fins de sécurité",
             ].map((item) => (
               <li key={item} style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.65 }}>{item}</li>

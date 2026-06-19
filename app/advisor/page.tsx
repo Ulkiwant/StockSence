@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase";
 import { useUserPlan } from "@/lib/useUserPlan";
 import {
   Check,
-  X,
   ChevronLeft,
   ChevronRight,
   Briefcase,
@@ -20,8 +19,6 @@ import {
   Shield,
   Activity,
   PlusCircle,
-  Plus,
-  Search,
   User,
   GraduationCap,
   Coffee,
@@ -36,21 +33,10 @@ import {
   Package,
 } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
-import SignalPill from "@/components/SignalPill";
 import CompanyLogo from "@/components/CompanyLogo";
+import { determineProfile, PROFILE_LABELS } from "@/lib/investorProfiles";
 
 /* ── Interfaces ── */
-
-interface ForcedStock {
-  symbol: string;
-  name: string;
-  signal: string;
-  upside: number;
-  fairValue: number;
-  currentPrice: number;
-  currency: string;
-  confirmed: boolean;
-}
 
 interface Allocation {
   symbol: string;
@@ -63,6 +49,8 @@ interface Allocation {
 }
 
 interface PortfolioRecommendation {
+  key?: string;
+  label?: string; // "Prudent" | "Équilibré" | "Dynamique" | "Offensif"
   portfolioName: string;
   summary: string;
   expectedReturn: string;
@@ -203,14 +191,14 @@ const QUESTIONS: Question[] = [
     field: "existingAssets",
     stepLabel: "Actifs existants",
     title: "As-tu déjà des investissements ou des actifs ?",
-    subtitle: "On s'adapte à ce que tu as déjà — plus question de te proposer ce que tu possèdes déjà.",
+    subtitle: "Ces informations t'aident à prendre du recul sur ta situation globale. Le profil affiché à la fin reste un exemple générique, identique pour tous les utilisateurs de ce profil.",
     type: "multi",
     options: [
-      { label: "Immobilier (résidence ou locatif)", sublabel: "On réduira l'exposition aux actifs immobiliers dans ton portefeuille.", icon: <Building2 size={20} color="var(--accent)" /> },
-      { label: "Livret A ou épargne de précaution", sublabel: "Bonne base — on construira par-dessus.", icon: <PiggyBank size={20} color="var(--accent)" /> },
-      { label: "Assurance-vie déjà ouverte", sublabel: "On intégrera cet horizon dans la stratégie.", icon: <Shield size={20} color="var(--accent)" /> },
-      { label: "Actions ou ETF (voir mon portefeuille)", sublabel: "Importer automatiquement pour éviter les doublons.", icon: <Wallet size={20} color="var(--accent)" /> },
-      { label: "Je démarre de zéro", sublabel: "Parfait — on part d'une feuille blanche.", icon: <Package size={20} color="var(--accent)" /> },
+      { label: "Immobilier (résidence ou locatif)", sublabel: "Information indicative — n'influence pas le profil-type affiché.", icon: <Building2 size={20} color="var(--accent)" /> },
+      { label: "Livret A ou épargne de précaution", sublabel: "Une bonne base de sécurité à conserver en complément.", icon: <PiggyBank size={20} color="var(--accent)" /> },
+      { label: "Assurance-vie déjà ouverte", sublabel: "Information indicative — n'influence pas le profil-type affiché.", icon: <Shield size={20} color="var(--accent)" /> },
+      { label: "Actions ou ETF déjà détenus", sublabel: "À titre indicatif — n'est pas utilisé pour personnaliser le profil affiché.", icon: <Wallet size={20} color="var(--accent)" /> },
+      { label: "Je démarre de zéro", sublabel: "Tu pourras explorer les 4 profils-types depuis le début.", icon: <Package size={20} color="var(--accent)" /> },
     ],
   },
   {
@@ -223,7 +211,7 @@ const QUESTIONS: Question[] = [
       { label: "PEA", sublabel: "Fiscalité avantageuse après 5 ans, pour les actions européennes", icon: <Target size={20} color="var(--accent)" /> },
       { label: "CTO (Compte-Titres)", sublabel: "Flexible, accessible partout, imposé chaque année", icon: <Briefcase size={20} color="var(--accent)" /> },
       { label: "Assurance-vie", sublabel: "Transmission facilitée, fiscalité attractive sur le long terme", icon: <Shield size={20} color="var(--accent)" /> },
-      { label: "Je ne sais pas encore", sublabel: "L'IA choisira l'enveloppe la plus adaptée à ton profil", icon: <Sparkles size={20} color="var(--accent)" /> },
+      { label: "Je ne sais pas encore", sublabel: "Chaque profil-type présente des enveloppes courantes, à titre d'exemple", icon: <Sparkles size={20} color="var(--accent)" /> },
     ],
   },
 ];
@@ -253,8 +241,8 @@ function getHint(field: string): HintContent {
       body: "Un salarié et un indépendant n'ont pas les mêmes enveloppes fiscales ni la même stabilité de revenus.",
     },
     existingAssets: {
-      title: "On complète, on n'écrase pas.",
-      body: "Si tu as déjà de l'immobilier, on n'a pas besoin de t'en rajouter. Si tu as un **Livret A** plein, on sait qu'il ne faut plus y mettre d'argent. L'IA propose ce qui **manque** à ton patrimoine, pas ce que tu as déjà.",
+      title: "Ta situation globale compte.",
+      body: "Le profil affiché à la fin reste un exemple générique, identique pour tout le monde dans ce profil. Cette information t'aide simplement à prendre du recul sur ta situation globale.",
     },
     horizon: {
       title: "Pourquoi l'horizon change tout.",
@@ -285,22 +273,7 @@ function getHint(field: string): HintContent {
       body: "Un **PEA** (Plan d'Épargne en Actions) permet d'investir en bourse avec une fiscalité très avantageuse après 5 ans. Un **CTO** (Compte-Titres Ordinaire) est plus flexible mais imposé chaque année.",
     },
   };
-  return map[field] ?? { title: "Bon à savoir.", body: "Chaque réponse permet à l'IA d'affiner ta recommandation." };
-}
-
-/* ── Profile guess ── */
-
-function guessProfile(answers: Record<string, string | string[]>): string {
-  const rt = answers.riskTolerance as string | undefined;
-  if (rt?.includes("Prudent")) return "Prudent";
-  if (rt?.includes("Équilibré")) return "Équilibré";
-  if (rt?.includes("Dynamique")) return "Dynamique";
-  const drop = answers.reactionToDrop as string | undefined;
-  if (drop?.includes("renforce") || drop?.includes("racheter")) return "Dynamique";
-  if (drop?.includes("vends")) return "Prudent";
-  const horizon = answers.horizon as string | undefined;
-  if (horizon?.includes("10 ans") || horizon?.includes("Plus de")) return "Équilibré tendance Dynamique";
-  return "Équilibré";
+  return map[field] ?? { title: "Bon à savoir.", body: "Chaque réponse t'aide à situer ton profil parmi les 4 profils-types proposés (Prudent, Équilibré, Dynamique, Offensif)." };
 }
 
 /* ── Bold text renderer ── */
@@ -443,58 +416,6 @@ export default function AdvisorPage() {
     }
   }, [userEmail]); // eslint-disable-line
 
-  // Portfolio import state
-  const [portfolioHoldings, setPortfolioHoldings] = useState<{symbol:string;name:string;sector:string;value:number}[]>([]);
-  const [portfolioImported, setPortfolioImported] = useState(false);
-
-  // Load portfolio if user wants to import existing assets
-  useEffect(() => {
-    const existingAssets = answers.existingAssets as string[] | undefined;
-    if (existingAssets?.includes("Actions ou ETF (voir mon portefeuille)") && !portfolioImported) {
-      fetch("/api/portfolio").then(r => r.json()).then(async (holdings) => {
-        if (!Array.isArray(holdings) || holdings.length === 0) return;
-        const enriched = await Promise.allSettled(
-          holdings.map(async (h: {symbol:string;name:string;quantity:number;avg_price:number;currency:string}) => {
-            const res = await fetch(`/api/stock/${h.symbol}`);
-            const d = await res.json();
-            const isEtf = String(d.quoteType ?? "").toUpperCase() === "ETF" || String(d.quoteType ?? "").toUpperCase() === "MUTUALFUND";
-            const sector = isEtf ? "ETF diversifié" : (d.sector || "Action");
-            return { symbol: h.symbol, name: h.name || h.symbol, sector, value: h.quantity * h.avg_price };
-          })
-        );
-        const data = enriched.filter((r): r is PromiseFulfilledResult<{symbol:string;name:string;sector:string;value:number}> => r.status === "fulfilled").map(r => r.value);
-        setPortfolioHoldings(data);
-        setPortfolioImported(true);
-      }).catch(() => {});
-    }
-  }, [answers.existingAssets]); // eslint-disable-line
-
-  // Forced stocks state
-  const [forcedStocks, setForcedStocks] = useState<ForcedStock[]>([]);
-  const [forcedInput, setForcedInput] = useState("");
-  const [forcedLoading, setForcedLoading] = useState(false);
-  const [forcedError, setForcedError] = useState<string | null>(null);
-  // Recherche inline par nom ou ticker
-  const [forcedSearch, setForcedSearch] = useState("");
-  const [forcedDropdown, setForcedDropdown] = useState<{ symbol: string; name: string; exchange: string }[]>([]);
-  const [forcedDropdownLoading, setForcedDropdownLoading] = useState(false);
-  const [forcedDropdownOpen, setForcedDropdownOpen] = useState(false);
-
-  // Recherche debounced par nom ou ticker
-  useEffect(() => {
-    if (!forcedSearch.trim()) { setForcedDropdown([]); setForcedDropdownOpen(false); return; }
-    const t = setTimeout(async () => {
-      setForcedDropdownLoading(true);
-      try {
-        const r = await fetch(`/api/search?q=${encodeURIComponent(forcedSearch)}`);
-        const d = await r.json();
-        setForcedDropdown(Array.isArray(d) ? d.slice(0, 7) : []);
-        setForcedDropdownOpen(true);
-      } finally { setForcedDropdownLoading(false); }
-    }, 280);
-    return () => clearTimeout(t);
-  }, [forcedSearch]);
-
   const currentQuestion = step < TOTAL ? QUESTIONS[step] : null;
   const isMulti = currentQuestion?.type === "multi";
   const isInput = currentQuestion?.type === "input";
@@ -525,65 +446,6 @@ export default function AdvisorPage() {
     setAnswers((a) => ({ ...a, [currentQuestion.field]: next }));
   }
 
-  const confirmedForced = forcedStocks.filter((s) => s.confirmed);
-
-  const handleNext = () => {
-    if (!currentQuestion) return;
-    if (isInput) {
-      setAnswers((prev) => ({ ...prev, capital: capitalInput }));
-    } else if (isInputOptional) {
-      if (monthlyInput.trim()) {
-        setAnswers((prev) => ({ ...prev, monthly: monthlyInput }));
-      }
-    }
-    setStep((s) => s + 1);
-  };
-
-  const handlePrev = () => {
-    if (step > 0) setStep((s) => s - 1);
-  };
-
-  const handleAddForced = async (symbolOverride?: string) => {
-    const sym = (symbolOverride ?? forcedInput).trim().toUpperCase();
-    if (!sym || forcedLoading) return;
-    setForcedLoading(true);
-    setForcedError(null);
-    // Fermer le dropdown immédiatement
-    setForcedDropdownOpen(false);
-    setForcedSearch("");
-    setForcedInput("");
-    try {
-      const res = await fetch(`/api/stock/${sym}`);
-      if (!res.ok) {
-        setForcedError(`"${sym}" introuvable sur Yahoo Finance.`);
-        setForcedLoading(false);
-        return;
-      }
-      const d = await res.json();
-      if (forcedStocks.find((s) => s.symbol === d.symbol)) {
-        setForcedError("Cette action est déjà dans la liste.");
-        setForcedLoading(false);
-        return;
-      }
-      setForcedStocks((fs) => [
-        ...fs,
-        {
-          symbol: d.symbol,
-          name: d.name,
-          signal: d.valuation?.signal ?? "HOLD",
-          upside: d.valuation?.upside ?? 0,
-          fairValue: d.valuation?.fairValue ?? d.currentPrice,
-          currentPrice: d.currentPrice,
-          currency: d.currency,
-          confirmed: false,
-        },
-      ]);
-    } catch {
-      setForcedError("Erreur lors de la récupération des données.");
-    }
-    setForcedLoading(false);
-  };
-
   const submit = async () => {
     setLoading(true);
     setError(null);
@@ -600,45 +462,20 @@ export default function AdvisorPage() {
           reactionToDrop: answers.reactionToDrop,
           riskTolerance: answers.riskTolerance,
           goal: answers.goal,
-          allocationMix: "70% ETF / 30% actions",
           monthly: monthlyInput ? parseFloat(monthlyInput) : 0,
-          // Actifs existants — éviter les doublons
           existingAssets: (answers.existingAssets as string[] | undefined) ?? [],
-          existingHoldings: portfolioHoldings.map(h => ({
-            symbol: h.symbol, name: h.name, sector: h.sector,
-          })),
-          // Situation familiale
           family: answers.familySituation ?? "Célibataire sans enfant",
-          forcedStocks: confirmedForced.map((s) => ({
-            symbol: s.symbol,
-            name: s.name,          // nom EXACT — l'IA doit l'utiliser tel quel
-            signal: s.signal,
-            upside: s.upside,
-            currentPrice: s.currentPrice,
-            fairValue: s.fairValue,
-            currency: s.currency,
-          })),
-          geography: "Mondial",
-          esgInterest: "Non concerné",
-          wantsDividends: "optionnel",
           taxWrapper: taxWrapperArr,
-          favoriteSectors: [],
-          excludedSectors: [],
           situation: answers.situation ?? "Salarié(e)",
-          hasEmergencyFund: (answers.existingAssets as string[] | undefined)?.includes("Livret A ou épargne de précaution") ?? false,
-          involvement: "Semi-actif — je consulte 1 fois par mois",
-          alreadyInvested: !((answers.existingAssets as string[] | undefined)?.includes("Je démarre de zéro") ?? true),
-          experience: "Débutant",
-          firstName: "",
         }),
       });
       const data = await res.json();
       if (res.status === 403) setError("Accès non autorisé.");
-      else if (data.error) setError("La génération a échoué. Réessaie dans quelques instants.");
+      else if (data.error) setError("Une erreur est survenue. Réessaie dans quelques instants.");
       else {
         setResult(data);
         setStep(TOTAL + 1);
-        // Sauvegarder dans localStorage pour retrouver le portefeuille après navigation
+        // Sauvegarder dans localStorage pour retrouver le résultat après navigation
         if (userEmail) {
           const key = `finazen_advisor_${btoa(userEmail)}`;
           localStorage.setItem(key, JSON.stringify({
@@ -656,6 +493,26 @@ export default function AdvisorPage() {
     setLoading(false);
   };
 
+  const handleNext = () => {
+    if (!currentQuestion) return;
+    if (isInput) {
+      setAnswers((prev) => ({ ...prev, capital: capitalInput }));
+    } else if (isInputOptional) {
+      if (monthlyInput.trim()) {
+        setAnswers((prev) => ({ ...prev, monthly: monthlyInput }));
+      }
+    }
+    if (step === TOTAL - 1) {
+      submit();
+    } else {
+      setStep((s) => s + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (step > 0) setStep((s) => s - 1);
+  };
+
   const resetAll = () => {
     setStep(0);
     setResult(null);
@@ -663,10 +520,7 @@ export default function AdvisorPage() {
     setCapitalInput("");
     setMonthlyInput("");
     setError(null);
-    setForcedStocks([]);
-    setForcedInput("");
-    setForcedError(null);
-    // Effacer le portefeuille sauvegardé pour permettre d'en générer un nouveau
+    // Effacer le résultat sauvegardé pour permettre d'en refaire un nouveau
     if (userEmail) {
       localStorage.removeItem(`finazen_advisor_${btoa(userEmail)}`);
     }
@@ -678,9 +532,7 @@ export default function AdvisorPage() {
     const monthlyNum = monthlyInput ? parseFloat(monthlyInput) : 0;
     const taxWrapper = (answers.taxWrapper as string[] | undefined) ?? [];
     const risk = ((answers.riskTolerance as string) ?? "").toLowerCase();
-    const familySit = (answers.familySituation as string) ?? "";
     const horizonAns = (answers.horizon as string) ?? "";
-    const goalAns    = (answers.goal as string) ?? "";
     const ageAns     = (answers.age as string) ?? "";
     const CHART_COLORS_RES = ["#1F5C3E","#2F7D52","#C9A24E","#9C9583","#7D55C7","#5C3A21","#0078D4","#B84A3E"];
 
@@ -693,17 +545,7 @@ export default function AdvisorPage() {
       ? "Tu privilégies la sécurité et la préservation de ton capital avant la performance."
       : "Tu cherches un bon équilibre entre croissance et stabilité — le profil le plus répandu.";
 
-    const profileDetails: string[] = [];
-    if (horizonAns.includes("10 ans") || horizonAns.includes("Plus de")) profileDetails.push("Ton horizon long permet d'investir dans des actifs plus performants et de traverser les crises sans vendre.");
-    else if (horizonAns.includes("5")) profileDetails.push("Ton horizon de 5 à 10 ans autorise une prise de risque modérée avec un bon potentiel de rendement.");
-    else profileDetails.push("Ton horizon court implique une allocation prudente pour pouvoir récupérer ton argent à temps.");
-    if (familySit.includes("Parent isolé")) profileDetails.push("En tant que parent isolé, une poche de sécurité plus importante est intégrée dans ton allocation.");
-    else if (familySit.includes("enfants")) profileDetails.push("Avec des enfants à charge, l'allocation intègre un niveau de sécurité adapté à tes responsabilités.");
-    if (goalAns.includes("retraite")) profileDetails.push("Ton objectif retraite favorise une approche progressive sur le long terme.");
-    else if (goalAns.includes("revenus")) profileDetails.push("Ton objectif de revenus réguliers est pris en compte via des actifs distributeurs.");
-    if (monthlyNum > 0) profileDetails.push(`Tes versements mensuels de ${monthlyNum.toLocaleString("fr-FR")} € accélèrent la constitution de ton capital grâce à l'effet de régularité (DCA).`);
-
-    // Brokers recommandés selon profil
+    // Brokers — exemples d'enveloppes/courtiers courants pour ce type de profil
     type Broker = { name: string; domain: string; desc: string; tags: string[]; link: string; best?: boolean };
     const brokers: Broker[] = [];
     if (taxWrapper.includes("PEA") || taxWrapper.includes("Je ne sais pas encore") || taxWrapper.length === 0) {
@@ -731,6 +573,16 @@ export default function AdvisorPage() {
         <div style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 24px 80px" }}>
 
           {/* ══════════════════════════════════════════
+              AVERTISSEMENT — contenu pédagogique générique
+          ══════════════════════════════════════════ */}
+          <div style={{ background: "rgba(176,125,0,0.08)", border: "1px solid rgba(176,125,0,0.25)", borderRadius: 16, padding: "16px 20px", marginBottom: 24, display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+            <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--ink)", margin: 0 }}>
+              {result.disclaimer}
+            </p>
+          </div>
+
+          {/* ══════════════════════════════════════════
               1. TON PROFIL D'INVESTISSEUR
           ══════════════════════════════════════════ */}
           <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 20, padding: "28px 32px", marginBottom: 24 }}>
@@ -738,32 +590,21 @@ export default function AdvisorPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9999, background: profileBg, border: `1px solid ${profileColor}40`, fontSize: 13, fontWeight: 700, color: profileColor }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: profileColor }} />
-                Profil {result.riskLevel}
+                Profil le plus proche : {result.label ?? result.riskLevel}
               </span>
               <span style={{ fontSize: 13, color: "var(--muted)" }}>· {ageAns}</span>
             </div>
 
-            {/* Titre + résumé IA */}
+            {/* Titre + résumé du profil-type */}
             <h1 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(28px, 4vw, 40px)", letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 14px", color: "var(--ink)" }}>
-              {result.portfolioName || "Ton portefeuille sur mesure"}.
+              {result.portfolioName || "Le profil le plus proche"}.
             </h1>
             <p style={{ fontSize: 15, lineHeight: 1.75, color: "var(--ink)", marginBottom: 20 }}>
               {profileTagline}
             </p>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: profileDetails.length ? 20 : 0 }}>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", marginBottom: 0 }}>
               {result.summary}
             </p>
-
-            {/* Points clés dynamiques */}
-            {profileDetails.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {profileDetails.map((d, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "var(--muted)", lineHeight: 1.55 }}>
-                    <span style={{ color: "var(--accent)", flexShrink: 0, marginTop: 1 }}>✓</span> {d}
-                  </div>
-                ))}
-              </div>
-            )}
 
             {/* Métriques synthèse */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginTop: 22, paddingTop: 20, borderTop: "1px solid var(--line)" }}>
@@ -779,10 +620,13 @@ export default function AdvisorPage() {
                 </div>
               ))}
             </div>
+            <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 10, marginBottom: 0 }}>
+              * Hypothèse pédagogique pour ce profil-type, non garantie et identique pour tous les profils {result.label ?? ""}.
+            </p>
           </div>
 
           {/* ══════════════════════════════════════════
-              2. TON ALLOCATION PERSONNALISÉE
+              2. EXEMPLE DE RÉPARTITION POUR CE PROFIL
               — Visible pour investisseur / premium / admin
               — Verrouillée pour guest et free
           ══════════════════════════════════════════ */}
@@ -801,10 +645,10 @@ export default function AdvisorPage() {
                   <>
                     <div style={{ fontSize: 32, marginBottom: 12 }}>🔓</div>
                     <h3 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: 24, color: "var(--ink)", margin: "0 0 10px" }}>
-                      Ton allocation est prête !
+                      L&apos;exemple de répartition est prêt !
                     </h3>
                     <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.65, margin: "0 0 22px" }}>
-                      Crée un compte <strong style={{ color: "var(--ink)" }}>gratuit</strong> pour voir exactement quels ETF et actions acheter, dans quelles proportions — et sauvegarder ton portefeuille.
+                      Crée un compte <strong style={{ color: "var(--ink)" }}>gratuit</strong> pour voir le détail de cet exemple de répartition par profil — et explorer les autres profils-types.
                     </p>
                     <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
                       <a href="/auth/signup" style={{
@@ -837,7 +681,7 @@ export default function AdvisorPage() {
                       Répartition réservée aux abonnés
                     </h3>
                     <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.65, margin: "0 0 20px" }}>
-                      Ton profil a bien été analysé. Pour accéder à l&apos;allocation complète — quels ETF et actions acheter, dans quelle proportion — passe au plan <strong style={{ color: "var(--ink)" }}>Investisseur</strong> ou <strong style={{ color: "var(--ink)" }}>Premium</strong>.
+                      Le profil le plus proche de tes réponses a été déterminé. Pour accéder au détail de l&apos;exemple de répartition — quelles lignes le composent et dans quelles proportions — passe au plan <strong style={{ color: "var(--ink)" }}>Investisseur</strong> ou <strong style={{ color: "var(--ink)" }}>Premium</strong>.
                     </p>
                     <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
                       <a href="/tarifs" style={{
@@ -870,14 +714,14 @@ export default function AdvisorPage() {
               <div style={{ position: "absolute", right: -60, top: -60, width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(closest-side,rgba(45,125,90,0.30),transparent 70%)", pointerEvents: "none" }} />
               {/* Ligne 1: label + rendement */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 10, color: "#A8D0AF", fontFamily: "var(--font-geist-mono, monospace)", letterSpacing: "0.10em" }}>TON ALLOCATION PERSONNALISÉE</span>
+                <span style={{ fontSize: 10, color: "#A8D0AF", fontFamily: "var(--font-geist-mono, monospace)", letterSpacing: "0.10em" }}>EXEMPLE DE RÉPARTITION POUR CE PROFIL</span>
                 <span style={{ fontSize: 13, fontFamily: "var(--font-geist-mono, monospace)", color: "#A8D0AF", fontWeight: 700, flexShrink: 0 }}>
                   Rendement estimé : {result.expectedReturn}
                 </span>
               </div>
               {/* Ligne 2: nom du portefeuille */}
               <div style={{ fontFamily: "var(--font-instrument, serif)", fontSize: "clamp(18px,3vw,26px)", color: "#F6F2E8", lineHeight: 1.2, marginBottom: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {result.portfolioName || "Ton portefeuille"}
+                {result.portfolioName || "Le profil le plus proche"}
               </div>
               {/* Ligne 3: enveloppes + conseil fiscal (tronqué) */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap", overflow: "hidden" }}>
@@ -980,7 +824,7 @@ export default function AdvisorPage() {
 
               {/* Positions */}
               <div style={{ padding: "24px 28px" }}>
-                <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 16 }}>LIGNES SUGGÉRÉES</p>
+                <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 16 }}>EXEMPLES DE LIGNES</p>
                 <div>
                   {result.allocations.map((a, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: i < result.allocations.length - 1 ? "1px dashed var(--line)" : "none" }}>
@@ -1011,8 +855,8 @@ export default function AdvisorPage() {
             <div style={{ filter: (!isPaid && isLoggedIn === false) ? "blur(5px)" : "none", userSelect: (!isPaid && isLoggedIn === false) ? "none" : "auto", pointerEvents: (!isPaid && isLoggedIn === false) ? "none" : "auto" }}>
             <div style={{ marginBottom: 16 }}>
               <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, lineHeight: 1.6 }}>
-                Sélectionné selon ton profil <strong style={{ color: "var(--ink)" }}>{result.riskLevel}</strong>
-                {taxWrapper.length > 0 && taxWrapper[0] !== "Je ne sais pas encore" && ` et ton enveloppe ${taxWrapper[0]}`}.
+                Exemples de courtiers couramment utilisés pour le profil <strong style={{ color: "var(--ink)" }}>{result.label ?? result.riskLevel}</strong>
+                {taxWrapper.length > 0 && taxWrapper[0] !== "Je ne sais pas encore" && ` et l'enveloppe ${taxWrapper[0]}`}.
               </p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
@@ -1124,9 +968,9 @@ export default function AdvisorPage() {
           }}
         />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <p style={{ fontSize: 17, color: "var(--ink)", fontWeight: 600 }}>Construction de ton portefeuille en cours…</p>
+        <p style={{ fontSize: 17, color: "var(--ink)", fontWeight: 600 }}>Détermination de ton profil…</p>
         <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 360, textAlign: "center" }}>
-          Analyse de ton profil, sélection des actifs, calibration du risque. Ça prend 10-15 secondes.
+          On situe tes réponses parmi les 4 profils-types.
         </p>
       </div>
     );
@@ -1135,7 +979,7 @@ export default function AdvisorPage() {
   /* ── QUESTIONNAIRE ── */
 
   const hint = currentQuestion ? getHint(currentQuestion.field) : getHint("default");
-  const guessedProfile = guessProfile(answers);
+  const guessedProfile = PROFILE_LABELS[determineProfile(answers)];
   const currentAnswer = getCurrentAnswer();
   const minutesLeft = Math.max(1, Math.ceil(((TOTAL - step) * 20) / 60));
 
@@ -1173,7 +1017,7 @@ export default function AdvisorPage() {
               fontWeight: 600,
             }}
           >
-            CONSEILLER PATRIMONIAL · IA
+            PROFILS D'INVESTISSEUR
           </span>
         </div>
 
@@ -1189,10 +1033,10 @@ export default function AdvisorPage() {
             margin: "0 0 20px",
           }}
         >
-          Un portefeuille{" "}
-          <em style={{ fontStyle: "italic", color: "var(--accent)" }}>fait pour toi,</em>
+          Découvre{" "}
+          <em style={{ fontStyle: "italic", color: "var(--accent)" }}>ton profil,</em>
           <br />
-          en moins de 3 minutes.
+          en quelques minutes.
         </h1>
 
         {/* Subtitle */}
@@ -1205,7 +1049,7 @@ export default function AdvisorPage() {
             margin: "0 auto 28px",
           }}
         >
-          Neuf questions. Notre IA construit une allocation personnalisée selon ton profil, ton horizon et tes objectifs. Sans engagement, sans données bancaires.
+          Quelques questions sur ta situation et tes objectifs pour situer ton profil parmi 4 profils-types (Prudent, Équilibré, Dynamique, Offensif) — et découvrir à quoi ressemble un exemple de répartition pour ce profil. Sans engagement, sans données bancaires.
         </p>
 
         {/* Trust badges */}
@@ -1447,35 +1291,6 @@ export default function AdvisorPage() {
               </div>
             )}
 
-            {/* Portfolio import panel — shown when "Actions ou ETF" is selected */}
-            {currentQuestion?.field === "existingAssets" &&
-             (answers.existingAssets as string[] | undefined)?.includes("Actions ou ETF (voir mon portefeuille)") && (
-              <div style={{ marginTop: 16, background: "var(--accent-soft)", border: "1px solid rgba(45,125,90,0.22)", borderRadius: 14, padding: "16px 18px" }}>
-                {portfolioHoldings.length > 0 ? (
-                  <>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                      ✓ {portfolioHoldings.length} position{portfolioHoldings.length > 1 ? "s" : ""} importée{portfolioHoldings.length > 1 ? "s" : ""} depuis ton portefeuille
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {portfolioHoldings.map(h => (
-                        <div key={h.symbol} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12, color: "var(--ink)" }}>
-                          <span style={{ fontWeight: 600 }}>{h.name}</span>
-                          <span style={{ color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>{h.sector !== "—" ? h.sector : "Action"}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <p style={{ fontSize: 11, color: "var(--muted)", margin: "10px 0 0", lineHeight: 1.5 }}>
-                      L'IA en tiendra compte pour ne pas créer de doublons et proposer ce qui complète le mieux ton portefeuille actuel.
-                    </p>
-                  </>
-                ) : (
-                  <div style={{ fontSize: 13, color: "var(--muted)" }}>
-                    {portfolioImported ? "Aucune position trouvée dans ton portefeuille." : "Chargement de ton portefeuille…"}
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Footer nav */}
             <div
               style={{
@@ -1490,6 +1305,7 @@ export default function AdvisorPage() {
               {/* Prev */}
               {step > 0 ? (
                 <button
+                  className="advisor-prev-btn"
                   onClick={handlePrev}
                   style={{
                     display: "flex",
@@ -1502,6 +1318,8 @@ export default function AdvisorPage() {
                     color: "var(--muted)",
                     fontSize: 14,
                     cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
                   }}
                 >
                   <ChevronLeft size={15} />
@@ -1512,28 +1330,32 @@ export default function AdvisorPage() {
               )}
 
               {/* Next / Submit */}
-              {/* Toutes les questions (y compris la dernière) → "Suivant" pour passer aux convictions */}
-              <button
-                onClick={handleNext}
-                disabled={!hasAnswer()}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: step === TOTAL - 1 ? "14px 32px" : "12px 28px",
-                  borderRadius: 9999,
-                  border: "none",
-                  background: hasAnswer() ? "var(--accent)" : "var(--line)",
-                  color: hasAnswer() ? "#fff" : "var(--muted)",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  cursor: hasAnswer() ? "pointer" : "not-allowed",
-                  transition: "all 0.15s",
-                }}
-              >
-                {step === TOTAL - 1 ? "Mes convictions" : "Question suivante"}
-                <ChevronRight size={16} />
-              </button>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                {error && <p style={{ color: "var(--signal-down)", fontSize: 13, margin: 0 }}>{error}</p>}
+                <button
+                  className="advisor-next-btn"
+                  onClick={handleNext}
+                  disabled={!hasAnswer()}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: step === TOTAL - 1 ? "14px 32px" : "12px 28px",
+                    borderRadius: 9999,
+                    border: "none",
+                    background: hasAnswer() ? "var(--accent)" : "var(--line)",
+                    color: hasAnswer() ? "#fff" : "var(--muted)",
+                    fontSize: 15,
+                    fontWeight: 700,
+                    cursor: hasAnswer() ? "pointer" : "not-allowed",
+                    whiteSpace: "nowrap",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {step === TOTAL - 1 ? "Voir mon profil" : "Question suivante"}
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
 
             {/* Optional skip for monthly */}
@@ -1656,385 +1478,6 @@ export default function AdvisorPage() {
         </div>
       )}
 
-      {/* ── CONVICTIONS STEP (after all questions done) ── */}
-      {step === TOTAL && (
-        <div
-          style={{
-            maxWidth: 1080,
-            margin: "0 auto",
-            padding: isMobile ? "0 16px 60px" : "0 24px 80px",
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 320px",
-            gap: 32,
-            alignItems: "start",
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              border: "1.5px solid var(--line)",
-              borderRadius: 24,
-              padding: isMobile ? 24 : 48,
-            }}
-          >
-            {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  background: "var(--accent)",
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "var(--font-geist-mono, monospace)",
-                }}
-              >
-                ★
-              </div>
-              <span style={{ fontSize: 11, letterSpacing: "0.12em", color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", fontWeight: 600, textTransform: "uppercase" }}>
-                Convictions personnelles
-              </span>
-            </div>
-
-            <h2
-              style={{
-                fontFamily: "'Instrument Serif', Georgia, serif",
-                fontSize: "clamp(28px, 4vw, 44px)",
-                fontWeight: 400,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.1,
-                color: "var(--ink)",
-                margin: "0 0 14px",
-              }}
-            >
-              As-tu des convictions ?
-            </h2>
-            <p style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.6, marginBottom: 32 }}>
-              Ajoute des actions ou ETF que tu souhaites inclure. On les analysera avant de les intégrer. Tu peux passer cette étape.
-            </p>
-
-            {/* Recherche inline par nom ou ticker */}
-            <div style={{ position: "relative", marginBottom: forcedError ? 8 : 20 }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
-                borderRadius: 14, background: "var(--paper-2)",
-                border: "1.5px solid var(--line)", transition: "border-color 0.15s",
-              }}>
-                {forcedLoading
-                  ? <RefreshCw size={16} color="var(--muted)" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }} />
-                  : <Search size={16} color="var(--muted)" style={{ flexShrink: 0 }} />
-                }
-                <input
-                  value={forcedSearch}
-                  onChange={(e) => { setForcedSearch(e.target.value); setForcedDropdownOpen(true); }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && forcedSearch.trim()) handleAddForced(forcedSearch.trim());
-                    if (e.key === "Escape") { setForcedDropdownOpen(false); setForcedSearch(""); }
-                  }}
-                  onFocus={() => forcedDropdown.length > 0 && setForcedDropdownOpen(true)}
-                  placeholder="Recherche par nom ou ticker — Apple, NVDA, MC.PA…"
-                  disabled={forcedLoading}
-                  style={{
-                    flex: 1, border: "none", outline: "none",
-                    background: "transparent", color: "var(--ink)",
-                    fontSize: 15, fontFamily: "inherit",
-                    opacity: forcedLoading ? 0.5 : 1,
-                  }}
-                />
-                {forcedDropdownLoading && <span style={{ fontSize: 12, color: "var(--muted)", flexShrink: 0 }}>…</span>}
-                {forcedSearch && !forcedLoading && (
-                  <button
-                    onClick={() => { setForcedSearch(""); setForcedDropdown([]); setForcedDropdownOpen(false); }}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", display: "flex", padding: 2, flexShrink: 0 }}
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-
-              {/* Dropdown résultats */}
-              {forcedDropdownOpen && forcedDropdown.length > 0 && (
-                <div style={{
-                  position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0,
-                  background: "var(--paper)", border: "1.5px solid var(--line)", borderRadius: 14,
-                  zIndex: 60, overflow: "hidden",
-                  boxShadow: "0 12px 40px rgba(10,22,40,0.14)",
-                }}>
-                  <div style={{ padding: "7px 12px 5px", fontSize: 10, color: "var(--muted)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-geist-mono, monospace)" }}>
-                    {forcedDropdown.length} résultat{forcedDropdown.length > 1 ? "s" : ""}
-                  </div>
-                  {forcedDropdown.map((r, idx) => {
-                    const alreadyAdded = forcedStocks.some(s => s.symbol === r.symbol);
-                    return (
-                      <div
-                        key={r.symbol}
-                        onClick={() => !alreadyAdded && handleAddForced(r.symbol)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "11px 14px",
-                          cursor: alreadyAdded ? "default" : "pointer",
-                          borderTop: idx === 0 ? "none" : "1px solid var(--line)",
-                          opacity: alreadyAdded ? 0.5 : 1,
-                          transition: "background 0.1s",
-                        }}
-                        onMouseEnter={e => { if (!alreadyAdded) e.currentTarget.style.background = "var(--paper-2)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
-                      >
-                        <CompanyLogo symbol={r.symbol} name={r.name} size={32} radius={8} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
-                          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>
-                            {r.symbol}{r.exchange ? ` · ${r.exchange}` : ""}
-                          </div>
-                        </div>
-                        {alreadyAdded
-                          ? <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600 }}>Déjà ajoutée</span>
-                          : <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 9999, background: "var(--accent-soft)", color: "var(--accent)", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
-                              <Plus size={11} strokeWidth={2.5} /> Ajouter
-                            </div>
-                        }
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Click outside → fermer */}
-              {forcedDropdownOpen && (
-                <div
-                  style={{ position: "fixed", inset: 0, zIndex: 59 }}
-                  onClick={() => setForcedDropdownOpen(false)}
-                />
-              )}
-            </div>
-
-            {forcedLoading && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 10, background: "var(--paper-2)", marginBottom: 14, fontSize: 13, color: "var(--muted)" }}>
-                <RefreshCw size={13} style={{ animation: "spin 1s linear infinite" }} />
-                Récupération des données de valorisation…
-              </div>
-            )}
-
-            {forcedError && <p style={{ color: "var(--signal-down)", fontSize: 13, marginBottom: 14 }}>{forcedError}</p>}
-
-            {/* Actions favorites ajoutées */}
-            {forcedStocks.map((s, i) => {
-              const isPos  = s.upside >= 0;
-              const isOver = s.upside < -15; // surévalué significativement
-              return (
-                <div
-                  key={i}
-                  style={{
-                    borderRadius: 16,
-                    border: `1.5px solid ${s.confirmed ? "var(--accent)" : "var(--line)"}`,
-                    background: s.confirmed ? "var(--accent-soft)" : "var(--paper-2)",
-                    marginBottom: 12,
-                    overflow: "hidden",
-                  }}
-                >
-                  {/* En-tête : logo + nom + supprimer */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 10px" }}>
-                    <CompanyLogo symbol={s.symbol} name={s.name} size={36} radius={9} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", marginTop: 1 }}>{s.symbol}</div>
-                    </div>
-                    <button
-                      onClick={() => setForcedStocks((fs) => fs.filter((_, j) => j !== i))}
-                      style={{ background: "rgba(184,74,58,0.08)", border: "none", color: "var(--signal-down)", borderRadius: 8, width: 26, height: 26, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-
-                  {/* Bloc valorisation — rappel théorique */}
-                  <div style={{
-                    margin: "0 14px 12px",
-                    padding: "10px 14px",
-                    borderRadius: 10,
-                    background: isOver
-                      ? "rgba(184,74,58,0.07)"
-                      : isPos
-                        ? "rgba(45,125,90,0.07)"
-                        : "rgba(176,125,0,0.07)",
-                    border: `1px solid ${isOver ? "rgba(184,74,58,0.2)" : isPos ? "rgba(45,125,90,0.2)" : "rgba(176,125,0,0.2)"}`,
-                  }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8 }}>
-                      Valorisation estimée par Finazen
-                    </div>
-                    <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" as const }}>
-                      {/* Prix actuel */}
-                      <div>
-                        <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 2 }}>Cours actuel</div>
-                        <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)" }}>
-                          {s.currentPrice.toFixed(2)} <span style={{ fontSize: 11, fontWeight: 400 }}>{s.currency}</span>
-                        </div>
-                      </div>
-                      {/* Séparateur */}
-                      <div style={{ width: 1, height: 32, background: "var(--line)", flexShrink: 0 }} />
-                      {/* Valeur estimée */}
-                      <div>
-                        <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 2 }}>Valeur théorique</div>
-                        <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)" }}>
-                          {s.fairValue.toFixed(2)} <span style={{ fontSize: 11, fontWeight: 400 }}>{s.currency}</span>
-                        </div>
-                      </div>
-                      {/* Séparateur */}
-                      <div style={{ width: 1, height: 32, background: "var(--line)", flexShrink: 0 }} />
-                      {/* Potentiel */}
-                      <div>
-                        <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 2 }}>Potentiel</div>
-                        <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: isOver ? "var(--signal-down)" : isPos ? "var(--signal-up)" : "#b07d00" }}>
-                          {isPos ? "+" : ""}{s.upside.toFixed(1)} %
-                        </div>
-                      </div>
-                      {/* Signal */}
-                      <div style={{ marginLeft: "auto" }}>
-                        <SignalPill score={s.signal} size="sm" />
-                      </div>
-                    </div>
-                    {/* Avertissement si surévalué */}
-                    {isOver && (
-                      <div style={{ marginTop: 8, fontSize: 12, color: "var(--signal-down)", display: "flex", alignItems: "center", gap: 5 }}>
-                        <TrendingDown size={12} /> Cette action semble surévaluée selon notre modèle — l'IA en tiendra compte.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Boutons confirmer / retirer */}
-                  <div style={{ display: "flex", gap: 8, padding: "0 14px 14px" }}>
-                    <button
-                      onClick={() => setForcedStocks((fs) => fs.map((x, j) => (j === i ? { ...x, confirmed: true } : x)))}
-                      disabled={s.confirmed}
-                      style={{
-                        flex: 1, padding: "9px",
-                        borderRadius: 9999,
-                        border: `1.5px solid ${s.confirmed ? "var(--accent)" : "rgba(45,125,90,0.3)"}`,
-                        background: s.confirmed ? "var(--accent-soft)" : "transparent",
-                        color: "var(--accent)", fontWeight: 600, fontSize: 13,
-                        cursor: s.confirmed ? "default" : "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                      }}
-                    >
-                      <Check size={13} />
-                      {s.confirmed ? "Incluse dans le portefeuille" : "Oui, l'inclure"}
-                    </button>
-                    {s.confirmed && (
-                      <button
-                        onClick={() => setForcedStocks((fs) => fs.map((x, j) => (j === i ? { ...x, confirmed: false } : x)))}
-                        style={{
-                          padding: "9px 14px",
-                          borderRadius: 9999,
-                          border: "1.5px solid var(--line)",
-                          background: "transparent",
-                          color: "var(--muted)",
-                          fontSize: 13,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Retirer
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Footer */}
-            <div
-              style={{
-                borderTop: "1.5px solid var(--line)",
-                marginTop: 32,
-                paddingTop: 24,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <button
-                onClick={handlePrev}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "10px 18px",
-                  borderRadius: 9999,
-                  border: "1.5px solid var(--line)",
-                  background: "transparent",
-                  color: "var(--muted)",
-                  fontSize: 14,
-                  cursor: "pointer",
-                }}
-              >
-                <ChevronLeft size={15} />
-                Précédent
-              </button>
-
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                {error && <p style={{ color: "var(--signal-down)", fontSize: 13, margin: 0 }}>{error}</p>}
-                <button
-                  onClick={submit}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "14px 32px",
-                    borderRadius: 9999,
-                    border: "none",
-                    background: "var(--accent)",
-                    color: "#fff",
-                    fontSize: 15,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  Générer mon portefeuille
-                  <Sparkles size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Hint card — hidden on mobile */}
-          {!isMobile && <div
-            style={{
-              position: "sticky",
-              top: 80,
-              background: "var(--paper-2)",
-              border: "1.5px solid var(--line)",
-              borderRadius: 18,
-              padding: 24,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
-              <span style={{ color: "var(--accent)", fontSize: 8 }}>●</span>
-              <span style={{ fontSize: 10, letterSpacing: "0.12em", color: "var(--accent)", fontFamily: "var(--font-geist-mono, monospace)", fontWeight: 700 }}>
-                PRESQUE FINI
-              </span>
-            </div>
-            <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 22, fontWeight: 400, color: "var(--ink)", margin: "0 0 10px" }}>
-              Facultatif mais utile.
-            </h3>
-            <p style={{ fontSize: 14, color: "var(--muted)", lineHeight: 1.55, margin: "0 0 18px" }}>
-              Si tu as déjà une conviction sur une action — ex: LVMH, NVIDIA — indique-la ici.
-              On l'analysera pour voir si elle correspond à ton profil avant de l'intégrer.
-            </p>
-            <div style={{ height: 1, background: "var(--line)", marginBottom: 18 }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", margin: 0 }}>Profil pressenti</p>
-              <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 700, background: "rgba(45,125,90,0.1)", padding: "3px 10px", borderRadius: 9999 }}>
-                {guessedProfile}
-              </span>
-            </div>
-          </div>}
-        </div>
-      )}
-
       {/* ── RESULT PREVIEW (always visible) ── */}
       <section
         style={{
@@ -2128,7 +1571,7 @@ export default function AdvisorPage() {
                     lineHeight: 1.05,
                   }}
                 >
-                  Ton portefeuille{" "}
+                  Le profil{" "}
                   <em style={{ fontStyle: "italic", color: "#A8D0AF" }}>Équilibré.</em>
                 </h3>
               </div>
@@ -2204,7 +1647,7 @@ export default function AdvisorPage() {
               {/* Lines */}
               <div style={{ padding: "32px 40px" }}>
                 <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", fontWeight: 600, marginBottom: 20 }}>
-                  LIGNES SUGGÉRÉES
+                  EXEMPLES DE LIGNES
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {PREVIEW_LINES.map((line) => (
@@ -2237,7 +1680,7 @@ export default function AdvisorPage() {
               }}
             >
               <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-                À la fin du questionnaire, tu reçois ce livrable + les liens d'achat.
+                À la fin du questionnaire, découvre à quoi ressemble le profil qui te correspond le plus.
               </p>
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -2289,12 +1732,12 @@ export default function AdvisorPage() {
             {
               icon: <Activity size={22} color="var(--accent)" />,
               title: "Calibré sur 30 ans de marché.",
-              body: "Nos modèles s'appuient sur l'historique du S&P 500, du CAC 40 et des grands indices obligataires depuis 1995.",
+              body: "Ces profils-types s'appuient sur l'historique du S&P 500, du CAC 40 et des grands indices obligataires depuis 1995.",
             },
             {
               icon: <PlusCircle size={22} color="var(--accent)" />,
               title: "Tu restes maître à bord.",
-              body: "Le portefeuille suggéré est une proposition, pas un engagement. Tu passes tes ordres chez ton courtier habituel, à ton rythme.",
+              body: "Cet exemple de répartition est une illustration, pas un engagement. Tu fais tes propres recherches et tu passes tes ordres chez ton courtier habituel, à ton rythme.",
             },
           ].map((card) => (
             <div

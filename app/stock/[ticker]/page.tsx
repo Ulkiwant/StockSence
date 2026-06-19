@@ -371,7 +371,7 @@ export default function StockPage() {
         </div>
 
         {/* ── Tabs ── */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid var(--line)", paddingBottom: 0 }}>
+        <div className="stock-tabs" style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid var(--line)", paddingBottom: 0, overflowX: "auto" }}>
           {TABS.map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               style={{
@@ -380,7 +380,7 @@ export default function StockPage() {
                 color: activeTab === tab ? "var(--ink)" : "var(--muted)",
                 borderBottom: activeTab === tab ? "2px solid var(--ink)" : "2px solid transparent",
                 cursor: "pointer", transition: "color 0.15s",
-                marginBottom: -1,
+                marginBottom: -1, whiteSpace: "nowrap", flexShrink: 0,
               }}
             >{tab}</button>
           ))}
@@ -417,7 +417,7 @@ export default function StockPage() {
                     </p>
 
                     {/* Reason cards: 2×2 grid */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 0 }}>
+                    <div className="stock-reason-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 0 }}>
                       {(ai.catalysts?.slice(0, 2) ?? []).map((c, i) => {
                         const parts = c.split(/:\s|—\s/);
                         const title = parts.length > 1 ? parts[0] : null;
@@ -461,7 +461,7 @@ export default function StockPage() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div className="stock-reason-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     {(v.strengths ?? []).slice(0, 2).map((s, i) => (
                       <div key={i} style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(45,125,90,0.06)", borderLeft: "3px solid var(--signal-up)", fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>{s}</div>
                     ))}
@@ -475,7 +475,7 @@ export default function StockPage() {
               {/* Métriques clés avec explication débutant */}
               <div style={{ background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 16, padding: "20px 24px" }}>
                 <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", marginBottom: 16, fontFamily: "var(--font-geist-mono, monospace)" }}>MÉTRIQUES CLÉS</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                <div className="stock-metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
                   {(() => {
                     const pe = data.trailingPE;
                     const sectorPE = pe ? pe * 1.1 : 20;
@@ -575,7 +575,7 @@ export default function StockPage() {
             </div>
 
             {/* ── RIGHT: score decomposition + alert CTA ── */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "sticky", top: 24 }}>
+            <div className="sticky-sidebar" style={{ display: "flex", flexDirection: "column", gap: 14, position: "sticky", top: 24 }}>
 
               {/* Score decomposition */}
               <div style={{ background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 16, padding: "20px 20px" }}>
@@ -704,7 +704,7 @@ export default function StockPage() {
             <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 24, lineHeight: 1.65, maxWidth: 680 }}>
               Les fondamentaux décrivent la <strong style={{ color: "var(--ink)" }}>santé réelle de l'entreprise</strong> — indépendamment du prix en bourse. Passez la souris sur chaque ligne pour une explication rapide.
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div className="stock-fundamentals-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               {[
                 { section: "💰 Valorisation", color: "rgba(45,125,90,0.06)", borderColor: "rgba(45,125,90,0.20)", rows: [
                   { label: "Valeur totale en bourse", sub: "Capitalisation boursière", value: fmtBig(data.marketCap, data.currency), tooltip: "Prix de l'action × nombre total d'actions. Indique la taille de l'entreprise." },
