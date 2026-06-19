@@ -22,6 +22,12 @@ const NAV_LINKS = [
   { href: "/tarifs",    label: "Tarifs",       exact: false },
 ];
 
+// Sur mobile, Accueil/Mes actions/Portefeuille/Profils sont déjà dans la
+// bottom tab bar — on évite la redondance dans le tiroir.
+const MOBILE_DRAWER_LINKS = NAV_LINKS.filter(
+  (l) => !["/", "/watchlist", "/portfolio", "/advisor"].includes(l.href)
+);
+
 export default function Navbar() {
   const pathname = usePathname();
   const router   = useRouter();
@@ -124,8 +130,8 @@ export default function Navbar() {
                 padding: "16px 0 24px",
               }}
             >
-              {/* Nav links */}
-              {NAV_LINKS.map(({ href, label, exact }) => (
+              {/* Nav links — version réduite, le reste est dans la bottom tab bar */}
+              {MOBILE_DRAWER_LINKS.map(({ href, label, exact }) => (
                 <Link key={href} href={href} onClick={() => setMenuOpen(false)} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "13px 20px", fontSize: 16, fontWeight: isActive(href, exact) ? 700 : 500,

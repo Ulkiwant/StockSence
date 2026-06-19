@@ -26,7 +26,7 @@ export function GlossaryDrawer({ def, onClose }: Props) {
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.55)",
-          zIndex: 40,
+          zIndex: 140,
           backdropFilter: "blur(2px)",
         }}
       />
@@ -38,8 +38,9 @@ export function GlossaryDrawer({ def, onClose }: Props) {
         background: "#1c1b1a",
         borderTop: "1px solid rgba(255,255,255,0.09)",
         borderRadius: "20px 20px 0 0",
-        zIndex: 50,
+        zIndex: 150,
         padding: "20px 20px 32px",
+        paddingBottom: "calc(32px + env(safe-area-inset-bottom, 0px))",
         maxHeight: "70vh",
         overflowY: "auto",
       }}>

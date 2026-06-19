@@ -6,6 +6,8 @@ import OnboardingOverlay from "@/components/OnboardingOverlay";
 import SessionGuard from "@/components/SessionGuard";
 import PwaRegister from "@/components/PwaRegister";
 import InstallBanner from "@/components/InstallBanner";
+import MobileTabBar from "@/components/MobileTabBar";
+import StandaloneRedirect from "@/components/StandaloneRedirect";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -133,11 +135,13 @@ export default function RootLayout({
       </head>
       <body style={{ background: "var(--paper)", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <PwaRegister />
+        <StandaloneRedirect />
         <Navbar />
         <OnboardingOverlay />
         <SessionGuard />
         <main style={{ flex: 1 }}>{children}</main>
         <InstallBanner />
+        <MobileTabBar />
       </body>
     </html>
   );

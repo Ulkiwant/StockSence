@@ -49,7 +49,8 @@ export default function InstallBanner() {
   return (
     <div
       style={{
-        position: "fixed", left: 12, right: 12, bottom: 12, zIndex: 250,
+        position: "fixed", left: 12, right: 12, zIndex: 250,
+        bottom: "calc(66px + env(safe-area-inset-bottom, 0px))",
         background: "#0a1628", borderRadius: 18,
         padding: "14px 14px 14px 16px",
         boxShadow: "0 12px 32px rgba(10,22,40,0.35)",
