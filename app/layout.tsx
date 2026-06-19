@@ -121,6 +121,12 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/favicon.ico" />
         {/* PWA — icône iOS (apple-touch-icon généré par app/apple-icon.tsx) */}
         <link rel="apple-touch-icon" href="/apple-icon" />
+        {/* PWA — ces deux balises ne sont pas générées par l'API metadata de Next
+            sur cette version, on les force explicitement : sans "capable", iOS ouvre
+            le site ajouté à l'écran d'accueil dans Safari (avec barre d'adresse)
+            au lieu du mode plein écran "standalone". */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#0a1628" />
         {/* Préconnexion aux polices */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
