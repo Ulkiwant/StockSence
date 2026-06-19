@@ -1,63 +1,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Share, SquarePlus, Download } from "lucide-react";
+import { X, Share, SquarePlus, Download, MoreVertical } from "lucide-react";
 import { useMobile } from "@/lib/useMobile";
+import { usePwaInstall } from "@/lib/usePwaInstall";
+import DiamondMark from "./DiamondMark";
 
 const DISMISS_KEY = "finazen_install_dismissed";
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !("MSStream" in window);
-}
-
-function isStandalone() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true
-  );
-}
-
 export default function InstallBanner() {
   const isMobile = useMobile();
+  const { canInstall, ios, standalone, promptInstall } = usePwaInstall();
   const [visible, setVisible] = useState(false);
-  const [ios, setIos] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [waitedForPrompt, setWaitedForPrompt] = useState(false);
 
   useEffect(() => {
-    if (!isMobile) return;
-    if (isStandalone()) return;
+    if (!isMobile || standalone) { setVisible(false); return; }
     if (localStorage.getItem(DISMISS_KEY)) return;
+    if (ios) { setVisible(true); return; }
+    // Sur Android/Chrome, laisse 2.5s à beforeinstallprompt pour arriver
+    // avant d'afficher un message de repli si le navigateur ne le supporte pas.
+    const t = setTimeout(() => setWaitedForPrompt(true), 2500);
+    return () => clearTimeout(t);
+  }, [isMobile, ios, standalone]);
 
-    if (isIOS()) {
-      setIos(true);
+  useEffect(() => {
+    if (canInstall) setVisible(true);
+  }, [canInstall]);
+
+  useEffect(() => {
+    if (waitedForPrompt && !ios && !canInstall && isMobile && !standalone && !localStorage.getItem(DISMISS_KEY)) {
       setVisible(true);
-      return;
     }
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setVisible(true);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, [isMobile]);
+  }, [waitedForPrompt, ios, canInstall, isMobile, standalone]);
 
   const dismiss = () => {
     setVisible(false);
     localStorage.setItem(DISMISS_KEY, "1");
   };
 
-  const install = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    dismiss();
+  const handleInstall = async () => {
+    const accepted = await promptInstall();
+    if (accepted) dismiss();
   };
 
   if (!visible) return null;
@@ -80,17 +64,14 @@ export default function InstallBanner() {
         }
       `}</style>
 
-      {/* Icône app */}
+      {/* Icône app — logo complet, identique à l'icône réelle */}
       <div style={{
         width: 42, height: 42, borderRadius: 11, background: "#13233f",
         border: "1px solid rgba(245,241,234,0.15)",
         display: "flex", alignItems: "center", justifyContent: "center",
         flexShrink: 0,
       }}>
-        <svg width="22" height="28" viewBox="0 0 34 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M17 1 L29 16 L34 24 L17 53 L0 24 L5 16 Z" stroke="#f5f1ea" strokeWidth="3" strokeLinejoin="round" />
-          <line x1="0" y1="24" x2="34" y2="24" stroke="#f5f1ea" strokeWidth="3" />
-        </svg>
+        <DiamondMark size={22} />
       </div>
 
       {/* Texte */}
@@ -99,16 +80,20 @@ export default function InstallBanner() {
           Installer Finazen
         </div>
         <div style={{ fontSize: 11.5, color: "rgba(245,241,234,0.65)", lineHeight: 1.4, marginTop: 1 }}>
-          {ios
-            ? <>Appuie sur <Share size={11} style={{ verticalAlign: -1, margin: "0 2px" }} /> puis <SquarePlus size={11} style={{ verticalAlign: -1, margin: "0 2px" }} /> &laquo; Sur l&apos;écran d&apos;accueil &raquo;</>
-            : "Accès direct depuis ton écran d'accueil, sans store"}
+          {ios ? (
+            <>Appuie sur <Share size={11} style={{ verticalAlign: -1, margin: "0 2px" }} /> puis <SquarePlus size={11} style={{ verticalAlign: -1, margin: "0 2px" }} /> &laquo; Sur l&apos;écran d&apos;accueil &raquo;</>
+          ) : canInstall ? (
+            "Accès direct depuis ton écran d'accueil, sans store"
+          ) : (
+            <>Ouvre le menu <MoreVertical size={11} style={{ verticalAlign: -1, margin: "0 2px" }} /> de ton navigateur puis &laquo; Installer l&apos;application &raquo;</>
+          )}
         </div>
       </div>
 
       {/* Action */}
-      {!ios && (
+      {canInstall && (
         <button
-          onClick={install}
+          onClick={handleInstall}
           style={{
             display: "flex", alignItems: "center", gap: 6,
             background: "var(--accent)", color: "#fff",

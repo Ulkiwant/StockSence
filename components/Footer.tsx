@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { Download } from "lucide-react";
 import Brand from "./Brand";
+import InstallAppLink from "./InstallAppLink";
 
 const COLS = [
   {
@@ -91,6 +93,10 @@ export default function Footer() {
           <p style={{ fontSize: 12, color: "var(--muted)" }}>
             © {new Date().getFullYear()} Finazen. Tous droits réservés.
           </p>
+          <InstallAppLink style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>
+            <Download size={13} strokeWidth={2.2} />
+            Installer l&apos;application
+          </InstallAppLink>
           <p style={{ fontSize: 12, color: "var(--muted)" }}>
             Données à titre indicatif — pas de conseil financier
           </p>

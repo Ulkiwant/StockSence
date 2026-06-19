@@ -6,8 +6,9 @@ import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import type { AuthChangeEvent, Session, UserResponse } from "@supabase/supabase-js";
 import { Bell, LogOut, User, Menu, X, Search, ChevronRight,
-         Settings, CreditCard, HelpCircle, Shield } from "lucide-react";
+         Settings, CreditCard, HelpCircle, Shield, Download } from "lucide-react";
 import Brand from "./Brand";
+import InstallAppLink from "./InstallAppLink";
 import { useMobile } from "@/lib/useMobile";
 
 const NAV_LINKS = [
@@ -136,6 +137,20 @@ export default function Navbar() {
                   <ChevronRight size={16} color="var(--muted)" />
                 </Link>
               ))}
+
+              {/* Installer l'app */}
+              <InstallAppLink onNavigate={() => setMenuOpen(false)} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "13px 20px", fontSize: 16, fontWeight: 500,
+                color: "var(--accent)", borderBottom: "1px solid var(--line)",
+                width: "100%",
+              }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Download size={16} strokeWidth={2} />
+                  Installer l&apos;application
+                </span>
+                <ChevronRight size={16} color="var(--accent)" />
+              </InstallAppLink>
 
               {/* Auth */}
               <div style={{ padding: "16px 20px 0" }}>
