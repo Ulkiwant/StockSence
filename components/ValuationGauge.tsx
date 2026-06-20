@@ -16,7 +16,7 @@ function getColor(score: number): string {
 }
 
 function getSignalLabel(score: number): string {
-  if (score >= 40)  return "Très sous-évalué";
+  if (score >= 40)  return "Forte décote";
   if (score >= 15)  return "Sous-évalué";
   if (score > -15)  return "Neutre";
   if (score > -40)  return "À surveiller";

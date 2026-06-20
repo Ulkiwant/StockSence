@@ -10,7 +10,7 @@ export type SignalScore =
 
 const SIGNAL_CONFIG: Record<string, { label: string; bg: string; color: string; border: string }> = {
   STRONG_BUY: {
-    label: "Très sous-évalué",
+    label: "Forte décote",
     bg: "rgba(45, 125, 90, 0.12)",
     color: "#2d7d5a",
     border: "rgba(45, 125, 90, 0.35)",

@@ -109,11 +109,11 @@ export const GLOSSARY: Record<string, MetricDef> = {
     definition:
       "Résumé en un mot de l'analyse complète. Il combine tous les multiples (P/E, DCF, EV/EBITDA, PEG) et le compare aux moyennes sectorielles pour estimer le niveau de valorisation.",
     howToRead:
-      "Très sous-évalué = nettement sous-évalué · Sous-évalué = légèrement sous-évalué · Neutre = prix juste · À surveiller = légèrement surévalué · Surévalué = nettement surévalué.",
+      "Forte décote = nettement sous-évalué · Sous-évalué = légèrement sous-évalué · Neutre = prix juste · À surveiller = légèrement surévalué · Surévalué = nettement surévalué.",
     example:
       "⚠️ Ce signal est une aide à la décision, pas une garantie. Il reflète la valorisation actuelle — pas les risques futurs, la conjoncture, ou votre situation personnelle.",
     benchmarks: [
-      { label: "Très sous-évalué", color: "green" },
+      { label: "Forte décote", color: "green" },
       { label: "Sous-évalué", color: "green" },
       { label: "Neutre", color: "yellow" },
       { label: "À surveiller", color: "red" },

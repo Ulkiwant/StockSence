@@ -23,7 +23,7 @@ interface Market { label: string; desc: string; price: number | null; change: nu
 interface Idea { symbol: string; name: string; price: number; currency: string; change: number; signal: string; score: number; reason: string; }
 
 const SIG_LABEL: Record<string, string> = {
-  STRONG_BUY: "Très sous-évalué", BUY: "Sous-évalué", HOLD: "Neutre",
+  STRONG_BUY: "Forte décote", BUY: "Sous-évalué", HOLD: "Neutre",
   SELL: "À surveiller", STRONG_SELL: "Surévalué",
 };
 const SIG_STYLE: Record<string, { bg: string; color: string; border: string }> = {
@@ -468,7 +468,7 @@ export default function WatchlistPage() {
               {/* Astuce */}
               <div style={{ background: "linear-gradient(180deg, #E9F0E5 0%, #F4F1E2 100%)", border: "1px solid rgba(45,125,90,0.25)", borderRadius: 16, padding: 20 }}>
                 <div style={{ fontSize: 10, color: "var(--accent)", letterSpacing: "0.12em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 10, textTransform: "uppercase" }}>Astuce</div>
-                <p style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.6, margin: 0 }}>Les signaux <strong>Très sous-évalué</strong> sont calibrés sur 3 à 5 ans. Évite de réagir aux variations d'un jour — laisse parler ton horizon.</p>
+                <p style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.6, margin: 0 }}>Les signaux <strong>Forte décote</strong> sont calibrés sur 3 à 5 ans. Évite de réagir aux variations d'un jour — laisse parler ton horizon.</p>
                 <Link href="/faq" style={{ display: "inline-block", marginTop: 10, fontSize: 13, color: "var(--accent)", fontWeight: 600 }}>Comprendre les signaux →</Link>
               </div>
             </div>}
