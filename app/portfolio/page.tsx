@@ -994,18 +994,18 @@ export default function PortfolioPage() {
           <div style={{ minWidth: 0 }}>
             {/* Table header */}
             <div style={{
-              display: "flex", alignItems: "center",
-              justifyContent: "space-between", marginBottom: 16,
+              display: "flex", alignItems: "center", flexWrap: "wrap",
+              justifyContent: "space-between", gap: 8, marginBottom: 16,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>Lignes du portefeuille</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap" }}>Lignes du portefeuille</span>
                 <span style={{
                   padding: "3px 10px", borderRadius: 9999, fontSize: 12,
                   background: "var(--paper-3)", color: "var(--muted)",
-                  fontFamily: "var(--font-geist-mono, monospace)",
+                  fontFamily: "var(--font-geist-mono, monospace)", whiteSpace: "nowrap", flexShrink: 0,
                 }}>{enriched.length} positions</span>
               </div>
-              <span style={{ padding: "5px 14px", borderRadius: 9999, fontSize: 11, fontWeight: 600, background: "var(--ink)", color: "var(--paper)", border: "1px solid var(--ink)" }}>
+              <span style={{ padding: "5px 14px", borderRadius: 9999, fontSize: 11, fontWeight: 600, background: "var(--ink)", color: "var(--paper)", border: "1px solid var(--ink)", whiteSpace: "nowrap", flexShrink: 0 }}>
                 Trié par valeur
               </span>
             </div>
@@ -1028,31 +1028,35 @@ export default function PortfolioPage() {
                       onClick={() => window.location.href = `/stock/${h.symbol}`}
                       style={{ padding: "14px 16px", borderBottom: i < enriched.length - 1 ? "1px solid var(--line)" : "none", cursor: "pointer" }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                        <CompanyLogo symbol={h.symbol} name={h.name} size={40} radius={10} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                        <CompanyLogo symbol={h.symbol} name={h.name} size={38} radius={10} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name || h.symbol}</div>
-                          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>{sectorLabel}</div>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name || h.symbol}</div>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3, flexShrink: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)" }}>{fmtEur(h.marketValue, h.currency)}</div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            {/* Variation du jour */}
-                            {h.dayChangePct !== undefined && (
-                              <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: (h.dayChangePct ?? 0) >= 0 ? "var(--signal-up)" : "var(--signal-down)", background: (h.dayChangePct ?? 0) >= 0 ? "rgba(45,125,90,0.08)" : "rgba(184,74,58,0.08)", padding: "2px 6px", borderRadius: 4 }}>
-                                {(h.dayChangePct ?? 0) >= 0 ? "▲" : "▼"} {Math.abs((h.dayChangePct ?? 0) * 100).toFixed(2)} %
-                              </span>
-                            )}
-                            <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-geist-mono, monospace)", color: isPos ? "var(--signal-up)" : "var(--signal-down)" }}>
-                              {isPos ? "+" : ""}{h.pnlPct.toFixed(1)} %
+                        <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)", flexShrink: 0 }}>{fmtEur(h.marketValue, h.currency)}</div>
+                      </div>
+
+                      {/* Ligne 2 : pleine largeur, plus de place pour les métriques */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginLeft: 48 }}>
+                        <span style={{ fontSize: 11, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1 }}>{sectorLabel}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          {h.dayChangePct !== undefined && (
+                            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-geist-mono, monospace)", color: (h.dayChangePct ?? 0) >= 0 ? "var(--signal-up)" : "var(--signal-down)", background: (h.dayChangePct ?? 0) >= 0 ? "rgba(45,125,90,0.08)" : "rgba(184,74,58,0.08)", padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap" }}>
+                              {(h.dayChangePct ?? 0) >= 0 ? "▲" : "▼"} {Math.abs((h.dayChangePct ?? 0) * 100).toFixed(2)} %
                             </span>
-                            {sig && <SignalBadge signal={sig} />}
-                          </div>
+                          )}
+                          <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-geist-mono, monospace)", color: isPos ? "var(--signal-up)" : "var(--signal-down)", whiteSpace: "nowrap" }}>
+                            {isPos ? "+" : ""}{h.pnlPct.toFixed(1)} %
+                          </span>
                         </div>
                       </div>
-                      {/* Weight bar */}
-                      <div style={{ height: 4, background: "var(--line)", borderRadius: 9999, overflow: "hidden", width: "100%" }}>
-                        <div style={{ width: `${Math.min(100, weight)}%`, height: "100%", background: "var(--accent)", borderRadius: 9999 }} />
+
+                      {/* Ligne 3 : badge de valorisation + barre de poids */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8, marginLeft: 48 }}>
+                        <div style={{ flex: 1, height: 4, background: "var(--line)", borderRadius: 9999, overflow: "hidden" }}>
+                          <div style={{ width: `${Math.min(100, weight)}%`, height: "100%", background: "var(--accent)", borderRadius: 9999 }} />
+                        </div>
+                        {sig && <SignalBadge signal={sig} />}
                       </div>
                     </div>
                   );
@@ -1606,8 +1610,8 @@ export default function PortfolioPage() {
                       setCheckResults(Array.isArray(d) ? d.slice(0, 6) : []);
                     } finally { setCheckSearching(false); }
                   }}
-                  placeholder="Tapez le nom d'une entreprise ou d'un ETF — Apple, Amundi MSCI World…"
-                  style={{ flex: 1, border: "none", background: "transparent", outline: "none", color: "var(--ink)", fontSize: 14, fontFamily: "inherit" }}
+                  placeholder={isMobile ? "Ex. Apple, Amundi MSCI World…" : "Tapez le nom d'une entreprise ou d'un ETF — Apple, Amundi MSCI World…"}
+                  style={{ flex: 1, minWidth: 0, border: "none", background: "transparent", outline: "none", color: "var(--ink)", fontSize: 14, fontFamily: "inherit" }}
                 />
                 {checkSearching && <span style={{ fontSize: 11, color: "var(--muted)" }}>…</span>}
               </div>

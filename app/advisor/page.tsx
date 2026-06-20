@@ -781,8 +781,11 @@ export default function AdvisorPage() {
                             return <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={CHART_COLORS_RES[i % CHART_COLORS_RES.length]} strokeWidth={sw} strokeDasharray={`${dash} ${circ - dash}`} transform={`rotate(${rot} ${cx} ${cy})`} strokeLinecap="butt" />;
                           })}
                           <circle cx={cx} cy={cy} r={r - sw / 2 - 1} fill="#fff" />
-                          <text x={cx} y={cx - 3} textAnchor="middle" fontSize={7} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)">rendement</text>
-                          <text x={cx} y={cx + 9} textAnchor="middle" fontSize={10} fontWeight="700" fill="var(--accent)" fontFamily="var(--font-geist-mono, monospace)">{result.expectedReturn}</text>
+                          <text x={cx} y={cx - 8} textAnchor="middle" fontSize={7} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)">rendement</text>
+                          <text x={cx} y={cx + 6} textAnchor="middle" fontSize={11} fontWeight="700" fill="var(--accent)" fontFamily="var(--font-geist-mono, monospace)">
+                            {result.expectedReturn.match(/\d+\s*%\s*à\s*\d+/) ? result.expectedReturn.replace(/\s*%\s*à\s*/, "–").replace(/\s*par an\*?/, "") : result.expectedReturn}
+                          </text>
+                          <text x={cx} y={cx + 17} textAnchor="middle" fontSize={6} fill="var(--muted)" fontFamily="var(--font-geist-mono, monospace)">par an</text>
                         </svg>
                       </div>
 

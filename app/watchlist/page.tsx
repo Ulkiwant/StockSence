@@ -328,21 +328,23 @@ export default function WatchlistPage() {
                     return (
                       <div key={s.symbol}
                         onClick={() => window.location.href = `/stock/${s.symbol}`}
-                        style={{ display: "flex", gap: 12, padding: "14px 16px", alignItems: "center", borderBottom: i < filtered.length - 1 ? "1px solid var(--line)" : "none", cursor: "pointer" }}
+                        style={{ padding: "14px 16px", borderBottom: i < filtered.length - 1 ? "1px solid var(--line)" : "none", cursor: "pointer" }}
                       >
-                        <CompanyLogo symbol={s.symbol} name={s.name} size={42} radius={12} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
-                          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{s.sector || s.symbol}</div>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-                          <div style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{fmtEur(s.currentPrice, s.currency)}</div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11, fontWeight: 600, color: isUp ? "var(--signal-up)" : "var(--signal-down)" }}>
-                              {isUp ? "+" : ""}{(s.changePercent * 100).toFixed(2)} % {isUp ? "▲" : "▼"}
-                            </span>
-                            <SignalBadge signal={sig} />
+                        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 6 }}>
+                          <CompanyLogo symbol={s.symbol} name={s.name} size={40} radius={12} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
                           </div>
+                          <div style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 13, fontWeight: 600, color: "var(--ink)", flexShrink: 0 }}>{fmtEur(s.currentPrice, s.currency)}</div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginLeft: 52 }}>
+                          <span style={{ fontSize: 11, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.sector || s.symbol}</span>
+                          <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11, fontWeight: 600, color: isUp ? "var(--signal-up)" : "var(--signal-down)", whiteSpace: "nowrap", flexShrink: 0 }}>
+                            {isUp ? "+" : ""}{(s.changePercent * 100).toFixed(2)} % {isUp ? "▲" : "▼"}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6, marginLeft: 52 }}>
+                          <SignalBadge signal={sig} />
                         </div>
                       </div>
                     );

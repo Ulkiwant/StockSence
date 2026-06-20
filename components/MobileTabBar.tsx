@@ -36,11 +36,12 @@ export default function MobileTabBar() {
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
 
-  // Une fois installée, "Accueil" = la watchlist (le tableau de bord) —
-  // la landing marketing n'a plus de raison d'être un onglet de l'app.
+  // Une fois installée, le tableau de bord (watchlist) remplace la landing
+  // marketing comme premier onglet — mais on garde un libellé honnête
+  // ("Mes actions"), pas "Accueil" qui ne correspondrait pas au contenu affiché.
   const tabs = standalone
     ? [
-        { href: "/watchlist", label: "Accueil",     icon: Home,      exact: false },
+        { href: "/watchlist", label: "Mes actions", icon: Home,      exact: false },
         { href: "/advisor",   label: "Profils",      icon: Target,    exact: false },
         { href: "/portfolio", label: "Portefeuille", icon: Briefcase, exact: false },
       ]
