@@ -92,7 +92,7 @@ export default function AlertesPage() {
           </h1>
         </div>
         <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.65, marginBottom: 32 }}>
-          Recevez un email dès que le signal IA d&apos;une de vos actions change,
+          Recevez un email dès que le signal de valorisation d&apos;une de vos actions change,
           ou quand son cours varie de plus d&apos;un certain pourcentage.
         </p>
 
@@ -165,7 +165,7 @@ export default function AlertesPage() {
                     <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                       <Toggle checked={entry.signalActive} onChange={(v) => update(symbol, { signalActive: v })} />
                       <span style={{ fontSize: 13, color: "var(--ink)" }}>
-                        M&apos;alerter si le signal IA change
+                        M&apos;alerter si le signal de valorisation change
                       </span>
                     </label>
 

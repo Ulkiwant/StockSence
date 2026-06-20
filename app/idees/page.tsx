@@ -22,7 +22,7 @@ interface IdeasResponse {
 }
 
 const SIG_LABEL: Record<string, string> = {
-  STRONG_BUY: "Achat fort", BUY: "Achat", HOLD: "Neutre",
+  STRONG_BUY: "Très sous-évalué", BUY: "Sous-évalué", HOLD: "Neutre",
   SELL: "À surveiller", STRONG_SELL: "Surévalué",
 };
 const SIG_STYLE: Record<string, { bg: string; color: string; border: string }> = {

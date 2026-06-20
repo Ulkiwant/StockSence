@@ -3,6 +3,7 @@ import { createServerSupabaseClient as createServerClient } from "@/lib/supabase
 import { resend, FROM_EMAIL } from "@/lib/resend";
 import { AlertEmail, alertSubject } from "@/emails/AlertEmail";
 import { render as renderAsync } from "@react-email/render";
+import { SIGNAL_LABELS } from "@/lib/signalLabels";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://stocksense.app";
 
@@ -107,8 +108,8 @@ export async function GET(req: NextRequest) {
           userEmail, ticker: alert.ticker,
           companyName: stock.name,
           alertType: "signal_change",
-          before: previousSignal,
-          after: stock.signal,
+          before: SIGNAL_LABELS[previousSignal] ?? previousSignal,
+          after: SIGNAL_LABELS[stock.signal] ?? stock.signal,
         });
         await supabase.from("alert_logs").insert({ alert_id: alert.id, value: stock.signal });
         sent++;

@@ -23,7 +23,7 @@ export function AlertEmail({
   unsubscribeUrl,
 }: AlertEmailProps) {
   const isSignal = alertType === "signal_change";
-  const alertLabel = isSignal ? "Signal IA mis à jour" : "Variation de prix";
+  const alertLabel = isSignal ? "Signal de valorisation mis à jour" : "Variation de prix";
 
   return (
     <Html lang="fr">
@@ -110,6 +110,6 @@ export function AlertEmail({
 
 // Ligne d'objet de l'email — utilisée par la route API
 export function alertSubject(ticker: string, alertType: "signal_change" | "price_variation", after: string): string {
-  if (alertType === "signal_change") return `[StockSense] ${ticker} vient de passer en ${after}`;
-  return `[StockSense] ${ticker} a varié de ${after}`;
+  if (alertType === "signal_change") return `[Finazen] ${ticker} vient de passer en ${after}`;
+  return `[Finazen] ${ticker} a varié de ${after}`;
 }

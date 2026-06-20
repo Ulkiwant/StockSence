@@ -23,7 +23,7 @@ interface Market { label: string; desc: string; price: number | null; change: nu
 interface Idea { symbol: string; name: string; price: number; currency: string; change: number; signal: string; score: number; reason: string; }
 
 const SIG_LABEL: Record<string, string> = {
-  STRONG_BUY: "Achat fort", BUY: "Achat", HOLD: "Neutre",
+  STRONG_BUY: "Très sous-évalué", BUY: "Sous-évalué", HOLD: "Neutre",
   SELL: "À surveiller", STRONG_SELL: "Surévalué",
 };
 const SIG_STYLE: Record<string, { bg: string; color: string; border: string }> = {
@@ -305,7 +305,7 @@ export default function WatchlistPage() {
               {/* Toolbar */}
               <div style={{ display: "flex", flexWrap: isMobile ? "nowrap" : "wrap", gap: 10, marginBottom: 14, alignItems: "center", overflowX: isMobile ? "auto" : undefined }}>
                 <div style={{ display: "flex", background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 9999, padding: 4, gap: 2, flexShrink: 0 }}>
-                  {([["all", `Tous ${stocks.length}`], ["buy", `Achat fort ${stocks.filter(s => s.valuation?.signal === "STRONG_BUY").length}`], ["watch", `À surveiller ${stocks.filter(s => s.valuation?.signal === "SELL").length}`], ["sell", `Surévalués ${stocks.filter(s => s.valuation?.signal === "STRONG_SELL").length}`]] as const).map(([k, l]) => (
+                  {([["all", `Tous ${stocks.length}`], ["buy", `Sous-évalués ${stocks.filter(s => s.valuation?.signal === "STRONG_BUY").length}`], ["watch", `À surveiller ${stocks.filter(s => s.valuation?.signal === "SELL").length}`], ["sell", `Surévalués ${stocks.filter(s => s.valuation?.signal === "STRONG_SELL").length}`]] as const).map(([k, l]) => (
                     <button key={k} onClick={() => setFilter(k)} style={{ padding: "6px 13px", borderRadius: 9999, border: "none", fontSize: 12, fontWeight: filter === k ? 700 : 500, background: filter === k ? "var(--ink)" : "transparent", color: filter === k ? "var(--paper)" : "var(--muted)", cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>
                   ))}
                 </div>
@@ -362,7 +362,7 @@ export default function WatchlistPage() {
                     <span style={{ textAlign: "right" }}>Prix (€)</span>
                     <span style={{ textAlign: "right" }}>1 jour</span>
                     <span style={{ textAlign: "center" }}>Tendance</span>
-                    <span style={{ textAlign: "center" }}>Signal IA</span>
+                    <span style={{ textAlign: "center" }}>Valorisation</span>
                     <span style={{ textAlign: "center" }}>Note</span>
                     <span/>
                   </div>
@@ -466,7 +466,7 @@ export default function WatchlistPage() {
               {/* Astuce */}
               <div style={{ background: "linear-gradient(180deg, #E9F0E5 0%, #F4F1E2 100%)", border: "1px solid rgba(45,125,90,0.25)", borderRadius: 16, padding: 20 }}>
                 <div style={{ fontSize: 10, color: "var(--accent)", letterSpacing: "0.12em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 10, textTransform: "uppercase" }}>Astuce</div>
-                <p style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.6, margin: 0 }}>Les signaux <strong>Achat fort</strong> sont calibrés sur 3 à 5 ans. Évite de réagir aux variations d'un jour — laisse parler ton horizon.</p>
+                <p style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.6, margin: 0 }}>Les signaux <strong>Très sous-évalué</strong> sont calibrés sur 3 à 5 ans. Évite de réagir aux variations d'un jour — laisse parler ton horizon.</p>
                 <Link href="/faq" style={{ display: "inline-block", marginTop: 10, fontSize: 13, color: "var(--accent)", fontWeight: 600 }}>Comprendre les signaux →</Link>
               </div>
             </div>}

@@ -10,13 +10,13 @@ export type SignalScore =
 
 const SIGNAL_CONFIG: Record<string, { label: string; bg: string; color: string; border: string }> = {
   STRONG_BUY: {
-    label: "Achat fort",
+    label: "Très sous-évalué",
     bg: "rgba(45, 125, 90, 0.12)",
     color: "#2d7d5a",
     border: "rgba(45, 125, 90, 0.35)",
   },
   BUY: {
-    label: "Achat",
+    label: "Sous-évalué",
     bg: "rgba(45, 125, 90, 0.08)",
     color: "#2d7d5a",
     border: "rgba(45, 125, 90, 0.25)",
@@ -28,13 +28,13 @@ const SIGNAL_CONFIG: Record<string, { label: string; bg: string; color: string; 
     border: "rgba(139, 122, 94, 0.28)",
   },
   SELL: {
-    label: "Vente",
+    label: "À surveiller",
     bg: "rgba(184, 74, 58, 0.08)",
     color: "#b84a3a",
     border: "rgba(184, 74, 58, 0.25)",
   },
   STRONG_SELL: {
-    label: "Vente forte",
+    label: "Surévalué",
     bg: "rgba(184, 74, 58, 0.12)",
     color: "#b84a3a",
     border: "rgba(184, 74, 58, 0.35)",

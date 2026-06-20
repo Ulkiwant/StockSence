@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import OnboardingOverlay from "@/components/OnboardingOverlay";
 import SessionGuard from "@/components/SessionGuard";
 import PwaRegister from "@/components/PwaRegister";
 import InstallBanner from "@/components/InstallBanner";
@@ -137,7 +136,6 @@ export default function RootLayout({
         <PwaRegister />
         <StandaloneRedirect />
         <Navbar />
-        <OnboardingOverlay />
         <SessionGuard />
         <main style={{ flex: 1 }}>{children}</main>
         <InstallBanner />

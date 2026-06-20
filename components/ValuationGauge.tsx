@@ -16,11 +16,11 @@ function getColor(score: number): string {
 }
 
 function getSignalLabel(score: number): string {
-  if (score >= 40)  return "Achat fort";
-  if (score >= 15)  return "Achat";
+  if (score >= 40)  return "Très sous-évalué";
+  if (score >= 15)  return "Sous-évalué";
   if (score > -15)  return "Neutre";
-  if (score > -40)  return "Vente";
-  return "Vente forte";
+  if (score > -40)  return "À surveiller";
+  return "Surévalué";
 }
 
 export default function ValuationGauge({ score, label, size = "md", lightBg = false }: ValuationGaugeProps) {

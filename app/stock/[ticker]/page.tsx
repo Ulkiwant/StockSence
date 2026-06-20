@@ -330,7 +330,7 @@ export default function StockPage() {
           }}>
             <div style={{ textAlign: "center", width: "100%" }}>
               <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", marginBottom: 4, fontFamily: "var(--font-geist-mono, monospace)" }}>
-                SIGNAL RENDLY
+                SIGNAL FINAZEN
               </div>
               <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 16, letterSpacing: "-0.01em" }}>
                 Verdict de la valorisation

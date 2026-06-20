@@ -104,23 +104,23 @@ export const GLOSSARY: Record<string, MetricDef> = {
     tags: ["Bourse", "Identification", "Recherche"],
   },
   signal: {
-    name: "Signal IA",
-    fullName: "Signal d'achat/vente calculé par l'IA",
+    name: "Signal de valorisation",
+    fullName: "Signal de valorisation calculé automatiquement",
     definition:
-      "Résumé en un mot de l'analyse complète de l'IA. Il combine tous les multiples (P/E, DCF, EV/EBITDA, PEG) et le compare aux moyennes sectorielles pour donner une recommandation globale.",
+      "Résumé en un mot de l'analyse complète. Il combine tous les multiples (P/E, DCF, EV/EBITDA, PEG) et le compare aux moyennes sectorielles pour estimer le niveau de valorisation.",
     howToRead:
-      "STRONG BUY = nettement sous-évalué · BUY = légèrement sous-évalué · HOLD = prix juste · SELL = légèrement surévalué · STRONG SELL = nettement surévalué.",
+      "Très sous-évalué = nettement sous-évalué · Sous-évalué = légèrement sous-évalué · Neutre = prix juste · À surveiller = légèrement surévalué · Surévalué = nettement surévalué.",
     example:
       "⚠️ Ce signal est une aide à la décision, pas une garantie. Il reflète la valorisation actuelle — pas les risques futurs, la conjoncture, ou votre situation personnelle.",
     benchmarks: [
-      { label: "STRONG BUY", color: "green" },
-      { label: "BUY", color: "green" },
-      { label: "HOLD", color: "yellow" },
-      { label: "SELL", color: "red" },
-      { label: "STRONG SELL", color: "red" },
+      { label: "Très sous-évalué", color: "green" },
+      { label: "Sous-évalué", color: "green" },
+      { label: "Neutre", color: "yellow" },
+      { label: "À surveiller", color: "red" },
+      { label: "Surévalué", color: "red" },
     ],
     currentPosition: 0,
-    tags: ["Signal", "IA", "Recommandation"],
+    tags: ["Signal", "Valorisation"],
   },
   margenethe: {
     name: "Marge nette",

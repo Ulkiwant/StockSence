@@ -79,7 +79,7 @@ function sectorFr(s: string): string { return SECTOR_FR[s] ?? s; }
 
 /* ── Signal badge ── */
 const SIG_LABEL: Record<string, string> = {
-  STRONG_BUY: "Achat fort", BUY: "Achat", HOLD: "Neutre",
+  STRONG_BUY: "Très sous-évalué", BUY: "Sous-évalué", HOLD: "Neutre",
   SELL: "À surveiller", STRONG_SELL: "Surévalué",
 };
 const SIG_STYLE: Record<string, { bg: string; color: string; border: string }> = {
@@ -183,7 +183,7 @@ function MiniSparkline({ data, up }: { data: number[]; up: boolean }) {
 
 /* ── Signal styles ── */
 const SIGNAL_LABELS: Record<string, string> = {
-  STRONG_BUY: "Achat fort", BUY: "Achat", HOLD: "Neutre", SELL: "À surveiller", STRONG_SELL: "Surévalué",
+  STRONG_BUY: "Très sous-évalué", BUY: "Sous-évalué", HOLD: "Neutre", SELL: "À surveiller", STRONG_SELL: "Surévalué",
 };
 const SIGNAL_COLORS: Record<string, { bg: string; color: string }> = {
   STRONG_BUY: { bg: "#1F5C3E",                    color: "#F6F2E8" },
