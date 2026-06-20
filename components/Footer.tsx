@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 import Brand from "./Brand";
 import InstallAppLink from "./InstallAppLink";
+import { useMobile } from "@/lib/useMobile";
 
 const COLS = [
   {
@@ -33,7 +34,51 @@ const COLS = [
   },
 ];
 
+const LEGAL_LINKS = [
+  { label: "Mentions légales", href: "/mentions-legales" },
+  { label: "Confidentialité",  href: "/confidentialite" },
+  { label: "Contact",          href: "/contact" },
+];
+
 export default function Footer() {
+  const isMobile = useMobile();
+
+  // Mobile : footer minimal — la nav principale est déjà dans la bottom tab bar
+  // et le menu hamburger, pas besoin de répéter des colonnes de liens.
+  if (isMobile) {
+    return (
+      <footer style={{
+        borderTop: "1px solid var(--line)",
+        background: "var(--paper-2)",
+        padding: "28px 20px 24px",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          <Brand size="sm" />
+        </div>
+        <p style={{ fontSize: 11.5, color: "var(--muted)", lineHeight: 1.6, marginBottom: 18 }}>
+          Outil d&apos;analyse pédagogique — ne constitue pas un conseil en investissement (AMF). Investir comporte des risques de perte en capital.
+        </p>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 16 }}>
+          {LEGAL_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} style={{ fontSize: 12, color: "var(--muted)" }}>
+              {l.label}
+            </Link>
+          ))}
+        </div>
+
+        <InstallAppLink style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--accent)", fontWeight: 600, marginBottom: 16 }}>
+          <Download size={13} strokeWidth={2.2} />
+          Installer l&apos;application
+        </InstallAppLink>
+
+        <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14, fontSize: 11, color: "var(--muted)" }}>
+          © {new Date().getFullYear()} Finazen — données à titre indicatif
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer style={{
       borderTop: "1px solid var(--line)",

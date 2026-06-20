@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2, Check, Clock, AlertCircle, Pencil } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import CompanyLogo from "@/components/CompanyLogo";
+import CircleAction from "@/components/CircleAction";
 
 const WorldMap = dynamic(() => import("@/components/WorldMap"), { ssr: false, loading: () => <div style={{ height: 260, background: "var(--paper-3)", borderRadius: 12 }} /> });
 
@@ -642,69 +643,89 @@ export default function PortfolioPage() {
 
 
       {/* ── Header ── */}
-      <div style={{
-        display: "flex", alignItems: "flex-start",
-        justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 32,
-      }}>
-        <div>
-          <h1 style={{
-            fontSize: 48, fontWeight: 400, letterSpacing: "-0.02em",
-            fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
-            color: "var(--ink)", marginBottom: 8, lineHeight: 1.1,
-          }}>
-            Mon{" "}
-            <em style={{ fontStyle: "italic", color: "var(--accent)" }}>portefeuille</em>.
-          </h1>
-          <p style={{ fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
-            {holdings.length} ligne{holdings.length !== 1 ? "s" : ""} — positions diversifiées
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "10px 20px", borderRadius: 9999,
-            border: "1.5px solid var(--line)",
-            background: "transparent", color: "var(--ink)",
-            fontSize: 14, fontWeight: 500, cursor: "pointer",
-          }}>
-            <Download size={14} />Rapport mensuel
-          </button>
-          <button
-            onClick={handleAnalyze}
-            disabled={analyzing || !enriched.length}
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 20px", borderRadius: 9999,
-              border: "1.5px solid var(--accent)",
-              background: "transparent", color: "var(--accent)",
-              fontSize: 14, fontWeight: 600, cursor: "pointer",
-              opacity: analyzing || !enriched.length ? 0.5 : 1,
+      <div style={{ marginBottom: isMobile ? 24 : 32 }}>
+        <div style={{
+          display: "flex", alignItems: "flex-start",
+          justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+          marginBottom: isMobile ? 18 : 0,
+        }}>
+          <div>
+            <h1 style={{
+              fontSize: isMobile ? 32 : 48, fontWeight: 400, letterSpacing: "-0.02em",
+              fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
+              color: "var(--ink)", marginBottom: 8, lineHeight: 1.1,
             }}>
-            <Sparkles size={14} />{analyzing ? "Analyse en cours…" : "Diagnostiquer"}
-          </button>
-          <button onClick={() => setShowAdd(true)} style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "10px 20px", borderRadius: 9999,
-            border: "none", background: "var(--accent)",
-            color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-          }}>
-            <Plus size={14} />Ajouter une transaction
-          </button>
+              Mon{" "}
+              <em style={{ fontStyle: "italic", color: "var(--accent)" }}>portefeuille</em>.
+            </h1>
+            <p style={{ fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+              {holdings.length} ligne{holdings.length !== 1 ? "s" : ""} — positions diversifiées
+            </p>
+          </div>
+
+          {!isMobile && (
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "10px 20px", borderRadius: 9999,
+                border: "1.5px solid var(--line)",
+                background: "transparent", color: "var(--ink)",
+                fontSize: 14, fontWeight: 500, cursor: "pointer",
+              }}>
+                <Download size={14} />Rapport mensuel
+              </button>
+              <button
+                onClick={handleAnalyze}
+                disabled={analyzing || !enriched.length}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "10px 20px", borderRadius: 9999,
+                  border: "1.5px solid var(--accent)",
+                  background: "transparent", color: "var(--accent)",
+                  fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  opacity: analyzing || !enriched.length ? 0.5 : 1,
+                }}>
+                <Sparkles size={14} />{analyzing ? "Analyse en cours…" : "Diagnostiquer"}
+              </button>
+              <button onClick={() => setShowAdd(true)} style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "10px 20px", borderRadius: 9999,
+                border: "none", background: "var(--accent)",
+                color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>
+                <Plus size={14} />Ajouter une transaction
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Actions mobile — boutons circulaires façon app, jamais de débordement */}
+        {isMobile && (
+          <div style={{ display: "flex", justifyContent: "space-around" }}>
+            <CircleAction icon={<Plus size={18} strokeWidth={2.3} />} label="Ajouter" primary onClick={() => setShowAdd(true)} />
+            <CircleAction
+              icon={<Sparkles size={18} strokeWidth={2} />}
+              label={analyzing ? "…" : "Diagnostiquer"}
+              onClick={handleAnalyze}
+              disabled={analyzing || !enriched.length}
+            />
+            <CircleAction icon={<Download size={18} strokeWidth={2} />} label="Rapport" />
+          </div>
+        )}
       </div>
 
       {/* ── KPI strip ── */}
       {enriched.length > 0 && (
         <div className="kpi-strip" style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-          background: "var(--paper-2)", border: "1.5px solid var(--line)",
-          borderRadius: 18, overflow: "hidden", marginBottom: 28,
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: isMobile ? 10 : 14,
+          marginBottom: 28,
         }}>
           {/* Cell 1 — Valeur totale (green gradient) */}
           <div style={{
             padding: isMobile ? "18px 16px" : "24px 26px",
-            borderRight: "1px solid var(--line)",
-            background: "linear-gradient(135deg, rgba(45,125,90,0.10) 0%, transparent 70%)",
+            borderRadius: 16, border: "1px solid rgba(45,125,90,0.18)",
+            boxShadow: "0 1px 3px rgba(10,22,40,0.04)",
+            background: "linear-gradient(135deg, rgba(45,125,90,0.13) 0%, #ffffff 65%)",
           }}>
             <div style={{
               fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em",
@@ -731,7 +752,11 @@ export default function PortfolioPage() {
           </div>
 
           {/* Cell 2 — Gain total */}
-          <div style={{ padding: isMobile ? "18px 16px" : "24px 26px", borderRight: "1px solid var(--line)" }}>
+          <div style={{
+            padding: isMobile ? "18px 16px" : "24px 26px",
+            borderRadius: 16, border: "1px solid var(--line)", background: "#fff",
+            boxShadow: "0 1px 3px rgba(10,22,40,0.04)",
+          }}>
             <div style={{
               fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em",
               fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase",
@@ -752,7 +777,11 @@ export default function PortfolioPage() {
           </div>
 
           {/* Cell 3 — Annualisé */}
-          <div style={{ padding: isMobile ? "18px 16px" : "24px 26px", borderRight: "1px solid var(--line)" }}>
+          <div style={{
+            padding: isMobile ? "18px 16px" : "24px 26px",
+            borderRadius: 16, border: "1px solid var(--line)", background: "#fff",
+            boxShadow: "0 1px 3px rgba(10,22,40,0.04)",
+          }}>
             <div style={{
               fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em",
               fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase",
@@ -795,7 +824,11 @@ export default function PortfolioPage() {
           </div>
 
           {/* Cell 4 — Dividendes */}
-          <div style={{ padding: isMobile ? "18px 16px" : "24px 26px" }}>
+          <div style={{
+            padding: isMobile ? "18px 16px" : "24px 26px",
+            borderRadius: 16, border: "1px solid var(--line)", background: "#fff",
+            boxShadow: "0 1px 3px rgba(10,22,40,0.04)",
+          }}>
             <div style={{
               fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em",
               fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase",
@@ -2181,7 +2214,7 @@ export default function PortfolioPage() {
 
       {/* ── Dividendes détail ── */}
       {dividendHoldings.length > 0 && (
-        <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, padding: "22px 24px", marginBottom: 28 }}>
+        <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 18, padding: "22px 24px", marginBottom: 28, boxShadow: "0 1px 3px rgba(10,22,40,0.04)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
             <div>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)", margin: "0 0 4px" }}>
@@ -2203,34 +2236,33 @@ export default function PortfolioPage() {
             </div>
           </div>
 
-          {/* Tableau détail par action */}
-          <div style={{ overflowX: "auto" }}>
-          <div style={{ minWidth: isMobile ? 480 : undefined }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", columnGap: 8, borderBottom: "1px solid var(--line)", paddingBottom: 8, marginBottom: 4, fontSize: 10, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            <span>Entreprise</span>
-            <span style={{ textAlign: "right" }}>Rendement</span>
-            <span style={{ textAlign: "right" }}>/ an (estimé)</span>
-            <span style={{ textAlign: "right" }}>D'ici fin {new Date().getFullYear()}</span>
-          </div>
-          {dividendHoldings
-            .sort((a, b) => (b.marketValue * (b.dividendYield ?? 0)) - (a.marketValue * (a.dividendYield ?? 0)))
-            .map((h, i) => {
-              const annual  = h.marketValue * (h.dividendYield ?? 0);
-              const toYear  = (annual / 12) * monthsLeft;
-              const yieldPct = ((h.dividendYield ?? 0) * 100).toFixed(2);
-              return (
-                <div key={h.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", columnGap: 8, padding: "10px 0", borderBottom: i < dividendHoldings.length - 1 ? "1px dashed var(--line)" : "none", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                    <CompanyLogo symbol={h.symbol} name={h.name} size={26} radius={6} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={h.name}>{h.name}</span>
+          {/* Détail par action — liste verticale, aucun scroll horizontal nécessaire */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {dividendHoldings
+              .sort((a, b) => (b.marketValue * (b.dividendYield ?? 0)) - (a.marketValue * (a.dividendYield ?? 0)))
+              .map((h, i) => {
+                const annual = h.marketValue * (h.dividendYield ?? 0);
+                const yieldPct = ((h.dividendYield ?? 0) * 100).toFixed(2);
+                return (
+                  <div key={h.id} style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                    padding: "12px 2px",
+                    borderBottom: i < dividendHoldings.length - 1 ? "1px solid var(--line)" : "none",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                      <CompanyLogo symbol={h.symbol} name={h.name} size={32} radius={9} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={h.name}>{h.name}</div>
+                        <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 1 }}>{yieldPct} % de rendement</div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--signal-up)", fontFamily: "var(--font-geist-mono, monospace)" }}>{fmtEur(annual)}</div>
+                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 1 }}>par an</div>
+                    </div>
                   </div>
-                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--signal-up)", fontWeight: 600 }}>{yieldPct} %</div>
-                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--ink)", fontWeight: 600 }}>{fmtEur(annual)}</div>
-                  <div style={{ textAlign: "right", fontSize: 12, fontFamily: "var(--font-geist-mono, monospace)", color: "var(--accent)", fontWeight: 600 }}>{fmtEur(toYear)}</div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
           </div>
 
           <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, background: "var(--paper-3)", fontSize: 11, color: "var(--muted)", lineHeight: 1.6 }}>

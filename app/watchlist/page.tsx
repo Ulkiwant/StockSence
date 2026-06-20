@@ -4,9 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { SearchModal } from "@/components/SearchModal";
 import { createClient } from "@/lib/supabase";
-import { Star, Plus, Download, TrendingUp, TrendingDown, Clock, BarChart2 } from "lucide-react";
+import { Star, Plus, Download, TrendingUp, TrendingDown, Clock, BarChart2, Search, Sparkles } from "lucide-react";
 import Footer from "@/components/Footer";
 import CompanyLogo from "@/components/CompanyLogo";
+import CircleAction from "@/components/CircleAction";
 import { useMobile } from "@/lib/useMobile";
 
 const USD_TO_EUR = 0.92;
@@ -89,6 +90,7 @@ export default function WatchlistPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [filter, setFilter]     = useState<"all"|"buy"|"watch"|"sell">("all");
   const [query, setQuery]       = useState("");
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const supabase = createClient();
 
   const loadWatchlist = useCallback(async () => {
@@ -183,56 +185,87 @@ export default function WatchlistPage() {
     <div style={{ background: "var(--paper)", minHeight: "100vh" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "20px 16px 60px" : "32px 28px 80px" }}>
 
-        {/* Breadcrumb */}
-        <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.12em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 16, textTransform: "uppercase", display: "flex", gap: 8 }}>
-          <Link href="/" style={{ color: "var(--muted)" }}>Finazen</Link>
-          <span>/</span><span>Mes actions</span>
-        </div>
-
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: isMobile ? 20 : 32, flexWrap: "wrap", gap: 16 }}>
-          <div>
-            <h1 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: isMobile ? "32px" : "clamp(36px, 5vw, 58px)", letterSpacing: "-0.02em", lineHeight: 1.05, margin: "0 0 8px" }}>
-              Mes <em style={{ fontStyle: "italic", color: "var(--accent)" }}>actions</em>.
-            </h1>
-            {!isMobile && (
-              <p style={{ fontSize: 15, color: "var(--muted)", maxWidth: 540, lineHeight: 1.6, margin: 0 }}>
-                {items.length} valeur{items.length !== 1 ? "s" : ""} suivie{items.length !== 1 ? "s" : ""} — surveille les signaux, compare leur santé et garde un œil sur les opportunités qui te ressemblent.
-                {!loggedIn && <span style={{ marginLeft: 8 }}>· <Link href="/auth/login" style={{ color: "var(--accent)", fontWeight: 600 }}>Connexion</Link> pour synchroniser.</span>}
-              </p>
-            )}
-          </div>
-          <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-            {!isMobile && (
-              <button style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
-                <Download size={14} strokeWidth={1.8} /> Exporter
-              </button>
-            )}
-            <button onClick={() => setSearchOpen(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: isMobile ? "9px 14px" : "9px 20px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              <Plus size={14} strokeWidth={2.5} />{isMobile ? "Ajouter" : "Ajouter une action"}
-            </button>
-          </div>
-        </div>
-
-        {/* KPIs */}
-        {stocks.length > 0 && (
-          isMobile ? (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-              {[
-                { icon: <TrendingUp size={13} />, label: "En hausse aujourd'hui", big: String(upStocks.length), sub: `/ ${stocks.length}`, meta: `${avgChg > 0 ? "+" : ""}${avgChg.toFixed(2)} % en moyenne`, green: upStocks.length > stocks.length / 2 },
-                { icon: <BarChart2 size={13} />, label: "Variation aujourd'hui", big: `${avgChg >= 0 ? "+" : ""}${avgChg.toFixed(1)}`, sub: " %", meta: `Moyenne de tes ${stocks.length} positions`, green: avgChg >= 0 },
-              ].map((k, i) => (
-                <div key={i} style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 14, padding: "14px 16px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--muted)", marginBottom: 8 }}>{k.icon} {k.label}</div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-                    <span style={{ fontFamily: "var(--font-instrument, serif)", fontSize: 28, lineHeight: 1, color: k.green ? "var(--signal-up)" : "var(--ink)", letterSpacing: "-0.02em" }}>{k.big}</span>
-                    {k.sub && <span style={{ fontSize: 13, color: "var(--muted)" }}>{k.sub}</span>}
+        {isMobile ? (
+          <>
+            {/* ── Hero façon Revolut : gros chiffre + contexte ── */}
+            <div style={{ marginBottom: 4 }}>
+              <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.12em", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", marginBottom: 8 }}>
+                Mes actions
+              </div>
+              {stocks.length > 0 ? (
+                <>
+                  <div style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em", color: avgChg >= 0 ? "var(--signal-up)" : "var(--signal-down)" }}>
+                    {avgChg >= 0 ? "+" : ""}{avgChg.toFixed(2)} %
                   </div>
-                  <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, fontFamily: "var(--font-geist-mono, monospace)" }}>{k.meta}</div>
-                </div>
-              ))}
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>
+                    Variation moyenne aujourd&apos;hui · {upStocks.length}/{stocks.length} en hausse
+                  </div>
+                </>
+              ) : (
+                <h1 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: 32, letterSpacing: "-0.02em", margin: 0 }}>
+                  Mes <em style={{ fontStyle: "italic", color: "var(--accent)" }}>actions</em>.
+                </h1>
+              )}
+              {!loggedIn && (
+                <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
+                  <Link href="/auth/login" style={{ color: "var(--accent)", fontWeight: 600 }}>Connexion</Link> pour synchroniser tes actions entre appareils.
+                </p>
+              )}
             </div>
-          ) : (
+
+            {/* ── Actions circulaires ── */}
+            <div style={{ display: "flex", justifyContent: "space-around", margin: "22px 0 24px" }}>
+              <CircleAction icon={<Plus size={18} strokeWidth={2.3} />} label="Ajouter" primary onClick={() => setSearchOpen(true)} />
+              <CircleAction icon={<Search size={18} strokeWidth={2} />} label="Chercher" onClick={() => setShowMobileSearch(s => !s)} />
+              <CircleAction icon={<Sparkles size={18} strokeWidth={2} />} label="Idées" onClick={() => { window.location.href = "/idees"; }} />
+            </div>
+
+            {showMobileSearch && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 9999, padding: "9px 14px", marginBottom: 16 }}>
+                <Search size={13} color="var(--muted)" />
+                <input
+                  autoFocus
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="Filtrer par nom d'entreprise…"
+                  style={{ border: "none", background: "transparent", outline: "none", color: "var(--ink)", fontSize: 13, flex: 1, fontFamily: "inherit" }}
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Breadcrumb */}
+            <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.12em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 16, textTransform: "uppercase", display: "flex", gap: 8 }}>
+              <Link href="/" style={{ color: "var(--muted)" }}>Finazen</Link>
+              <span>/</span><span>Mes actions</span>
+            </div>
+
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <h1 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(36px, 5vw, 58px)", letterSpacing: "-0.02em", lineHeight: 1.05, margin: "0 0 8px" }}>
+                  Mes <em style={{ fontStyle: "italic", color: "var(--accent)" }}>actions</em>.
+                </h1>
+                <p style={{ fontSize: 15, color: "var(--muted)", maxWidth: 540, lineHeight: 1.6, margin: 0 }}>
+                  {items.length} valeur{items.length !== 1 ? "s" : ""} suivie{items.length !== 1 ? "s" : ""} — surveille les signaux, compare leur santé et garde un œil sur les opportunités qui te ressemblent.
+                  {!loggedIn && <span style={{ marginLeft: 8 }}>· <Link href="/auth/login" style={{ color: "var(--accent)", fontWeight: 600 }}>Connexion</Link> pour synchroniser.</span>}
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+                <button style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 9999, border: "1.5px solid var(--line)", background: "transparent", color: "var(--ink)", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                  <Download size={14} strokeWidth={1.8} /> Exporter
+                </button>
+                <button onClick={() => setSearchOpen(true)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 20px", borderRadius: 9999, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                  <Plus size={14} strokeWidth={2.5} />Ajouter une action
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* KPIs — desktop uniquement (mobile a son propre hero ci-dessus) */}
+        {stocks.length > 0 && !isMobile && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
               {[
                 { icon: <TrendingUp size={13} />, label: "En hausse aujourd'hui", big: String(upStocks.length), sub: `/ ${stocks.length}`, meta: `${avgChg > 0 ? "+" : ""}${avgChg.toFixed(2)} % en moyenne`, green: upStocks.length > stocks.length / 2 },
@@ -250,7 +283,6 @@ export default function WatchlistPage() {
                 </div>
               ))}
             </div>
-          )
         )}
 
         {/* Empty state */}
@@ -289,16 +321,16 @@ export default function WatchlistPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{items.map(w => <div key={w.symbol} className="skeleton" style={{ height: 64, borderRadius: 10 }} />)}</div>
               ) : isMobile ? (
                 /* ── Mobile card list ── */
-                <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 16, overflow: "hidden" }}>
+                <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 3px rgba(10,22,40,0.04)" }}>
                   {filtered.map((s, i) => {
                     const isUp = s.changePercent >= 0;
                     const sig  = s.valuation?.signal ?? "HOLD";
                     return (
                       <div key={s.symbol}
                         onClick={() => window.location.href = `/stock/${s.symbol}`}
-                        style={{ display: "flex", gap: 12, padding: "14px 16px", alignItems: "center", borderBottom: i < filtered.length - 1 ? "1px dashed var(--line)" : "none", cursor: "pointer" }}
+                        style={{ display: "flex", gap: 12, padding: "14px 16px", alignItems: "center", borderBottom: i < filtered.length - 1 ? "1px solid var(--line)" : "none", cursor: "pointer" }}
                       >
-                        <CompanyLogo symbol={s.symbol} name={s.name} size={40} radius={10} />
+                        <CompanyLogo symbol={s.symbol} name={s.name} size={42} radius={12} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
                           <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{s.sector || s.symbol}</div>

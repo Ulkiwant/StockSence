@@ -206,7 +206,7 @@ export default function ScenarioAnalysis({
           const rate = rates[key];
           const proj = projections[key] as Record<number, number>;
           return (
-            <div key={key} style={{ background: BG[key], border: `1px solid ${BORDER[key]}`, borderRadius: 14, padding: "18px 20px" }}>
+            <div key={key} style={{ background: BG[key], border: `1px solid ${BORDER[key]}`, borderRadius: 16, padding: "18px 20px", boxShadow: "0 1px 3px rgba(10,22,40,0.04)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ color: sc.color, display: "flex" }}><ScenarioIcon k={key} /></span>
