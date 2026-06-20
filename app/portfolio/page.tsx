@@ -699,9 +699,63 @@ export default function PortfolioPage() {
           )}
         </div>
 
-        {/* Actions mobile — boutons circulaires façon app, jamais de débordement */}
-        {isMobile && (
-          <div style={{ display: "flex", justifyContent: "space-around" }}>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          MOBILE — carte hero (valeur + sparkline) + actions rondes
+      ══════════════════════════════════════════ */}
+      {isMobile && enriched.length > 0 && (
+        <>
+          <div style={{
+            padding: "20px 20px 4px", borderRadius: 26, border: "1px solid var(--line)",
+            background: "#fff", boxShadow: "0 1px 3px rgba(10,22,40,0.04)", marginBottom: 18,
+            overflow: "hidden",
+          }}>
+            <div style={{
+              fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em",
+              fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase",
+            }}>VALEUR TOTALE</div>
+            <div style={{
+              fontSize: 32, color: "var(--ink)",
+              fontFamily: "var(--font-geist-mono, monospace)", fontWeight: 700,
+              lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 10,
+              fontVariantNumeric: "tabular-nums",
+            }}>
+              {fmtEur(totals.value, "EUR")}
+            </div>
+            {todayChange != null && todayChangePct != null ? (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                fontSize: 12, fontWeight: 600, fontFamily: "var(--font-geist-mono, monospace)",
+                color: todayChange >= 0 ? "var(--signal-up)" : "var(--signal-down)",
+                background: todayChange >= 0 ? "rgba(45,125,90,0.10)" : "rgba(184,74,58,0.10)",
+                padding: "3px 9px", borderRadius: 9999, marginBottom: 12,
+              }}>
+                {todayChange >= 0 ? "▲" : "▼"} {fmtEur(Math.abs(todayChange))} · {todayChangePct >= 0 ? "+" : ""}{todayChangePct.toFixed(2)} %
+              </span>
+            ) : (
+              <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 12 }}>— aujourd'hui</div>
+            )}
+            {history.length > 1 && (
+              <div style={{ marginLeft: -20, marginRight: -20 }}>
+                <ResponsiveContainer width="100%" height={56}>
+                  <AreaChart data={history} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="heroValueGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={isUp ? "var(--signal-up)" : "var(--signal-down)"} stopOpacity={0.22} />
+                        <stop offset="95%" stopColor={isUp ? "var(--signal-up)" : "var(--signal-down)"} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="value"
+                      stroke={isUp ? "var(--signal-up)" : "var(--signal-down)"}
+                      strokeWidth={1.8} fill="url(#heroValueGrad)" dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 18 }}>
             <CircleAction icon={<Plus size={18} strokeWidth={2.3} />} label="Ajouter" primary onClick={() => setShowAdd(true)} />
             <CircleAction
               icon={<Sparkles size={18} strokeWidth={2} />}
@@ -711,18 +765,68 @@ export default function PortfolioPage() {
             />
             <CircleAction icon={<Download size={18} strokeWidth={2} />} label="Rapport" />
           </div>
-        )}
-      </div>
 
-      {/* ── KPI strip ── */}
-      {enriched.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+            {/* Gain total */}
+            <div style={{ padding: "18px 16px", borderRadius: 16, border: "1px solid var(--line)", background: "#fff", boxShadow: "0 1px 3px rgba(10,22,40,0.04)" }}>
+              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>GAIN TOTAL</div>
+              <div style={{ fontSize: 22, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, marginBottom: 6, color: isUp ? "var(--signal-up)" : "var(--signal-down)" }}>
+                {isUp ? "+" : ""}{fmtEur(totals.pnl)}
+              </div>
+              <div style={{ fontSize: 11, color: isUp ? "var(--signal-up)" : "var(--signal-down)", fontFamily: "var(--font-geist-mono, monospace)" }}>
+                {isUp ? "+" : ""}{totalPct.toFixed(2)} %
+              </div>
+            </div>
+
+            {/* Perf. cumulée / Annualisé */}
+            <div style={{ padding: "18px 16px", borderRadius: 16, border: "1px solid var(--line)", background: "#fff", boxShadow: "0 1px 3px rgba(10,22,40,0.04)" }}>
+              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>
+                {historyYears > 0 && historyYears < 1 ? "PERF. CUMULÉE" : "ANNUALISÉ"}
+              </div>
+              <div style={{ fontSize: 22, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, marginBottom: 6, color: annualizedReturn == null ? "var(--ink)" : annualizedReturn >= 0 ? "var(--signal-up)" : "var(--signal-down)" }}>
+                {annualizedReturn != null ? `${annualizedReturn >= 0 ? "+" : ""}${annualizedReturn.toFixed(1)} %` : `${isUp ? "+" : ""}${totalPct.toFixed(1)} %`}
+              </div>
+              {livretAReturn != null && chartPerf != null && (
+                <div style={{ fontSize: 10.5, color: "var(--muted)" }}>
+                  vs Livret A : {chartPerf - livretAReturn >= 0 ? "+" : ""}{(chartPerf - livretAReturn).toFixed(1)} %
+                </div>
+              )}
+            </div>
+
+            {/* Dividendes */}
+            <div style={{ padding: "18px 16px", borderRadius: 16, border: "1px solid var(--line)", background: "#fff", boxShadow: "0 1px 3px rgba(10,22,40,0.04)" }}>
+              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>DIVIDENDES / AN</div>
+              <div style={{ fontSize: 22, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, marginBottom: 6, color: totalAnnualDividend > 0 ? "var(--signal-up)" : "var(--ink)" }}>
+                {totalAnnualDividend > 0 ? fmtEur(totalAnnualDividend) : "—"}
+              </div>
+              <div style={{ fontSize: 10.5, color: "var(--muted)" }}>
+                {totalAnnualDividend > 0 ? `≈ ${fmtEur(dividendToReceive)} d'ici fin ${new Date().getFullYear()}` : "Aucune action à dividende"}
+              </div>
+            </div>
+
+            {/* Diversification */}
+            <div style={{ padding: "18px 16px", borderRadius: 16, border: "1px solid var(--line)", background: "#fff", boxShadow: "0 1px 3px rgba(10,22,40,0.04)" }}>
+              <div style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.10em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 8, textTransform: "uppercase" }}>DIVERSIFICATION</div>
+              <div style={{ fontSize: 22, fontFamily: "var(--font-instrument, 'Instrument Serif', serif)", fontWeight: 400, lineHeight: 1, marginBottom: 6, color: divScore >= 65 ? "var(--signal-up)" : divScore >= 40 ? "var(--warning)" : "var(--signal-down)" }}>
+                {divScore}<span style={{ fontSize: 13, color: "var(--muted)" }}>/100</span>
+              </div>
+              <div style={{ fontSize: 10.5, color: "var(--muted)" }}>
+                {enriched.length} positions · {uniqueSectors} secteurs
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── KPI strip — desktop ── */}
+      {!isMobile && enriched.length > 0 && (
         <div className="kpi-strip" style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: isMobile ? 10 : 14,
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14,
           marginBottom: 28,
         }}>
           {/* Cell 1 — Valeur totale (green gradient) */}
           <div style={{
-            padding: isMobile ? "18px 16px" : "24px 26px",
+            padding: "24px 26px",
             borderRadius: 16, border: "1px solid rgba(45,125,90,0.18)",
             boxShadow: "0 1px 3px rgba(10,22,40,0.04)",
             background: "linear-gradient(135deg, rgba(45,125,90,0.13) 0%, #ffffff 65%)",
@@ -733,7 +837,7 @@ export default function PortfolioPage() {
               textTransform: "uppercase",
             }}>VALEUR TOTALE</div>
             <div style={{
-              fontSize: isMobile ? 26 : 52, color: "var(--accent)",
+              fontSize: 52, color: "var(--accent)",
               fontFamily: "var(--font-instrument, 'Instrument Serif', serif)",
               fontWeight: 400, lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 8,
             }}>
