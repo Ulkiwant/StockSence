@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Search, ArrowRight, Check, ChevronRight, Clock, BarChart2, Shield } from "lucide-react";
 import Footer from "@/components/Footer";
 import CompanyLogo from "@/components/CompanyLogo";
+import Sparkline from "@/components/Sparkline";
 
 /* ── Livret A calculation (taux actuel 2,4 %) ── */
 const LIVRET_A_RATE = 0.024;
@@ -170,6 +171,17 @@ export default function HomePage() {
   const [simAmount,  setSimAmount]  = useState(5000);
   const [simMonthly, setSimMonthly] = useState(200);
   const [simYears,   setSimYears]   = useState(15);
+
+  /* ── Performance réelle des profils-types (12 derniers mois glissants) ── */
+  interface TrustProfile {
+    key: string; label: string; portfolioName: string;
+    invested: number; currentValue: number; gain: number; gainPct: number;
+    series: { date: string; value: number }[]; startDate: string;
+  }
+  const [trustData, setTrustData] = useState<{ profiles: TrustProfile[]; initial: number; monthly: number; disclaimer: string } | null>(null);
+  useEffect(() => {
+    fetch("/api/trust-portfolios").then((r) => r.json()).then((d) => { if (!d.error) setTrustData(d); }).catch(() => {});
+  }, []);
 
   function calcSim(rate: number) {
     // Montant initial capitalisé + versements mensuels capitalisés
@@ -683,6 +695,62 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════
+          PERFORMANCE RÉELLE — 12 derniers mois glissants
+      ══════════════════════════════════════════ */}
+      {trustData && trustData.profiles.length > 0 && (
+        <section style={{ borderTop: "1px solid var(--line)", padding: "96px 32px", background: "var(--paper-2)" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ marginBottom: 40 }}>
+              <div style={{ fontSize: 12, color: "var(--accent)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 14 }}>
+                Données réelles · 12 derniers mois
+              </div>
+              <h2 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(32px, 4vw, 52px)", lineHeight: 1.05, letterSpacing: "-0.015em", margin: "0 0 18px" }}>
+                Si tu avais investi <em style={{ fontStyle: "italic", color: "var(--accent)" }}>il y a un an</em>.
+              </h2>
+              <p style={{ fontSize: 16, color: "var(--muted)", lineHeight: 1.65, maxWidth: 640, margin: 0 }}>
+                {trustData.initial.toLocaleString("fr-FR")} € de départ + {trustData.monthly.toLocaleString("fr-FR")} €/mois pendant 12 mois, sur la répartition exacte de chaque profil-type — avec les vrais cours de marché, pas une simulation théorique. Cette fenêtre glisse automatiquement : elle couvre toujours les 12 derniers mois, jamais une période choisie pour avantager le résultat.
+              </p>
+            </div>
+
+            <div className="steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 20 }}>
+              {trustData.profiles.map((p) => {
+                const isUp = p.gain >= 0;
+                return (
+                  <div key={p.key} style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 16, padding: "22px 22px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>Profil {p.label}</span>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 9999,
+                        background: isUp ? "rgba(45,125,90,0.10)" : "rgba(184,74,58,0.10)",
+                        color: isUp ? "var(--signal-up)" : "var(--signal-down)",
+                      }}>
+                        {isUp ? "+" : ""}{p.gainPct.toFixed(1)} %
+                      </span>
+                    </div>
+                    <div style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: 32, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 6 }}>
+                      {p.currentValue.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} €
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14 }}>
+                      {p.invested.toLocaleString("fr-FR")} € versés · {isUp ? "+" : ""}{p.gain.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} €
+                    </div>
+                    <Sparkline
+                      data={p.series.map((s) => s.value)}
+                      width={240} height={56}
+                      color={isUp ? "var(--signal-up)" : "var(--signal-down)"}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6, maxWidth: 760 }}>
+              ⚠️ {trustData.disclaimer}
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* ══════════════════════════════════════════
           PORTFOLIO SECTION
