@@ -19,18 +19,9 @@ import {
   Shield,
   Activity,
   PlusCircle,
-  User,
-  GraduationCap,
-  Coffee,
-  Target,
-  PiggyBank,
   Flame,
   RefreshCw,
   Lightbulb,
-  Heart,
-  Building2,
-  Wallet,
-  Package,
 } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -87,43 +78,6 @@ interface Question {
 
 const QUESTIONS: Question[] = [
   {
-    field: "age",
-    stepLabel: "Âge",
-    title: "Quel est ton âge ?",
-    type: "choice",
-    options: [
-      { label: "Moins de 30 ans", tag: "débutant motivé", icon: <Flame size={20} color="var(--accent)" /> },
-      { label: "30 — 45 ans", tag: "dans la vie active", icon: <Briefcase size={20} color="var(--accent)" /> },
-      { label: "45 — 60 ans", tag: "à mi-parcours", icon: <Target size={20} color="var(--accent)" /> },
-      { label: "Plus de 60 ans", tag: "proche de la retraite", icon: <Coffee size={20} color="var(--accent)" /> },
-    ],
-  },
-  {
-    field: "familySituation",
-    stepLabel: "Famille",
-    title: "Quelle est ta situation familiale ?",
-    subtitle: "Elle détermine le niveau de sécurité dont tu as besoin et ta capacité à prendre des risques.",
-    type: "choice",
-    options: [
-      { label: "Célibataire, sans enfant", sublabel: "Tu peux prendre plus de risques — tu ne dépends que de toi.", tag: "Liberté maximale", icon: <User size={20} color="var(--accent)" /> },
-      { label: "En couple, sans enfant", sublabel: "Deux revenus, projets communs à financer.", tag: "Projets partagés", icon: <Heart size={20} color="var(--accent)" /> },
-      { label: "Avec enfants à charge", sublabel: "La sécurité et la constitution d'un patrimoine priment.", tag: "Sécurité importante", icon: <Home size={20} color="var(--accent)" /> },
-      { label: "Parent isolé avec enfants", sublabel: "Prudence et liquidité sont essentielles — tu assures seul(e).", tag: "Prudence maximale", icon: <Shield size={20} color="var(--accent)" /> },
-    ],
-  },
-  {
-    field: "situation",
-    stepLabel: "Situation pro",
-    title: "Quelle est ta situation professionnelle ?",
-    type: "choice",
-    options: [
-      { label: "Salarié(e)", tag: "revenus stables", icon: <Briefcase size={20} color="var(--accent)" /> },
-      { label: "Indépendant(e) / Freelance", tag: "revenus variables", icon: <Activity size={20} color="var(--accent)" /> },
-      { label: "Étudiant(e)", tag: "revenus limités", icon: <GraduationCap size={20} color="var(--accent)" /> },
-      { label: "Retraité(e)", tag: "revenus fixes", icon: <User size={20} color="var(--accent)" /> },
-    ],
-  },
-  {
     field: "horizon",
     stepLabel: "Horizon",
     title: "Pendant combien de temps peux-tu laisser ton argent investi ?",
@@ -175,45 +129,6 @@ const QUESTIONS: Question[] = [
       { label: "Dynamique — croissance maximale", sublabel: "J'accepte des baisses importantes pour viser plus haut.", tag: "Forte croissance", icon: <Flame size={20} color="var(--accent)" /> },
     ],
   },
-  {
-    field: "goal",
-    stepLabel: "Objectif",
-    title: "Quel est ton objectif principal ?",
-    type: "choice",
-    options: [
-      { label: "Faire fructifier mon capital", icon: <TrendingUp size={20} color="var(--accent)" /> },
-      { label: "Générer des revenus réguliers", icon: <PiggyBank size={20} color="var(--accent)" /> },
-      { label: "Préparer ma retraite", icon: <Coffee size={20} color="var(--accent)" /> },
-      { label: "Protéger mon capital de l'inflation", icon: <Shield size={20} color="var(--accent)" /> },
-    ],
-  },
-  {
-    field: "existingAssets",
-    stepLabel: "Actifs existants",
-    title: "As-tu déjà des investissements ou des actifs ?",
-    subtitle: "Ces informations t'aident à prendre du recul sur ta situation globale. Le profil affiché à la fin reste un exemple générique, identique pour tous les utilisateurs de ce profil.",
-    type: "multi",
-    options: [
-      { label: "Immobilier (résidence ou locatif)", sublabel: "Information indicative — n'influence pas le profil-type affiché.", icon: <Building2 size={20} color="var(--accent)" /> },
-      { label: "Livret A ou épargne de précaution", sublabel: "Une bonne base de sécurité à conserver en complément.", icon: <PiggyBank size={20} color="var(--accent)" /> },
-      { label: "Assurance-vie déjà ouverte", sublabel: "Information indicative — n'influence pas le profil-type affiché.", icon: <Shield size={20} color="var(--accent)" /> },
-      { label: "Actions ou ETF déjà détenus", sublabel: "À titre indicatif — n'est pas utilisé pour personnaliser le profil affiché.", icon: <Wallet size={20} color="var(--accent)" /> },
-      { label: "Je démarre de zéro", sublabel: "Tu pourras explorer les 4 profils-types depuis le début.", icon: <Package size={20} color="var(--accent)" /> },
-    ],
-  },
-  {
-    field: "taxWrapper",
-    stepLabel: "Enveloppe",
-    title: "Dans quelle enveloppe veux-tu investir ?",
-    subtitle: "Si tu ne sais pas, choisis 'Je ne sais pas encore' — on t'expliquera.",
-    type: "multi",
-    options: [
-      { label: "PEA", sublabel: "Fiscalité avantageuse après 5 ans, pour les actions européennes", icon: <Target size={20} color="var(--accent)" /> },
-      { label: "CTO (Compte-Titres)", sublabel: "Flexible, accessible partout, imposé chaque année", icon: <Briefcase size={20} color="var(--accent)" /> },
-      { label: "Assurance-vie", sublabel: "Transmission facilitée, fiscalité attractive sur le long terme", icon: <Shield size={20} color="var(--accent)" /> },
-      { label: "Je ne sais pas encore", sublabel: "Chaque profil-type présente des enveloppes courantes, à titre d'exemple", icon: <Sparkles size={20} color="var(--accent)" /> },
-    ],
-  },
 ];
 
 const STEP_LABELS = QUESTIONS.map((q) => q.stepLabel);
@@ -228,22 +143,6 @@ interface HintContent {
 
 function getHint(field: string): HintContent {
   const map: Record<string, HintContent> = {
-    age: {
-      title: "Pourquoi l'âge compte.",
-      body: "Plus tu commences tôt, plus les intérêts composés travaillent pour toi — même avec de petites sommes.",
-    },
-    familySituation: {
-      title: "Pourquoi la famille change tout.",
-      body: "Un parent isolé avec deux enfants à charge ne peut pas prendre les mêmes risques qu'un célibataire sans engagement. Ta situation détermine ton **filet de sécurité minimum** avant d'investir.",
-    },
-    situation: {
-      title: "Ton statut impacte tes choix.",
-      body: "Un salarié et un indépendant n'ont pas les mêmes enveloppes fiscales ni la même stabilité de revenus.",
-    },
-    existingAssets: {
-      title: "Ta situation globale compte.",
-      body: "Le profil affiché à la fin reste un exemple générique, identique pour tout le monde dans ce profil. Cette information t'aide simplement à prendre du recul sur ta situation globale.",
-    },
     horizon: {
       title: "Pourquoi l'horizon change tout.",
       body: "Sur 1 an, la bourse peut perdre 30 %. Sur **15 ans**, le **S&P 500** (l'indice des 500 plus grandes entreprises américaines) n'a **jamais** été en perte depuis 1950.",
@@ -263,14 +162,6 @@ function getHint(field: string): HintContent {
     riskTolerance: {
       title: "Quel profil te correspond ?",
       body: "Le profil **Équilibré** est le plus adapté à la majorité des investisseurs. Il offre un bon compromis entre performance à long terme et résistance aux crises.",
-    },
-    goal: {
-      title: "L'objectif oriente tout.",
-      body: "Un portefeuille pour la retraite dans 20 ans n'a rien à voir avec un portefeuille pour générer des revenus dans 2 ans.",
-    },
-    taxWrapper: {
-      title: "L'enveloppe fiscale change tout.",
-      body: "Un **PEA** (Plan d'Épargne en Actions) permet d'investir en bourse avec une fiscalité très avantageuse après 5 ans. Un **CTO** (Compte-Titres Ordinaire) est plus flexible mais imposé chaque année.",
     },
   };
   return map[field] ?? { title: "Bon à savoir.", body: "Chaque réponse t'aide à situer ton profil parmi les 4 profils-types proposés (Prudent, Équilibré, Dynamique, Offensif)." };
@@ -449,24 +340,16 @@ export default function AdvisorPage() {
   const submit = async () => {
     setLoading(true);
     setError(null);
-    const taxWrapperRaw = answers.taxWrapper ?? [];
-    const taxWrapperArr = Array.isArray(taxWrapperRaw) ? taxWrapperRaw : [taxWrapperRaw];
     try {
       const res = await fetch("/api/advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          age: answers.age,
           horizon: answers.horizon,
           capital: capitalInput || answers.capital,
           reactionToDrop: answers.reactionToDrop,
           riskTolerance: answers.riskTolerance,
-          goal: answers.goal,
           monthly: monthlyInput ? parseFloat(monthlyInput) : 0,
-          existingAssets: (answers.existingAssets as string[] | undefined) ?? [],
-          family: answers.familySituation ?? "Célibataire sans enfant",
-          taxWrapper: taxWrapperArr,
-          situation: answers.situation ?? "Salarié(e)",
         }),
       });
       const data = await res.json();
@@ -530,10 +413,8 @@ export default function AdvisorPage() {
   if (result && step === TOTAL + 1) {
     const capitalNum = parseFloat(capitalInput || (answers.capital as string)) || 0;
     const monthlyNum = monthlyInput ? parseFloat(monthlyInput) : 0;
-    const taxWrapper = (answers.taxWrapper as string[] | undefined) ?? [];
     const risk = ((answers.riskTolerance as string) ?? "").toLowerCase();
     const horizonAns = (answers.horizon as string) ?? "";
-    const ageAns     = (answers.age as string) ?? "";
     const CHART_COLORS_RES = ["#1F5C3E","#2F7D52","#C9A24E","#9C9583","#7D55C7","#5C3A21","#0078D4","#B84A3E"];
 
     /* Explication dynamique du profil */
@@ -545,26 +426,14 @@ export default function AdvisorPage() {
       ? "Tu privilégies la sécurité et la préservation de ton capital avant la performance."
       : "Tu cherches un bon équilibre entre croissance et stabilité — le profil le plus répandu.";
 
-    // Brokers — exemples d'enveloppes/courtiers courants pour ce type de profil
+    // Brokers — exemples génériques de courtiers courants pour ce type de profil
     type Broker = { name: string; domain: string; desc: string; tags: string[]; link: string; best?: boolean };
-    const brokers: Broker[] = [];
-    if (taxWrapper.includes("PEA") || taxWrapper.includes("Je ne sais pas encore") || taxWrapper.length === 0) {
-      brokers.push({ name: "Trade Republic", domain: "traderepublic.com", desc: "Le plus simple pour débuter. PEA gratuit, 0 € de commission, application mobile intuitive.", tags: ["PEA", "Gratuit", "Débutant"], link: "https://traderepublic.com/fr-fr", best: true });
-      brokers.push({ name: "Fortuneo", domain: "fortuneo.fr", desc: "PEA et CTO sans frais de tenue. Bonus à l'ouverture régulièrement.", tags: ["PEA", "CTO", "Français"], link: "https://www.fortuneo.fr" });
-    }
-    if (taxWrapper.includes("CTO (Compte-Titres)") && !brokers.find(b => b.name === "Trade Republic")) {
-      brokers.push({ name: "Trade Republic", domain: "traderepublic.com", desc: "0 € de commission sur actions et ETF. App simple et très bien conçue.", tags: ["CTO", "Gratuit", "Mobile"], link: "https://traderepublic.com/fr-fr", best: true });
-      brokers.push({ name: "Degiro", domain: "degiro.fr", desc: "Frais parmi les plus bas d'Europe. Idéal pour les ETF et les actions internationales.", tags: ["CTO", "Frais bas"], link: "https://www.degiro.fr" });
-    }
-    if (taxWrapper.includes("Assurance-vie")) {
-      brokers.push({ name: "Linxea Spirit", domain: "linxea.com", desc: "La meilleure assurance-vie en ligne. Frais de gestion 0,5 %/an, large choix d'ETF.", tags: ["Assurance-vie", "Recommandé"], link: "https://www.linxea.com", best: !brokers.length });
-    }
+    const brokers: Broker[] = [
+      { name: "Trade Republic", domain: "traderepublic.com", desc: "Le plus simple pour débuter. PEA gratuit, 0 € de commission, application mobile intuitive.", tags: ["PEA", "Gratuit", "Débutant"], link: "https://traderepublic.com/fr-fr", best: true },
+      { name: "Fortuneo", domain: "fortuneo.fr", desc: "PEA et CTO sans frais de tenue. Bonus à l'ouverture régulièrement.", tags: ["PEA", "CTO", "Français"], link: "https://www.fortuneo.fr" },
+    ];
     if (risk.includes("dynamique")) {
       brokers.push({ name: "Interactive Brokers", domain: "interactivebrokers.co.uk", desc: "Meilleurs frais pour les investisseurs actifs. Accès à tous les marchés mondiaux.", tags: ["CTO", "Pro", "Mondial"], link: "https://www.interactivebrokers.co.uk/fr" });
-    }
-    if (!brokers.length) {
-      brokers.push({ name: "Trade Republic", domain: "traderepublic.com", desc: "0 € de commission, application mobile simple. Idéal pour débuter.", tags: ["PEA", "Gratuit", "Débutant"], link: "https://traderepublic.com/fr-fr", best: true });
-      brokers.push({ name: "Fortuneo", domain: "fortuneo.fr", desc: "PEA et CTO français, sans frais de tenue.", tags: ["PEA", "CTO", "Français"], link: "https://www.fortuneo.fr" });
     }
     const topBrokers = brokers.slice(0, 3);
 
@@ -592,7 +461,6 @@ export default function AdvisorPage() {
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: profileColor }} />
                 Profil le plus proche : {result.label ?? result.riskLevel}
               </span>
-              <span style={{ fontSize: 13, color: "var(--muted)" }}>· {ageAns}</span>
             </div>
 
             {/* Titre + résumé du profil-type */}
@@ -725,9 +593,6 @@ export default function AdvisorPage() {
               </div>
               {/* Ligne 3: enveloppes + conseil fiscal (tronqué) */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap", overflow: "hidden" }}>
-                {taxWrapper.filter(t => t !== "Je ne sais pas encore").map(t => (
-                  <span key={t} style={{ fontSize: 10, padding: "3px 10px", borderRadius: 9999, background: "rgba(255,255,255,0.14)", color: "#A8D0AF", fontFamily: "var(--font-geist-mono, monospace)", fontWeight: 600, flexShrink: 0 }}>{t}</span>
-                ))}
                 {result.taxAdvice && (
                   <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", display: "flex", alignItems: "center", gap: 5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     <Briefcase size={10} style={{ flexShrink: 0 }} />
@@ -858,8 +723,7 @@ export default function AdvisorPage() {
             <div style={{ filter: (!isPaid && isLoggedIn === false) ? "blur(5px)" : "none", userSelect: (!isPaid && isLoggedIn === false) ? "none" : "auto", pointerEvents: (!isPaid && isLoggedIn === false) ? "none" : "auto" }}>
             <div style={{ marginBottom: 16 }}>
               <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, lineHeight: 1.6 }}>
-                Exemples de courtiers couramment utilisés pour le profil <strong style={{ color: "var(--ink)" }}>{result.label ?? result.riskLevel}</strong>
-                {taxWrapper.length > 0 && taxWrapper[0] !== "Je ne sais pas encore" && ` et l'enveloppe ${taxWrapper[0]}`}.
+                Exemples de courtiers couramment utilisés pour le profil <strong style={{ color: "var(--ink)" }}>{result.label ?? result.riskLevel}</strong>.
               </p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
