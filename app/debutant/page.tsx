@@ -395,15 +395,15 @@ export default function DebutantPage() {
               Pourquoi pas <em style={{ fontStyle: "italic", color: "var(--accent)" }}>un autre outil</em> ?
             </h2>
             <p style={{ fontSize: 14.5, color: "var(--muted)", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
-              La plupart des outils financiers sont pensés pour des gens qui maîtrisent déjà la finance. Finazen part de l&apos;hypothèse inverse.
+              Beaucoup d&apos;outils financiers supposent que tu maîtrises déjà tous les codes du secteur. Finazen reste clair à tous les niveaux — que tu débutes ou que tu sois déjà à l&apos;aise.
             </p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
             {[
               {
-                icon: "🗣️", title: "Pensé pour les débutants, pas pour les initiés",
-                desc: "Beaucoup de plateformes d'analyse boursière utilisent un vocabulaire et des tableaux denses pensés pour des utilisateurs déjà à l'aise avec la finance. Ici, chaque terme et chaque chiffre est expliqué en français clair.",
+                icon: "🗣️", title: "Accessible à tous, sans présupposer ton niveau",
+                desc: "Beaucoup de plateformes d'analyse boursière utilisent un vocabulaire et des tableaux denses qui supposent que tu maîtrises déjà la finance. Ici, chaque terme et chaque chiffre reste expliqué en clair, à portée de clic — utile que tu débutes ou que tu veuilles juste gagner du temps.",
               },
               {
                 icon: "🧮", title: "Un calcul transparent, pas un avis opaque",
