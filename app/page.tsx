@@ -557,6 +557,75 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════
+          DÉBUTANT — invitation chaleureuse vers /debutant
+      ══════════════════════════════════════════ */}
+      <section style={{ borderTop: "1px solid var(--line)", padding: "72px 32px", background: "var(--paper)" }}>
+        <div style={{
+          maxWidth: 1020, margin: "0 auto",
+          background: "#0a1628", borderRadius: 28,
+          padding: "56px 44px",
+          display: "flex", flexWrap: "wrap", gap: 40,
+          alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div style={{ maxWidth: 540 }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "5px 14px", borderRadius: 9999,
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+              fontSize: 12, color: "#9fd9b8", fontWeight: 600, marginBottom: 22,
+            }}>
+              🌱 Pour les vrais débutants
+            </div>
+            <h2 style={{
+              fontFamily: "var(--font-instrument, serif)", fontWeight: 400,
+              fontSize: "clamp(28px, 3.4vw, 42px)", lineHeight: 1.12,
+              letterSpacing: "-0.015em", color: "#F6F2E8", margin: "0 0 16px",
+            }}>
+              Tu ne comprends rien à la bourse ?{" "}
+              <em style={{ fontStyle: "italic", color: "#9fd9b8" }}>C&apos;est normal, et c&apos;est pour ça qu&apos;on est là.</em>
+            </h2>
+            <p style={{ fontSize: 15.5, color: "rgba(246,242,232,0.75)", lineHeight: 1.7, margin: "0 0 28px" }}>
+              Action, ETF, risque, diversification, profil d&apos;investisseur… Si ces mots ne veulent encore rien dire pour toi, commence par notre parcours <strong style={{ color: "#F6F2E8" }}>Débuter</strong> : les bases en clair, sans jargon, puis un plan d&apos;action simple pour faire tes premiers pas avec Finazen.
+            </p>
+            <Link href="/debutant" style={{
+              display: "inline-flex", alignItems: "center", gap: 10,
+              padding: "13px 24px", borderRadius: 9999,
+              background: "#F6F2E8", color: "#0a1628",
+              fontWeight: 700, fontSize: 15, border: "none",
+              transition: "transform 0.12s",
+            }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "none"; }}
+            >
+              Suivre le parcours Débuter
+              <ArrowRight size={15} strokeWidth={2.5} />
+            </Link>
+          </div>
+
+          {/* 3 repères visuels */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 240 }}>
+            {[
+              { n: "01", label: "Les bases en clair", desc: "Action, ETF, risque… expliqués sans jargon" },
+              { n: "02", label: "Ton profil", desc: "3 questions pour savoir par où commencer" },
+              { n: "03", label: "Ton premier pas", desc: "Un plan d'action concret avec Finazen" },
+            ].map(({ n, label, desc }) => (
+              <div key={n} style={{
+                display: "flex", alignItems: "flex-start", gap: 14,
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)",
+                borderRadius: 14, padding: "14px 16px",
+              }}>
+                <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 12, color: "#9fd9b8", fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{n}</span>
+                <div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: "#F6F2E8", marginBottom: 2 }}>{label}</div>
+                  <div style={{ fontSize: 12, color: "rgba(246,242,232,0.6)", lineHeight: 1.5 }}>{desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
           TRUST SECTION
       ══════════════════════════════════════════ */}
       <section style={{ borderTop: "1px solid var(--line)", padding: "96px 32px", background: "var(--paper-2)" }}>

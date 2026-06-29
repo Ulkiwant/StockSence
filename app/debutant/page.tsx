@@ -314,6 +314,79 @@ export default function DebutantPage() {
         <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 16 }}>Sans inscription · Résultat immédiat</p>
       </div>
 
+      {/* ── Les bases en 1 minute ── */}
+      <div style={{ background: "var(--paper-2)", borderTop: "1px solid var(--line)", padding: "56px 24px" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div style={{ fontSize: 12, color: "var(--accent)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
+              Avant de commencer
+            </div>
+            <h2 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(26px, 3.2vw, 36px)", letterSpacing: "-0.015em", margin: 0 }}>
+              Les bases, <em style={{ fontStyle: "italic", color: "var(--accent)" }}>en clair</em>.
+            </h2>
+            <p style={{ fontSize: 14.5, color: "var(--muted)", marginTop: 10, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+              5 mots que tu vas croiser partout. Pas besoin de les retenir par cœur — juste de savoir à quoi ils correspondent.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+            {[
+              { icon: "🏢", term: "Action", def: "Une toute petite part d'une entreprise cotée en bourse. En acheter une te rend (un peu) propriétaire de cette entreprise." },
+              { icon: "📦", term: "ETF", def: "Un panier qui regroupe des centaines d'actions en un seul achat. La façon la plus simple de ne pas tout miser sur une seule entreprise." },
+              { icon: "📉", term: "Risque", def: "Le prix d'une action bouge chaque jour, parfois fort. Plus ça bouge, plus le gain potentiel est grand — mais la perte aussi." },
+              { icon: "🧩", term: "Diversification", def: "Répartir son argent entre plusieurs actions ou secteurs plutôt que tout miser sur un seul, pour limiter les dégâts si l'un baisse." },
+              { icon: "⏳", term: "Horizon", def: "Le temps que tu peux laisser ton argent investi sans y toucher. Plus il est long, plus tu peux viser un meilleur rendement." },
+            ].map(({ icon, term, def }) => (
+              <div key={term} style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: "18px 18px" }}>
+                <div style={{ fontSize: 22, marginBottom: 8 }}>{icon}</div>
+                <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--ink)", marginBottom: 6 }}>{term}</div>
+                <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, margin: 0 }}>{def}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Et Finazen, ça sert à quoi concrètement ? ── */}
+      <div style={{ background: "var(--paper)", borderTop: "1px solid var(--line)", padding: "56px 24px" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <h2 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(26px, 3.2vw, 36px)", letterSpacing: "-0.015em", margin: 0 }}>
+              Et Finazen, ça sert à quoi <em style={{ fontStyle: "italic", color: "var(--accent)" }}>concrètement</em> ?
+            </h2>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {[
+              {
+                icon: "🔍", title: "Tu tapes le nom d'une entreprise, on te dit si son prix est cohérent",
+                desc: "Une note sur 100 et un signal de valorisation (sous-évalué, neutre, surévalué…), basés sur ses chiffres réels — pas une opinion.",
+              },
+              {
+                icon: "🎯", title: "Tu réponds à 3 questions, on situe ton profil d'investisseur",
+                desc: "Prudent, équilibré, dynamique ou offensif — pour comprendre quel type de répartition correspond à ta situation.",
+              },
+              {
+                icon: "💼", title: "Tu suis tes actions et ton portefeuille au même endroit",
+                desc: "Performance, dividendes, répartition — sans avoir à ouvrir dix onglets différents pour comprendre où tu en es.",
+              },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} style={{ display: "flex", gap: 16, alignItems: "flex-start", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 14, padding: "16px 18px" }}>
+                <span style={{ fontSize: 22, flexShrink: 0 }}>{icon}</span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--ink)", marginBottom: 4, lineHeight: 1.4 }}>{title}</div>
+                  <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.55, margin: 0 }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 24, lineHeight: 1.6 }}>
+            Finazen reste un outil pédagogique, pas un conseiller en investissement — il t&apos;aide à comprendre, la décision finale reste toujours la tienne.
+          </p>
+        </div>
+      </div>
+
       <Footer />
     </div>
   );
