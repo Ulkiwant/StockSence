@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, BookOpen, Calculator, Target, Layers } from "lucide-react";
 import Footer from "@/components/Footer";
 
 /* ══════════════════════════════════════════
@@ -402,24 +402,29 @@ export default function DebutantPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
             {[
               {
-                icon: "🗣️", title: "Accessible à tous, sans présupposer ton niveau",
+                icon: BookOpen, title: "Accessible à tous, sans présupposer ton niveau",
                 desc: "Beaucoup de plateformes d'analyse boursière utilisent un vocabulaire et des tableaux denses qui supposent que tu maîtrises déjà la finance. Ici, chaque terme et chaque chiffre reste expliqué en clair, à portée de clic — utile que tu débutes ou que tu veuilles juste gagner du temps.",
               },
               {
-                icon: "🧮", title: "Un calcul transparent, pas un avis opaque",
+                icon: Calculator, title: "Un calcul transparent, pas un avis opaque",
                 desc: "Plutôt qu'un consensus d'analystes ou une recommandation IA sans justification, la note sur 100 est décomposée critère par critère — tu vois exactement pourquoi.",
               },
               {
-                icon: "🧭", title: "Adapté à ton profil, pas une fiche générique",
+                icon: Target, title: "Adapté à ton profil, pas une fiche générique",
                 desc: "Un outil de suivi de patrimoine te montre ce que tu possèdes déjà. Finazen t'aide d'abord à comprendre ce qui te correspond, avant même d'investir — sans connecter tes comptes bancaires.",
               },
               {
-                icon: "🆓", title: "Tout au même endroit, gratuit pour commencer",
+                icon: Layers, title: "Tout au même endroit, gratuit pour commencer",
                 desc: "Recherche d'actions, profils, portefeuille et pédagogie réunis au même endroit, sans jongler entre plusieurs outils — et sans carte bancaire pour démarrer.",
               },
-            ].map(({ icon, title, desc }) => (
+            ].map(({ icon: Icon, title, desc }) => (
               <div key={title} style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: "18px 18px" }}>
-                <div style={{ fontSize: 22, marginBottom: 8 }}>{icon}</div>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 10, marginBottom: 10,
+                  background: "var(--accent-soft)", display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <Icon size={18} strokeWidth={1.8} color="var(--accent)" />
+                </div>
                 <div style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)", marginBottom: 6, lineHeight: 1.4 }}>{title}</div>
                 <p style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.55, margin: 0 }}>{desc}</p>
               </div>
