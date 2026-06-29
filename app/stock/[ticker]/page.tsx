@@ -23,6 +23,7 @@ interface StockData {
   currentPrice: number;
   change: number;
   changePercent: number;
+  open?: number;
   currency: string;
   sector: string;
   industry: string;
@@ -163,6 +164,11 @@ export default function StockPage() {
     fetch(`/api/stock/${ticker}`)
       .then((r) => { if (!r.ok) throw new Error("introuvable"); return r.json(); })
       .then((d) => {
+        // Variation depuis l'ouverture de la séance du jour plutôt que vs clôture précédente
+        if (d?.open) {
+          const change = d.currentPrice - d.open;
+          d = { ...d, change, changePercent: change / d.open };
+        }
         setData(d); setLoading(false);
         setLoadingAI(true);
         fetch(`/api/stock/${ticker}/analyze`)
