@@ -387,6 +387,47 @@ export default function DebutantPage() {
         </div>
       </div>
 
+      {/* ── Pourquoi Finazen plutôt qu'un autre outil ── */}
+      <div style={{ background: "var(--paper-2)", borderTop: "1px solid var(--line)", padding: "56px 24px" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <h2 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(26px, 3.2vw, 36px)", letterSpacing: "-0.015em", margin: "0 0 10px" }}>
+              Pourquoi pas <em style={{ fontStyle: "italic", color: "var(--accent)" }}>un autre outil</em> ?
+            </h2>
+            <p style={{ fontSize: 14.5, color: "var(--muted)", maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
+              La plupart des outils financiers sont pensés pour des gens qui maîtrisent déjà la finance. Finazen part de l&apos;hypothèse inverse.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
+            {[
+              {
+                icon: "🗣️", title: "Pensé pour les débutants, pas pour les initiés",
+                desc: "Beaucoup de plateformes d'analyse boursière utilisent un vocabulaire et des tableaux denses pensés pour des utilisateurs déjà à l'aise avec la finance. Ici, chaque terme et chaque chiffre est expliqué en français clair.",
+              },
+              {
+                icon: "🧮", title: "Un calcul transparent, pas un avis opaque",
+                desc: "Plutôt qu'un consensus d'analystes ou une recommandation IA sans justification, la note sur 100 est décomposée critère par critère — tu vois exactement pourquoi.",
+              },
+              {
+                icon: "🧭", title: "Adapté à ton profil, pas une fiche générique",
+                desc: "Un outil de suivi de patrimoine te montre ce que tu possèdes déjà. Finazen t'aide d'abord à comprendre ce qui te correspond, avant même d'investir — sans connecter tes comptes bancaires.",
+              },
+              {
+                icon: "🆓", title: "Tout au même endroit, gratuit pour commencer",
+                desc: "Recherche d'actions, profils, portefeuille et pédagogie réunis au même endroit, sans jongler entre plusieurs outils — et sans carte bancaire pour démarrer.",
+              },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: "18px 18px" }}>
+                <div style={{ fontSize: 22, marginBottom: 8 }}>{icon}</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)", marginBottom: 6, lineHeight: 1.4 }}>{title}</div>
+                <p style={{ fontSize: 12.5, color: "var(--muted)", lineHeight: 1.55, margin: 0 }}>{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <Footer />
     </div>
   );
