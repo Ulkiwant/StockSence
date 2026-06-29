@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check, BookOpen, Calculator, Target, Layers } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, BookOpen, Calculator, Target, Layers, Landmark, ListChecks, Wallet, Clock } from "lucide-react";
 import Footer from "@/components/Footer";
 
 /* ══════════════════════════════════════════
@@ -355,6 +355,88 @@ export default function DebutantPage() {
           <p style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 24, lineHeight: 1.6 }}>
             Finazen reste un outil pédagogique, pas un conseiller en investissement — il t&apos;aide à comprendre, la décision finale reste toujours la tienne.
           </p>
+        </div>
+      </div>
+
+      {/* ── Le PEA et comment passer à l'action ── */}
+      <div style={{ background: "var(--paper)", borderTop: "1px solid var(--line)", padding: "56px 24px" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div style={{ fontSize: 12, color: "var(--accent)", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
+              Le dernier kilomètre
+            </div>
+            <h2 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(26px, 3.2vw, 36px)", letterSpacing: "-0.015em", margin: 0 }}>
+              Comment <em style={{ fontStyle: "italic", color: "var(--accent)" }}>passer à l&apos;action</em> ?
+            </h2>
+            <p style={{ fontSize: 14.5, color: "var(--muted)", marginTop: 10, maxWidth: 540, marginLeft: "auto", marginRight: "auto" }}>
+              Finazen t&apos;aide à comprendre quoi acheter et pourquoi. Voici ce qui manque souvent : où et comment investir concrètement.
+            </p>
+          </div>
+
+          {/* Le PEA expliqué */}
+          <div style={{ display: "flex", gap: 16, alignItems: "flex-start", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 14, padding: "20px 22px", marginBottom: 14 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: "var(--accent-soft)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Landmark size={18} strokeWidth={1.8} color="var(--accent)" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--ink)", marginBottom: 6 }}>Le PEA, c&apos;est quoi ?</div>
+              <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: "0 0 8px" }}>
+                Le <strong style={{ color: "var(--ink)" }}>Plan d&apos;Épargne en Actions</strong> est une enveloppe fiscale française : tu y déposes de l&apos;argent, tu achètes des actions ou ETF européens à l&apos;intérieur, et si tu ne retires rien avant <strong style={{ color: "var(--ink)" }}>5 ans</strong>, tes gains ne sont plus soumis qu&apos;aux prélèvements sociaux (17,2 %) — pas à l&apos;impôt sur le revenu.
+              </p>
+              <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
+                Limite : 150 000 € versés, un seul PEA par personne, et il doit contenir majoritairement des titres européens. Pour le reste (actions américaines, certains ETF), il existe le <strong style={{ color: "var(--ink)" }}>CTO</strong> (Compte-Titres Ordinaire) — sans limite ni condition, mais sans avantage fiscal particulier.
+              </p>
+            </div>
+          </div>
+
+          {/* Comment choisir */}
+          <div style={{ display: "flex", gap: 16, alignItems: "flex-start", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 14, padding: "20px 22px", marginBottom: 14 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: "var(--accent-soft)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Wallet size={18} strokeWidth={1.8} color="var(--accent)" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--ink)", marginBottom: 6 }}>Par quel courtier passer ?</div>
+              <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
+                Banque traditionnelle ou courtier en ligne, le PEA et le CTO s&apos;ouvrent partout. Quatre critères à comparer avant de choisir : les <strong style={{ color: "var(--ink)" }}>frais de courtage</strong> (par ordre d&apos;achat/vente), les <strong style={{ color: "var(--ink)" }}>frais de tenue de compte</strong> (souvent nuls chez les courtiers en ligne), le <strong style={{ color: "var(--ink)" }}>dépôt minimum</strong> pour démarrer, et la simplicité de l&apos;application au quotidien. Finazen ne recommande pas un courtier en particulier — compare au moins deux ou trois offres avant de te décider.
+              </p>
+            </div>
+          </div>
+
+          {/* Les étapes concrètes */}
+          <div style={{ display: "flex", gap: 16, alignItems: "flex-start", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 14, padding: "20px 22px", marginBottom: 14 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0, background: "var(--accent-soft)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <ListChecks size={18} strokeWidth={1.8} color="var(--accent)" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--ink)", marginBottom: 10 }}>Ouvrir un compte, étape par étape</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  "Choisir un courtier ou une banque et sélectionner PEA ou CTO",
+                  "Remplir le formulaire en ligne (identité, adresse, situation professionnelle)",
+                  "Envoyer une pièce d'identité et un justificatif de domicile",
+                  "Faire un premier virement — souvent possible dès quelques dizaines d'euros",
+                  "Attendre la validation : de quelques minutes à quelques jours selon l'établissement",
+                ].map((step, i) => (
+                  <div key={step} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <span style={{
+                      width: 20, height: 20, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+                      background: "var(--accent)", color: "#fff", fontSize: 11, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>{i + 1}</span>
+                    <span style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Combien de temps / argent */}
+          <div style={{ display: "flex", gap: 16, alignItems: "flex-start", background: "var(--accent-soft)", border: "1px solid rgba(45,125,90,0.20)", borderRadius: 14, padding: "16px 18px" }}>
+            <Clock size={18} strokeWidth={1.8} color="var(--accent)" style={{ flexShrink: 0, marginTop: 1 }} />
+            <p style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.6, margin: 0 }}>
+              En pratique : compte environ <strong>10 à 15 minutes</strong> pour remplir le formulaire, et de <strong>quelques minutes à quelques jours</strong> pour la validation selon l&apos;établissement. Certains courtiers acceptent un premier dépôt dès 1 €.
+            </p>
+          </div>
         </div>
       </div>
 
