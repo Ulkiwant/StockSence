@@ -36,6 +36,15 @@ export async function POST(req: NextRequest) {
   const totalValue = totals?.value ?? 0;
   const amountPct = totalValue > 0 ? ((amount / totalValue) * 100).toFixed(1) : "—";
 
+  // Le nombre d'allocations proposées doit rester cohérent avec le montant :
+  // de nombreux courtiers n'autorisent pas l'achat de fractions d'actions,
+  // donc fragmenter un petit montant en 4-5 lignes rend chaque ligne inachetable.
+  const maxSuggestions =
+    amount < 150 ? 1 :
+    amount < 400 ? 2 :
+    amount < 1000 ? 3 : 5;
+  const suggestionRange = maxSuggestions === 1 ? "1 seule opportunité" : `${Math.max(1, maxSuggestions - 1)} à ${maxSuggestions} opportunités`;
+
   const prompt = `Tu es un conseiller en investissement expert. Un client veut investir ${amount}€ supplémentaires dans son portefeuille (soit environ ${amountPct}% de sa valeur actuelle de ${totalValue.toFixed(0)}€).
 
 ═══ PORTEFEUILLE ACTUEL ═══
@@ -43,14 +52,14 @@ Valeur totale : ${totalValue.toFixed(0)}€
 ${holdingsSummary}
 
 ═══ MISSION ═══
-Propose 4 à 5 opportunités d'investissement CONCRÈTES et DIVERSIFIÉES avec les ${amount}€ disponibles.
+Propose ${suggestionRange} d'investissement CONCRÈTES avec les ${amount}€ disponibles — pas plus de ${maxSuggestions}.
 Règles :
+- Priorité absolue : chaque allocation doit permettre d'acheter au moins une part/action entière avec le montant qui lui est alloué. La plupart des courtiers n'autorisent pas les fractions d'actions — ne propose donc jamais un montant inférieur au prix unitaire du titre. Avec un petit montant, mieux vaut une seule ligne cohérente que plusieurs lignes inachetables.
 - Éviter les doublons avec ce qui est déjà détenu
-- Compléter les manques de diversification identifiés
+- Compléter les manques de diversification identifiés, sans sacrifier la règle ci-dessus
 - Adapter au profil apparent du portefeuille (actions croissance ? ETF passif ? dividendes ?)
-- Inclure tickers réels (Yahoo Finance) et répartition suggérée des ${amount}€
-- Mélanger ETF et actions si pertinent
-- Si ${amount}€ < 200€, favoriser les ETF fractionnable ou actions accessibles
+- Inclure des tickers réels (Yahoo Finance) et la répartition suggérée des ${amount}€
+- Si ${amount}€ < 200€, privilégie un ETF ou une action à prix unitaire accessible plutôt que de diviser le montant
 
 Réponds UNIQUEMENT en JSON valide :
 {
