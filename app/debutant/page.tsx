@@ -279,39 +279,10 @@ export default function DebutantPage() {
           <em style={{ fontStyle: "italic", color: "var(--accent)" }}>quand on débute ?</em>
         </h1>
 
-        <p style={{ fontSize: 17, color: "var(--muted)", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 36px" }}>
-          Ce guide te pose <strong style={{ color: "var(--ink)" }}>3 questions simples</strong> et te donne un plan d'action clair — sans jargon, sans pression.
+        <p style={{ fontSize: 17, color: "var(--muted)", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 8px" }}>
+          Avant le quiz qui détermine ton profil, voici <strong style={{ color: "var(--ink)" }}>les bases à connaître</strong> — sans jargon, sans pression.
         </p>
-
-        {/* 3 étapes visuelles */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 40, flexWrap: "wrap", justifyContent: "center" }}>
-          {[
-            { n: "01", label: "Ta situation" },
-            { n: "02", label: "Ton objectif" },
-            { n: "03", label: "Ton profil" },
-          ].map(({ n, label }) => (
-            <div key={n} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "1px solid var(--line)", borderRadius: 10, padding: "8px 14px", fontSize: 13 }}>
-              <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11, color: "var(--accent)", fontWeight: 700 }}>{n}</span>
-              <span style={{ color: "var(--ink)", fontWeight: 600 }}>{label}</span>
-            </div>
-          ))}
-        </div>
-
-        <button onClick={() => setStep(1)} style={{
-          display: "inline-flex", alignItems: "center", gap: 12,
-          padding: "15px 32px", borderRadius: 9999,
-          background: "var(--accent)", color: "#F6F2E8",
-          fontWeight: 700, fontSize: 16, border: "none", cursor: "pointer",
-          boxShadow: "0 2px 0 rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.12)",
-          transition: "transform 0.12s, background 0.15s",
-        }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-hover)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.transform = "none"; }}
-        >
-          Je commence <ArrowRight size={16} strokeWidth={2.5} />
-        </button>
-
-        <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 16 }}>Sans inscription · Résultat immédiat</p>
+        <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>↓ Deux minutes de lecture, puis 3 questions pour situer ton profil.</p>
       </div>
 
       {/* ── Les bases en 1 minute ── */}
@@ -431,6 +402,50 @@ export default function DebutantPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* ── CTA final — lance le quiz ── */}
+      <div style={{ borderTop: "1px solid var(--line)", padding: "64px 24px", textAlign: "center" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 9999, border: "1px solid rgba(45,125,90,0.28)", background: "var(--accent-soft)", marginBottom: 22 }}>
+          <span style={{ fontSize: 14 }}>🌱</span>
+          <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>Guide débutant · 3 minutes</span>
+        </div>
+
+        <h2 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(28px, 3.6vw, 44px)", letterSpacing: "-0.015em", margin: "0 0 16px" }}>
+          Prêt à découvrir <em style={{ fontStyle: "italic", color: "var(--accent)" }}>ton profil</em> ?
+        </h2>
+        <p style={{ fontSize: 16, color: "var(--muted)", lineHeight: 1.7, maxWidth: 460, margin: "0 auto 32px" }}>
+          Ce guide te pose <strong style={{ color: "var(--ink)" }}>3 questions simples</strong> et te donne un plan d&apos;action clair.
+        </p>
+
+        <div style={{ display: "flex", gap: 12, marginBottom: 36, flexWrap: "wrap", justifyContent: "center" }}>
+          {[
+            { n: "01", label: "Ta situation" },
+            { n: "02", label: "Ton objectif" },
+            { n: "03", label: "Ton profil" },
+          ].map(({ n, label }) => (
+            <div key={n} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "1px solid var(--line)", borderRadius: 10, padding: "8px 14px", fontSize: 13 }}>
+              <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 11, color: "var(--accent)", fontWeight: 700 }}>{n}</span>
+              <span style={{ color: "var(--ink)", fontWeight: 600 }}>{label}</span>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={() => setStep(1)} style={{
+          display: "inline-flex", alignItems: "center", gap: 12,
+          padding: "15px 32px", borderRadius: 9999,
+          background: "var(--accent)", color: "#F6F2E8",
+          fontWeight: 700, fontSize: 16, border: "none", cursor: "pointer",
+          boxShadow: "0 2px 0 rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.12)",
+          transition: "transform 0.12s, background 0.15s",
+        }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-hover)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.transform = "none"; }}
+        >
+          Je commence <ArrowRight size={16} strokeWidth={2.5} />
+        </button>
+
+        <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 16 }}>Sans inscription · Résultat immédiat</p>
       </div>
 
       <Footer />
