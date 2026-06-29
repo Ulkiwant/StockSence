@@ -11,6 +11,8 @@ export interface StockQuote {
   currentPrice: number;
   change: number;
   changePercent: number;
+  /** Prix d'ouverture de la séance du jour — sert à calculer une variation "depuis l'ouverture" plutôt que vs clôture précédente. */
+  open: number;
   marketCap: number;
   sector: string;
   industry: string;
@@ -87,6 +89,7 @@ export async function getStockDetails(symbol: string): Promise<StockDetails | nu
       currentPrice: quote.regularMarketPrice ?? 0,
       change: quote.regularMarketChange ?? 0,
       changePercent: (quote.regularMarketChangePercent ?? 0) / 100,
+      open: quote.regularMarketOpen ?? 0,
       marketCap: quote.marketCap ?? 0,
       sector: ap?.sector ?? quote.sector ?? "Unknown",
       industry: ap?.industry ?? quote.industry ?? "Unknown",

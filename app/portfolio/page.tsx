@@ -383,7 +383,8 @@ export default function PortfolioPage() {
         const pnlPct = ((cp - h.avg_price) / h.avg_price) * 100;
         const sparkline = generateSparkline(pnlPct);
         const dividendYield = d.dividendYield ?? 0;
-        const dayChangePct = d.changePercent ?? 0;           // % variation du jour
+        // % variation depuis l'ouverture de la séance du jour (plutôt que vs clôture précédente)
+        const dayChangePct = d.open ? (cp - d.open) / d.open : (d.changePercent ?? 0);
         const dayChange    = cp * h.quantity * dayChangePct;  // € variation du jour
         return {
           ...h, currentPrice: cp,

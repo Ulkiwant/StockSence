@@ -14,7 +14,7 @@ import { useMobile } from "@/lib/useMobile";
 const NAV_LINKS = [
   { href: "/",          label: "Accueil",      exact: true  },
   { href: "/debutant",  label: "🌱 Débuter",   exact: false },
-  { href: "/watchlist", label: "Mes actions",  exact: false },
+  { href: "/watchlist", label: "Watchlist",    exact: false },
   { href: "/portfolio", label: "Portefeuille", exact: false },
   { href: "/advisor",   label: "Profils",      exact: false },
   { href: "/faq",       label: "FAQ",          exact: false },
@@ -22,7 +22,7 @@ const NAV_LINKS = [
   { href: "/tarifs",    label: "Tarifs",       exact: false },
 ];
 
-// Sur mobile, Accueil/Mes actions/Portefeuille/Profils sont déjà dans la
+// Sur mobile, Accueil/Watchlist/Portefeuille/Profils sont déjà dans la
 // bottom tab bar — on évite la redondance dans le tiroir.
 const MOBILE_DRAWER_LINKS = NAV_LINKS.filter(
   (l) => !["/", "/watchlist", "/portfolio", "/advisor"].includes(l.href)

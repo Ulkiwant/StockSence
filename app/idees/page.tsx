@@ -83,7 +83,7 @@ export default function IdeesPage() {
         <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.12em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 20, textTransform: "uppercase", display: "flex", gap: 8 }}>
           <Link href="/" style={{ color: "var(--muted)" }}>Finazen</Link>
           <span>/</span>
-          <Link href="/watchlist" style={{ color: "var(--muted)" }}>Mes actions</Link>
+          <Link href="/watchlist" style={{ color: "var(--muted)" }}>Watchlist</Link>
           <span>/</span>
           <span>Idées du jour</span>
         </div>

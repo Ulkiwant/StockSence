@@ -16,8 +16,16 @@ interface WatchItem { symbol: string; name: string; }
 interface StockData {
   symbol: string; name: string; currentPrice: number;
   change: number; changePercent: number; currency: string;
+  open?: number;
   sector?: string;
   valuation?: { fairValue: number; upside: number; signal: string; score: number };
+}
+
+/** Variation depuis l'ouverture du jour plutôt que vs clôture précédente (si l'ouverture est connue). */
+function applyOpenChange<T extends { currentPrice: number; change: number; changePercent: number; open?: number }>(s: T): T {
+  if (!s.open) return s;
+  const change = s.currentPrice - s.open;
+  return { ...s, change, changePercent: change / s.open };
 }
 interface Market { label: string; desc: string; price: number | null; change: number | null; }
 interface Idea { symbol: string; name: string; price: number; currency: string; change: number; signal: string; score: number; reason: string; }
@@ -107,7 +115,7 @@ export default function WatchlistPage() {
     setItems(symbols);
     if (!symbols.length) { setLoading(false); return; }
     const results = await Promise.allSettled(symbols.map(w => fetch(`/api/stock/${w.symbol}`).then(r => r.json())));
-    const d2 = results.filter((r): r is PromiseFulfilledResult<StockData> => r.status === "fulfilled" && !r.value?.error).map(r => r.value);
+    const d2 = results.filter((r): r is PromiseFulfilledResult<StockData> => r.status === "fulfilled" && !r.value?.error).map(r => applyOpenChange(r.value));
     setStocks(d2);
     setLoading(false);
 
@@ -148,7 +156,7 @@ export default function WatchlistPage() {
         localStorage.setItem(`watchlist-name-${symbol}`, name);
       }
     }
-    try { const d = await (await fetch(`/api/stock/${symbol}`)).json(); if (!d.error) setStocks(p => p.find(s => s.symbol === symbol) ? p : [...p, d]); } catch { /**/ }
+    try { const d = await (await fetch(`/api/stock/${symbol}`)).json(); if (!d.error) setStocks(p => p.find(s => s.symbol === symbol) ? p : [...p, applyOpenChange(d)]); } catch { /**/ }
   }, [loggedIn]);
 
   const handleUnfollow = useCallback(async (symbol: string) => {
@@ -190,7 +198,7 @@ export default function WatchlistPage() {
             {/* ── Hero façon Revolut : gros chiffre + contexte ── */}
             <div style={{ marginBottom: 4 }}>
               <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.12em", fontFamily: "var(--font-geist-mono, monospace)", textTransform: "uppercase", marginBottom: 8 }}>
-                Mes actions
+                Ma watchlist
               </div>
               {stocks.length > 0 ? (
                 <>
@@ -203,7 +211,7 @@ export default function WatchlistPage() {
                 </>
               ) : (
                 <h1 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: 32, letterSpacing: "-0.02em", margin: 0 }}>
-                  Mes <em style={{ fontStyle: "italic", color: "var(--accent)" }}>actions</em>.
+                  Ma <em style={{ fontStyle: "italic", color: "var(--accent)" }}>watchlist</em>.
                 </h1>
               )}
               {!loggedIn && (
@@ -238,14 +246,14 @@ export default function WatchlistPage() {
             {/* Breadcrumb */}
             <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.12em", fontFamily: "var(--font-geist-mono, monospace)", marginBottom: 16, textTransform: "uppercase", display: "flex", gap: 8 }}>
               <Link href="/" style={{ color: "var(--muted)" }}>Finazen</Link>
-              <span>/</span><span>Mes actions</span>
+              <span>/</span><span>Watchlist</span>
             </div>
 
             {/* Header */}
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
               <div>
                 <h1 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(36px, 5vw, 58px)", letterSpacing: "-0.02em", lineHeight: 1.05, margin: "0 0 8px" }}>
-                  Mes <em style={{ fontStyle: "italic", color: "var(--accent)" }}>actions</em>.
+                  Ma <em style={{ fontStyle: "italic", color: "var(--accent)" }}>watchlist</em>.
                 </h1>
                 <p style={{ fontSize: 15, color: "var(--muted)", maxWidth: 540, lineHeight: 1.6, margin: 0 }}>
                   {items.length} valeur{items.length !== 1 ? "s" : ""} suivie{items.length !== 1 ? "s" : ""} — surveille les signaux, compare leur santé et garde un œil sur les opportunités qui te ressemblent.

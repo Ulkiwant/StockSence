@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mes actions — Watchlist et suivi de portefeuille",
+  title: "Ma watchlist — Suivi d'actions boursières",
   description:
-    "Suivez vos actions favorites, consultez les signaux IA en temps réel et découvrez les opportunités d'investissement du jour. Gratuit sur Finazen.",
+    "Suivez vos actions favorites, consultez leur niveau de valorisation et découvrez les opportunités du jour. Gratuit sur Finazen.",
   keywords: [
     "watchlist actions bourse",
     "suivre actions",
-    "signal achat vente",
-    "mes actions bourse",
+    "signal valorisation action",
+    "watchlist bourse",
     "idées investissement",
     "opportunités boursières",
   ],
   openGraph: {
-    title: "Mes actions — Finazen",
-    description: "Suivez vos actions, consultez les signaux IA et découvrez les opportunités du jour.",
+    title: "Ma watchlist — Finazen",
+    description: "Suivez vos actions, consultez leur valorisation et découvrez les opportunités du jour.",
     url: "https://finazen.fr/watchlist",
   },
   alternates: { canonical: "https://finazen.fr/watchlist" },

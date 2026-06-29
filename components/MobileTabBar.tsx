@@ -38,10 +38,10 @@ export default function MobileTabBar() {
 
   // Une fois installée, le tableau de bord (watchlist) remplace la landing
   // marketing comme premier onglet — mais on garde un libellé honnête
-  // ("Mes actions"), pas "Accueil" qui ne correspondrait pas au contenu affiché.
+  // ("Watchlist"), pas "Accueil" qui ne correspondrait pas au contenu affiché.
   const tabs = standalone
     ? [
-        { href: "/watchlist", label: "Mes actions", icon: Home,      exact: false },
+        { href: "/watchlist", label: "Watchlist",   icon: Home,      exact: false },
         { href: "/advisor",   label: "Profils",      icon: Target,    exact: false },
         { href: "/portfolio", label: "Portefeuille", icon: Briefcase, exact: false },
       ]

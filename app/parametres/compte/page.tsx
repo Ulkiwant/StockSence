@@ -79,7 +79,7 @@ export default function ComptePage() {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
           {[
             { href: "/portfolio", icon: "📊", label: "Mon portefeuille" },
-            { href: "/watchlist", icon: "⭐", label: "Mes actions" },
+            { href: "/watchlist", icon: "⭐", label: "Ma watchlist" },
             { href: "/parametres/alertes", icon: "🔔", label: "Alertes email" },
             { href: "/tarifs", icon: "💳", label: "Offres & tarifs" },
           ].map(item => (
