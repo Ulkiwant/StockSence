@@ -16,6 +16,13 @@ interface UserPlanRow {
   expires_at: string | null;
 }
 
+interface AuthUserRow {
+  id: string;
+  email: string | undefined;
+  created_at: string;
+  last_sign_in_at: string | null;
+}
+
 const PLAN_COLORS: Record<Plan, string> = {
   free:         "#9C9583",
   investisseur: "#2F7D52",
@@ -34,6 +41,8 @@ export default function AdminPage() {
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading]       = useState(true);
   const [users, setUsers]           = useState<UserPlanRow[]>([]);
+  const [allUsers, setAllUsers]         = useState<AuthUserRow[]>([]);
+  const [allUsersLoading, setAllUsersLoading] = useState(true);
   const [saving, setSaving]         = useState(false);
   const [saved, setSaved]           = useState(false);
   const [error, setError]           = useState<string|null>(null);
@@ -52,6 +61,7 @@ export default function AdminPage() {
       }
       setAuthorized(true);
       loadUsers();
+      loadAllUsers();
     });
   }, []); // eslint-disable-line
 
@@ -61,6 +71,14 @@ export default function AdminPage() {
     const d = await res.json();
     setUsers(Array.isArray(d) ? d : []);
     setLoading(false);
+  };
+
+  const loadAllUsers = async () => {
+    setAllUsersLoading(true);
+    const res = await fetch("/api/admin/all-users");
+    const d = await res.json();
+    setAllUsers(Array.isArray(d) ? d : []);
+    setAllUsersLoading(false);
   };
 
   const grantAccess = async (e: React.FormEvent) => {
@@ -111,6 +129,37 @@ export default function AdminPage() {
           <span style={{ fontSize: 13, color: "var(--ink)" }}>
             Ton compte <strong>{ADMIN_EMAIL}</strong> a un accès <strong style={{ color: "#7D55C7" }}>Admin illimité permanent</strong> — indépendant de cette table.
           </span>
+        </div>
+
+        {/* Tous les comptes créés (Supabase Auth, pas seulement ceux avec un plan) */}
+        <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 18, overflow: "hidden", marginBottom: 32 }}>
+          <div style={{ padding: "18px 24px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", margin: 0 }}>
+              Tous les comptes créés — {allUsers.length} inscrit{allUsers.length !== 1 ? "s" : ""}
+            </h2>
+            <button onClick={loadAllUsers} style={{ fontSize: 12, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>Actualiser</button>
+          </div>
+
+          {allUsersLoading ? (
+            <div style={{ padding: "32px", textAlign: "center", color: "var(--muted)", fontSize: 13 }}>Chargement…</div>
+          ) : allUsers.length === 0 ? (
+            <div style={{ padding: "32px", textAlign: "center", color: "var(--muted)", fontSize: 13 }}>Aucun compte créé pour l&apos;instant.</div>
+          ) : (
+            <div style={{ maxHeight: 400, overflowY: "auto" }}>
+              {allUsers.map((u, i) => (
+                <div key={u.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 16, padding: "12px 24px", borderBottom: i < allUsers.length - 1 ? "1px solid var(--line)" : "none" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{u.email ?? "—"}</div>
+                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
+                      Inscrit le {new Date(u.created_at).toLocaleDateString("fr-FR")}
+                      {u.last_sign_in_at && ` · Dernière connexion le ${new Date(u.last_sign_in_at).toLocaleDateString("fr-FR")}`}
+                      {!u.last_sign_in_at && " · Jamais connecté"}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Formulaire accorder accès */}
