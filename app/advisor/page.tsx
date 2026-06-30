@@ -39,9 +39,11 @@ interface Allocation {
   dividendFrequency?: string;
 }
 
-interface PortfolioRecommendation {
-  key?: string;
-  label?: string; // "Prudent" | "Équilibré" | "Dynamique" | "Offensif"
+interface ProfileVariant {
+  variantKey: string;
+  variantLabel: string;
+  variantIcon: string;
+  variantDesc: string;
   portfolioName: string;
   summary: string;
   expectedReturn: string;
@@ -53,6 +55,18 @@ interface PortfolioRecommendation {
   rebalancing: string;
   tips: string[];
   disclaimer: string;
+}
+
+interface AdvisorResponse {
+  profileKey?: string;
+  label?: string; // "Prudent" | "Équilibré" | "Dynamique" | "Offensif"
+  variants: ProfileVariant[];
+  isGuest?: boolean;
+  userPlan?: string; // "free" | "investisseur" | "premium" | "admin" | "guest"
+}
+
+interface PortfolioRecommendation extends ProfileVariant {
+  label?: string;
   // Champs ajoutés par l'API
   isGuest?: boolean;
   userPlan?: string; // "free" | "investisseur" | "premium" | "admin" | "guest"
@@ -260,11 +274,20 @@ export default function AdvisorPage() {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [capitalInput, setCapitalInput] = useState("");
   const [monthlyInput, setMonthlyInput] = useState("");
-  const [result, setResult] = useState<PortfolioRecommendation | null>(null);
+  const [advisorData, setAdvisorData] = useState<AdvisorResponse | null>(null);
+  const [selectedVariantKey, setSelectedVariantKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null = chargement
   const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // La variante choisie par l'utilisateur, fusionnée avec les infos du profil
+  const result: PortfolioRecommendation | null = (() => {
+    if (!advisorData || !selectedVariantKey) return null;
+    const v = advisorData.variants.find((variant) => variant.variantKey === selectedVariantKey);
+    if (!v) return null;
+    return { ...v, label: advisorData.label, isGuest: advisorData.isGuest, userPlan: advisorData.userPlan };
+  })();
 
   // isPaid dérivé de la RÉPONSE de génération (plus fiable que useUserPlan séparé)
   const resultIsPaid = result
@@ -295,10 +318,11 @@ export default function AdvisorPage() {
     if (!userEmail) return;
     const key = `finazen_advisor_${btoa(userEmail)}`;
     const saved = localStorage.getItem(key);
-    if (saved && !result) {
+    if (saved && !advisorData) {
       try {
-        const parsed = JSON.parse(saved) as { result: PortfolioRecommendation; answers: Record<string, string | string[]>; capital: string; monthly: string };
-        setResult(parsed.result);
+        const parsed = JSON.parse(saved) as { advisorData: AdvisorResponse; variantKey: string | null; answers: Record<string, string | string[]>; capital: string; monthly: string };
+        setAdvisorData(parsed.advisorData);
+        setSelectedVariantKey(parsed.variantKey ?? null);
         setAnswers(parsed.answers ?? {});
         setCapitalInput(parsed.capital ?? "");
         setMonthlyInput(parsed.monthly ?? "");
@@ -337,6 +361,20 @@ export default function AdvisorPage() {
     setAnswers((a) => ({ ...a, [currentQuestion.field]: next }));
   }
 
+  // Sauvegarde dans localStorage pour retrouver le résultat (et la variante choisie) après navigation
+  const persistAdvisor = (data: AdvisorResponse, variantKey: string | null) => {
+    if (!userEmail) return;
+    const key = `finazen_advisor_${btoa(userEmail)}`;
+    localStorage.setItem(key, JSON.stringify({
+      advisorData: data,
+      variantKey,
+      answers,
+      capital: capitalInput,
+      monthly: monthlyInput,
+      generatedAt: new Date().toISOString(),
+    }));
+  };
+
   const submit = async () => {
     setLoading(true);
     setError(null);
@@ -356,24 +394,20 @@ export default function AdvisorPage() {
       if (res.status === 403) setError("Accès non autorisé.");
       else if (data.error) setError("Une erreur est survenue. Réessaie dans quelques instants.");
       else {
-        setResult(data);
+        setAdvisorData(data);
+        setSelectedVariantKey(null);
         setStep(TOTAL + 1);
-        // Sauvegarder dans localStorage pour retrouver le résultat après navigation
-        if (userEmail) {
-          const key = `finazen_advisor_${btoa(userEmail)}`;
-          localStorage.setItem(key, JSON.stringify({
-            result: data,
-            answers,
-            capital: capitalInput,
-            monthly: monthlyInput,
-            generatedAt: new Date().toISOString(),
-          }));
-        }
+        persistAdvisor(data, null);
       }
     } catch {
       setError("Erreur réseau. Vérifie ta connexion et réessaie.");
     }
     setLoading(false);
+  };
+
+  const chooseVariant = (variantKey: string) => {
+    setSelectedVariantKey(variantKey);
+    if (advisorData) persistAdvisor(advisorData, variantKey);
   };
 
   const handleNext = () => {
@@ -398,7 +432,8 @@ export default function AdvisorPage() {
 
   const resetAll = () => {
     setStep(0);
-    setResult(null);
+    setAdvisorData(null);
+    setSelectedVariantKey(null);
     setAnswers({});
     setCapitalInput("");
     setMonthlyInput("");
@@ -408,6 +443,60 @@ export default function AdvisorPage() {
       localStorage.removeItem(`finazen_advisor_${btoa(userEmail)}`);
     }
   };
+
+  // ── ÉCRAN DE CHOIX DE VARIANTE ──
+  if (advisorData && !selectedVariantKey && step === TOTAL + 1) {
+    return (
+      <div style={{ background: "var(--paper)", minHeight: "100vh" }}>
+        <div style={{ maxWidth: 880, margin: "0 auto", padding: "40px 24px 80px" }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: 9999,
+              background: "var(--accent-soft)", border: "1px solid rgba(45,125,90,0.25)", marginBottom: 18,
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)" }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>Profil le plus proche : {advisorData.label}</span>
+            </div>
+            <h1 style={{ fontFamily: "var(--font-instrument, serif)", fontWeight: 400, fontSize: "clamp(28px, 4vw, 42px)", letterSpacing: "-0.015em", margin: "0 0 12px" }}>
+              Choisis un <em style={{ fontStyle: "italic", color: "var(--accent)" }}>style</em> de portefeuille.
+            </h1>
+            <p style={{ fontSize: 15, color: "var(--muted)", maxWidth: 540, margin: "0 auto", lineHeight: 1.6 }}>
+              Même niveau de risque, orientation différente — choisis l&apos;exemple qui te parle le plus.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
+            {advisorData.variants.map((v) => (
+              <button
+                key={v.variantKey}
+                onClick={() => chooseVariant(v.variantKey)}
+                style={{
+                  textAlign: "left", background: "#fff", border: "1.5px solid var(--line)", borderRadius: 18,
+                  padding: "24px 24px", cursor: "pointer", transition: "border-color 0.15s, transform 0.1s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--line)"; }}
+              >
+                <div style={{ fontSize: 28, marginBottom: 12 }}>{v.variantIcon}</div>
+                <div style={{ fontWeight: 700, fontSize: 17, color: "var(--ink)", marginBottom: 6 }}>{v.variantLabel}</div>
+                <p style={{ fontSize: 13.5, color: "var(--muted)", lineHeight: 1.55, marginBottom: 16 }}>{v.variantDesc}</p>
+                <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--muted)" }}>
+                  <span><strong style={{ color: "var(--signal-up)" }}>{v.expectedReturn}</strong></span>
+                  <span>Risque {v.riskLevel.toLowerCase()}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: 28 }}>
+            <button onClick={resetAll} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: 13, cursor: "pointer" }}>
+              ← Refaire le questionnaire
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── RESULT PAGE ──
   if (result && step === TOTAL + 1) {
@@ -456,11 +545,17 @@ export default function AdvisorPage() {
           ══════════════════════════════════════════ */}
           <div style={{ background: "var(--paper-2)", border: "1.5px solid var(--line)", borderRadius: 20, padding: "28px 32px", marginBottom: 24 }}>
             {/* Badge profil */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9999, background: profileBg, border: `1px solid ${profileColor}40`, fontSize: 13, fontWeight: 700, color: profileColor }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: profileColor }} />
                 Profil le plus proche : {result.label ?? result.riskLevel}
               </span>
+              {result.variantLabel && (
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>· {result.variantIcon} {result.variantLabel}</span>
+              )}
+              <button onClick={() => setSelectedVariantKey(null)} style={{ marginLeft: "auto", fontSize: 12, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+                Changer de style →
+              </button>
             </div>
 
             {/* Titre + résumé du profil-type */}

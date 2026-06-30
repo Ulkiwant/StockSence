@@ -14,11 +14,13 @@ export async function GET() {
   try {
     const results = await Promise.allSettled(
       SHOWN_PROFILES.map(async (key) => {
-        const profile = INVESTOR_PROFILES[key];
-        const allocations = profile.allocations.map((a) => ({ symbol: a.symbol, percentage: a.percentage }));
+        const group = INVESTOR_PROFILES[key];
+        // Variante "monde" par défaut — celle qui sert de référence pour ce profil de risque.
+        const variant = group.variants[0];
+        const allocations = variant.allocations.map((a: { symbol: string; percentage: number }) => ({ symbol: a.symbol, percentage: a.percentage }));
 
         const priceLists = await Promise.allSettled(
-          allocations.map((a) => getHistoricalPrices(a.symbol, "1y"))
+          allocations.map((a: { symbol: string }) => getHistoricalPrices(a.symbol, "1y"))
         );
 
         const pricesBySymbol: Record<string, { date: string; close: number }[]> = {};
@@ -31,8 +33,8 @@ export async function GET() {
 
         return {
           key,
-          label: profile.label,
-          portfolioName: profile.portfolioName,
+          label: group.label,
+          portfolioName: variant.portfolioName,
           ...backtest,
         };
       })

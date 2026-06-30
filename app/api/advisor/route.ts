@@ -32,7 +32,13 @@ export async function POST(req: NextRequest) {
 
   const answers = await req.json();
   const profileKey = determineProfile(answers);
-  const profile = INVESTOR_PROFILES[profileKey];
+  const group = INVESTOR_PROFILES[profileKey];
 
-  return Response.json({ ...profile, isGuest: userPlan === "guest", userPlan });
+  return Response.json({
+    profileKey,
+    label: group.label,
+    variants: group.variants,
+    isGuest: userPlan === "guest",
+    userPlan,
+  });
 }
