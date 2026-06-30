@@ -235,7 +235,7 @@ export default function HomePage() {
               "name": "Finazen",
               "url": "https://finazen.fr",
               "logo": { "@type": "ImageObject", "url": "https://finazen.fr/icon.svg" },
-              "description": "Finazen est une plateforme d'investissement en bourse accessible aux débutants. Analyse d'actions par IA, suivi de portefeuille, watchlist et profils d'investisseur.",
+              "description": "Finazen est une plateforme d'analyse boursière pédagogique accessible aux débutants. Score de valorisation transparent, suivi de portefeuille, watchlist et profils d'investisseur.",
               "foundingDate": "2024",
               "areaServed": "FR",
               "knowsLanguage": "fr"
@@ -246,12 +246,12 @@ export default function HomePage() {
               "applicationCategory": "FinanceApplication",
               "operatingSystem": "Web, iOS (PWA), Android (PWA)",
               "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "description": "Plan gratuit disponible — fonctionnalités avancées à partir de 9,99 €/mois" },
-              "description": "Application web d'analyse boursière et de gestion de portefeuille. Valorisation d'actions par IA, signal achat/vente, profils d'investisseur.",
+              "description": "Application web d'analyse boursière et de gestion de portefeuille. Score de valorisation transparent, niveau de valorisation, profils d'investisseur.",
               "url": "https://finazen.fr",
               "screenshot": "https://finazen.fr/og-image.png",
               "featureList": [
-                "Analyse de valorisation d'actions par IA",
-                "Signal achat / neutre / vente",
+                "Score de valorisation d'actions sur 100, décomposé critère par critère",
+                "Niveau de valorisation : sous-évalué / neutre / surévalué",
                 "Suivi de portefeuille d'investissement",
                 "Watchlist d'actions",
                 "Profils d'investisseur (exemples de répartition)",
@@ -265,7 +265,7 @@ export default function HomePage() {
               "mainEntity": [
                 { "@type": "Question", "name": "Est-ce que Finazen gère mon argent ?", "acceptedAnswer": { "@type": "Answer", "text": "Non. Finazen est un outil d'analyse et d'aide à la décision pédagogique. Vous gardez le contrôle total et passez vos ordres chez votre courtier habituel." } },
                 { "@type": "Question", "name": "Finazen est-il gratuit ?", "acceptedAnswer": { "@type": "Answer", "text": "Finazen propose un plan gratuit incluant 1 analyse par jour, le score /100, une watchlist de 3 actions et un portefeuille de 3 positions. Les fonctionnalités avancées sont disponibles à partir de 9,99 €/mois." } },
-                { "@type": "Question", "name": "Comment Finazen analyse-t-il les actions ?", "acceptedAnswer": { "@type": "Answer", "text": "Finazen utilise des modèles de valorisation fondamentale (DCF, P/E, comparables sectoriels) combinés à l'intelligence artificielle pour calculer une juste valeur et générer un signal d'investissement." } }
+                { "@type": "Question", "name": "Comment Finazen analyse-t-il les actions ?", "acceptedAnswer": { "@type": "Answer", "text": "Finazen utilise des modèles de valorisation fondamentale (DCF, P/E, comparables sectoriels) pour calculer une juste valeur estimée et un niveau de valorisation (sous-évalué, neutre, surévalué), décomposés critère par critère." } }
               ]
             }
           ]
