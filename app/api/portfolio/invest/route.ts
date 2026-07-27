@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Cette fonctionnalité est réservée aux abonnés Investisseur et Premium." }, { status: 403 });
   }
 
-  const { amount, holdings, totals } = await req.json();
+  const { amount, holdings, totals, accountType = "PEA+CTO", riskProfile } = await req.json();
   if (!amount || amount <= 0) return Response.json({ error: "Montant invalide" }, { status: 400 });
 
   const holdingsSummary = holdings?.length
@@ -45,19 +45,67 @@ export async function POST(req: NextRequest) {
     amount < 1000 ? 3 : 5;
   const suggestionRange = maxSuggestions === 1 ? "1 seule opportunité" : `${Math.max(1, maxSuggestions - 1)} à ${maxSuggestions} opportunités`;
 
+  // Contraintes liées au type de compte
+  const accountConstraints: Record<string, string> = {
+    "PEA": `CONTRAINTE ABSOLUE — Compte PEA uniquement :
+- Uniquement des ETF UCITS domiciliés en Europe (ex : CW8.PA, EWLD.PA, PAEEM.PA, PUST.PA, WPEA.PA, BNPP.PA, MSFT.PA n'existe pas — utiliser les codes Euronext) et des actions cotées sur une bourse européenne (.PA, .AS, .DE, .MI, .MC, .L, .BR, .ST…)
+- INTERDIT : actions américaines cotées sur NYSE/Nasdaq (AAPL, NVDA, MSFT, etc. sans suffix européen), crypto, obligations en direct, produits dérivés
+- Tous les tickers proposés doivent être éligibles PEA`,
+    "CTO": `Compte CTO — toutes classes d'actifs autorisées :
+- Actions US, européennes, mondiales, ETF UCITS ou non, obligations ETF, REITs, etc.
+- Inclure en priorité des titres accessibles via les courtiers français courants`,
+    "PEA+CTO": `L'utilisateur dispose d'un PEA ET d'un CTO. Optimise la répartition fiscale :
+- Mettre en PEA : ETF UCITS européens, actions européennes (éligibles PEA)
+- Mettre en CTO : actions US, ETF non-UCITS, obligations, REITs, titres non éligibles PEA
+- Précise l'enveloppe recommandée pour chaque suggestion dans le champ "enveloppe"`,
+  };
+
+  // Contraintes liées au profil de risque
+  const riskConstraints: Record<string, string> = {
+    "prudent": `Profil PRUDENT — préservation du capital :
+- ETF obligataires UCITS en priorité (ex : AGGH.AS), ETF monde large (CW8.PA) en complément
+- Pas d'actions individuelles, pas de secteurs volatils (tech concentrée, crypto, small caps)
+- Risque maximal acceptable : Faible à Modéré`,
+    "equilibre": `Profil ÉQUILIBRÉ — croissance modérée :
+- Mix ETF monde + ETF obligataires, possible 1-2 actions de qualité à dividendes
+- Éviter les positions très concentrées ou spéculatives
+- Risque maximal acceptable : Modéré`,
+    "dynamique": `Profil DYNAMIQUE — croissance :
+- Priorité aux ETF actions monde/émergents/sectoriels, actions croissance solides
+- Peut inclure des secteurs porteurs (technologie, santé, énergie)
+- Risque maximal acceptable : Élevé`,
+    "offensif": `Profil OFFENSIF — performance maximale :
+- Positions concentrées acceptées, actions individuelles à fort potentiel, ETF sectoriels
+- Marchés émergents, small caps, secteurs en tendance forte — tout est envisageable
+- Risque : Élevé assumé`,
+  };
+
+  const accountSection = accountConstraints[accountType] ?? accountConstraints["PEA+CTO"];
+  const riskSection = riskProfile && riskConstraints[riskProfile]
+    ? `\n═══ PROFIL DE RISQUE ═══\n${riskConstraints[riskProfile]}`
+    : "";
+
+  const enveloppeField = accountType === "PEA+CTO"
+    ? `\n      "enveloppe": "PEA" | "CTO",`
+    : "";
+
   const prompt = `Tu es un conseiller en investissement expert. Un client veut investir ${amount}€ supplémentaires dans son portefeuille (soit environ ${amountPct}% de sa valeur actuelle de ${totalValue.toFixed(0)}€).
 
 ═══ PORTEFEUILLE ACTUEL ═══
 Valeur totale : ${totalValue.toFixed(0)}€
 ${holdingsSummary}
 
+═══ TYPE DE COMPTE ═══
+${accountSection}
+${riskSection}
+
 ═══ MISSION ═══
 Propose ${suggestionRange} d'investissement CONCRÈTES avec les ${amount}€ disponibles — pas plus de ${maxSuggestions}.
 Règles :
 - Priorité absolue : chaque allocation doit permettre d'acheter au moins une part/action entière avec le montant qui lui est alloué. La plupart des courtiers n'autorisent pas les fractions d'actions — ne propose donc jamais un montant inférieur au prix unitaire du titre. Avec un petit montant, mieux vaut une seule ligne cohérente que plusieurs lignes inachetables.
+- Respecter strictement les contraintes de compte et de profil de risque ci-dessus
 - Éviter les doublons avec ce qui est déjà détenu
-- Compléter les manques de diversification identifiés, sans sacrifier la règle ci-dessus
-- Adapter au profil apparent du portefeuille (actions croissance ? ETF passif ? dividendes ?)
+- Compléter les manques de diversification identifiés, sans sacrifier les règles ci-dessus
 - Inclure des tickers réels (Yahoo Finance) et la répartition suggérée des ${amount}€
 - Si ${amount}€ < 200€, privilégie un ETF ou une action à prix unitaire accessible plutôt que de diviser le montant
 
@@ -69,7 +117,7 @@ Réponds UNIQUEMENT en JSON valide :
       "symbol": "TICKER",
       "name": "Nom complet",
       "type": "ETF" | "Action",
-      "montant_suggere": 150,
+      "montant_suggere": 150,${enveloppeField}
       "rationale": "Pourquoi cet actif PRÉCISÉMENT pour CE portefeuille (2 phrases max)",
       "apport": "Ce qu'il apporte : ex 'Exposition Asie manquante' ou 'Dividendes stables'",
       "risque": "Faible" | "Modéré" | "Élevé"

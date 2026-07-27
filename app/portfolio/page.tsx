@@ -13,6 +13,7 @@ import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2, Check, Cloc
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import CompanyLogo from "@/components/CompanyLogo";
 import CircleAction from "@/components/CircleAction";
+import { PROFILE_LABELS } from "@/lib/investorProfiles";
 
 const WorldMap = dynamic(() => import("@/components/WorldMap"), { ssr: false, loading: () => <div style={{ height: 260, background: "var(--paper-3)", borderRadius: 12 }} /> });
 
@@ -324,10 +325,12 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [investAmount, setInvestAmount] = useState("");
+  const [investAccountType, setInvestAccountType] = useState<"PEA" | "CTO" | "PEA+CTO">("PEA+CTO");
+  const [investRiskProfile, setInvestRiskProfile] = useState<string | null>(null);
   const [investLoading, setInvestLoading] = useState(false);
   const [investResult, setInvestResult] = useState<{
     intro: string;
-    suggestions: { symbol: string; name: string; type: string; montant_suggere: number; rationale: string; apport: string; risque: string }[];
+    suggestions: { symbol: string; name: string; type: string; montant_suggere: number; enveloppe?: string; rationale: string; apport: string; risque: string }[];
     avertissement: string;
   } | null>(null);
   const [investError, setInvestError] = useState<string | null>(null);
@@ -406,6 +409,22 @@ export default function PortfolioPage() {
       });
     });
   }, [holdings]);
+
+  /* Lire le profil de risque sauvegardé depuis /advisor */
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }: { data: { user: { email?: string } | null } }) => {
+      if (!data.user?.email) return;
+      const key = `finazen_advisor_${btoa(data.user.email)}`;
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.advisorData?.profileKey) setInvestRiskProfile(parsed.advisorData.profileKey);
+        }
+      } catch { /* ignore */ }
+    });
+  }, []);
 
   /* Load history chart */
   const loadHistory = useCallback(async (p: string) => {
@@ -523,7 +542,7 @@ export default function PortfolioPage() {
     setInvestResult(null);
     const res = await fetch("/api/portfolio/invest", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount, holdings: enriched, totals }),
+      body: JSON.stringify({ amount, holdings: enriched, totals, accountType: investAccountType, riskProfile: investRiskProfile }),
     });
     const data = await res.json();
     if (data.error) setInvestError(data.error);
@@ -1902,6 +1921,40 @@ export default function PortfolioPage() {
             </div>
           </div>
 
+          {/* Sélecteur type de compte */}
+          <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+            <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>Type de compte</span>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {(["PEA", "PEA+CTO", "CTO"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setInvestAccountType(t)}
+                  style={{
+                    padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    cursor: "pointer", transition: "all 0.15s",
+                    border: `1.5px solid ${investAccountType === t ? "var(--accent)" : "var(--line)"}`,
+                    background: investAccountType === t ? "var(--accent-soft)" : "var(--paper)",
+                    color: investAccountType === t ? "var(--accent)" : "var(--muted)",
+                  }}
+                >{t}</button>
+              ))}
+            </div>
+            {investRiskProfile && (
+              <div style={{ fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 6 }}>
+                <span>Profil :</span>
+                <span style={{ fontWeight: 600, color: "var(--ink)" }}>
+                  {PROFILE_LABELS[investRiskProfile as keyof typeof PROFILE_LABELS] ?? investRiskProfile}
+                </span>
+                <Link href="/advisor" style={{ color: "var(--accent)", fontSize: 11 }}>Modifier →</Link>
+              </div>
+            )}
+            {!investRiskProfile && (
+              <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                <Link href="/advisor" style={{ color: "var(--accent)" }}>Renseigner votre profil de risque →</Link>
+              </div>
+            )}
+          </div>
+
           {/* Input montant + bouton */}
           <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 18, flexWrap: "wrap" }}>
             <div style={{ position: "relative", flex: "0 0 auto" }}>
@@ -1987,13 +2040,21 @@ export default function PortfolioPage() {
 
                       {/* Content */}
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                           <span style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{s.name}</span>
                           <span style={{
                             fontSize: 10, padding: "2px 7px", borderRadius: 6, fontWeight: 600,
                             background: "var(--paper-3)", color: "var(--muted)",
                             border: "1px solid var(--line)",
                           }}>{s.type}</span>
+                          {s.enveloppe && (
+                            <span style={{
+                              fontSize: 10, padding: "2px 8px", borderRadius: 6, fontWeight: 700,
+                              background: s.enveloppe === "PEA" ? "rgba(45,125,90,0.12)" : "rgba(74,158,255,0.12)",
+                              color: s.enveloppe === "PEA" ? "var(--accent)" : "#4a9eff",
+                              border: `1px solid ${s.enveloppe === "PEA" ? "rgba(45,125,90,0.3)" : "rgba(74,158,255,0.3)"}`,
+                            }}>{s.enveloppe}</span>
+                          )}
                         </div>
                         <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 6px", lineHeight: 1.6 }}>{s.rationale}</p>
                         <span style={{
