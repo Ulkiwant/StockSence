@@ -2076,7 +2076,7 @@ export default function PortfolioPage() {
                           fontSize: 11, padding: "2px 8px", borderRadius: 20, fontWeight: 700,
                           color: risqueColor, border: `1px solid ${risqueColor}`,
                           background: `${risqueColor}12`,
-                        }}>{s.risque}</span>
+                        }}>Risque : {s.risque}</span>
                       </div>
                     </div>
                   );
