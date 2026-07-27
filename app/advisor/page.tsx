@@ -321,6 +321,11 @@ export default function AdvisorPage() {
     if (saved && !advisorData) {
       try {
         const parsed = JSON.parse(saved) as { advisorData: AdvisorResponse; variantKey: string | null; answers: Record<string, string | string[]>; capital: string; monthly: string };
+        // Ignorer les données sauvegardées dans l'ancien format (avant introduction des variantes)
+        if (!parsed.advisorData?.variants || parsed.advisorData.variants.length === 0) {
+          localStorage.removeItem(key);
+          return;
+        }
         setAdvisorData(parsed.advisorData);
         setSelectedVariantKey(parsed.variantKey ?? null);
         setAnswers(parsed.answers ?? {});
