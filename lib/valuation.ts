@@ -34,6 +34,8 @@ export interface ValuationResult {
 const INDUSTRY_PE: Record<string, number> = {
   // Technologie
   "Semiconductors": 28, "Semiconductor Equipment & Materials": 26,
+  // Mémoire DRAM/NAND : commodity cyclique, P/E de référence abaissé
+  "Semiconductors—Memory": 14, "Semiconductor Memory": 14,
   "Software—Application": 35, "Software—Infrastructure": 30,
   "Internet Content & Information": 30, "Information Technology Services": 24,
   "Electronic Components": 20, "Consumer Electronics": 22,
@@ -157,10 +159,12 @@ function dcfValuation(input: ValuationInput): number {
   const discountRate = riskFreeRate + beta * marketPremium;
 
   // Taux de croissance : on prend le max entre la croissance observée et le
-  // plancher sectoriel long-terme, plafonné à 20%
+  // plancher sectoriel long-terme. Si la croissance dépasse 150% (super-cycle),
+  // on la plafonne à 12% : une telle poussée est conjoncturelle, pas structurelle.
   const floorGrowth = getFloorGrowth(input.sector);
   const observedGrowth = input.revenueGrowth ?? 0;
-  const phase1Growth = Math.min(Math.max(observedGrowth, floorGrowth), 0.20);
+  const isSuperCycle = observedGrowth > 1.5;
+  const phase1Growth = Math.min(Math.max(observedGrowth, floorGrowth), isSuperCycle ? 0.12 : 0.20);
   const phase2Growth = Math.min(phase1Growth * 0.5, 0.10);
   const terminalGrowth = 0.025;
 
@@ -211,7 +215,14 @@ function trailingPEValuation(input: ValuationInput): number {
   const floorGrowth = getFloorGrowth(input.sector);
   const growth = Math.max(input.revenueGrowth ?? 0, floorGrowth);
   const growthBonus = (1 + Math.min(growth, 0.15) * 0.5);
-  const adjustedPE = benchPE * growthBonus * debtPenaltyFactor(input.debtToEquity);
+  // Décote cyclique 45% si l'entreprise est en super-cycle (croissance >150%)
+  // ou en pic de bénéfices (ratio trailing/forward > 2.5x) : les marges actuelles
+  // ne sont pas représentatives d'un cycle complet.
+  const isCyclicalPeak =
+    input.revenueGrowth > 1.5 ||
+    (input.trailingPE > 10 && input.forwardPE > 0 && input.forwardPE < 8 && input.trailingPE / input.forwardPE > 2.5);
+  const cyclicalFactor = isCyclicalPeak ? 0.55 : 1.0;
+  const adjustedPE = benchPE * growthBonus * debtPenaltyFactor(input.debtToEquity) * cyclicalFactor;
   return input.eps * adjustedPE;
 }
 
@@ -219,11 +230,29 @@ function trailingPEValuation(input: ValuationInput): number {
 
 function forwardPEValuation(input: ValuationInput): number {
   if (!input.forwardPE || input.forwardPE <= 0 || !input.currentPrice) return 0;
+  const benchPE = getBenchmarkPE(input.sector, input.industry);
+  const adjustedBenchPE = benchPE * debtPenaltyFactor(input.debtToEquity);
+
+  // Détection pic cyclique : forward P/E anormalement bas (bénéfices au sommet du cycle)
+  // Ex. : mémoire DRAM/HBM, matières premières, énergie en super-cycle.
+  // Appliquer le P/E sectoriel à des bénéfices de pic donnerait une juste valeur
+  // irréaliste — on utilise à la place la moyenne trailing/forward avec décote cyclique.
+  const isCyclicalPeak =
+    input.forwardPE < 8 &&
+    input.trailingPE > 10 &&
+    input.trailingPE / input.forwardPE > 2.5 &&
+    input.eps > 0;
+
+  if (isCyclicalPeak) {
+    // Les bénéfices forward reflètent un pic cyclique qui ne durera pas.
+    // On valorise sur un EPS "mi-cycle" estimé à 1.5× l'EPS trailing
+    // (croissance normalisée vs niveau de début de cycle) avec décote de 45%.
+    const midCycleEPS = input.eps * 1.5;
+    return midCycleEPS * adjustedBenchPE * 0.55;
+  }
+
   const impliedEPSforward = input.currentPrice / input.forwardPE;
   if (impliedEPSforward <= 0) return 0;
-  const benchPE = getBenchmarkPE(input.sector, input.industry);
-  // Appliquer le malus dette
-  const adjustedBenchPE = benchPE * debtPenaltyFactor(input.debtToEquity);
   return impliedEPSforward * adjustedBenchPE;
 }
 
