@@ -9,7 +9,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import dynamic from "next/dynamic";
-import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2, Check, Clock, AlertCircle, Pencil } from "lucide-react";
+import { Download, Plus, Sparkles, TrendingUp, TrendingDown, Trash2, Check, Clock, AlertCircle, Pencil, RefreshCw } from "lucide-react";
 import ScenarioAnalysis from "@/components/ScenarioAnalysis";
 import CompanyLogo from "@/components/CompanyLogo";
 import CircleAction from "@/components/CircleAction";
@@ -324,6 +324,8 @@ export default function PortfolioPage() {
   const [totals, setTotals] = useState({ value: 0, cost: 0, pnl: 0 });
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [pricesUpdatedAt, setPricesUpdatedAt] = useState<Date | null>(null);
+  const [pricesRefreshing, setPricesRefreshing] = useState(false);
   const [investAmount, setInvestAmount] = useState("");
   const [investAccountType, setInvestAccountType] = useState<"PEA" | "CTO" | "PEA+CTO">("PEA+CTO");
   const [investRiskProfile, setInvestRiskProfile] = useState<string | null>(null);
@@ -370,12 +372,14 @@ export default function PortfolioPage() {
     loadHoldings();
   }, [loadHoldings]);
 
-  /* Enrich with current prices */
-  useEffect(() => {
-    if (!holdings.length) { setEnriched([]); setTotals({ value: 0, cost: 0, pnl: 0 }); return; }
-    Promise.allSettled(
-      holdings.map(async (h) => {
-        const res = await fetch(`/api/stock/${h.symbol}`);
+  /* Enrich with current prices — extracted so it can be called on demand and on a timer */
+  const refreshPrices = useCallback(async (currentHoldings: typeof holdings, silent = false) => {
+    if (!currentHoldings.length) { setEnriched([]); setTotals({ value: 0, cost: 0, pnl: 0 }); return; }
+    if (!silent) setPricesRefreshing(true);
+    const results = await Promise.allSettled(
+      currentHoldings.map(async (h) => {
+        // cache: "no-store" force le navigateur à ne pas réutiliser une réponse mise en cache
+        const res = await fetch(`/api/stock/${h.symbol}`, { cache: "no-store" });
         if (!res.ok) return {
           ...h, currentPrice: h.avg_price, pnl: 0, pnlPct: 0,
           marketValue: h.avg_price * h.quantity, sector: "N/A",
@@ -386,9 +390,8 @@ export default function PortfolioPage() {
         const pnlPct = ((cp - h.avg_price) / h.avg_price) * 100;
         const sparkline = generateSparkline(pnlPct);
         const dividendYield = d.dividendYield ?? 0;
-        // % variation depuis l'ouverture de la séance du jour (plutôt que vs clôture précédente)
         const dayChangePct = d.open ? (cp - d.open) / d.open : (d.changePercent ?? 0);
-        const dayChange    = cp * h.quantity * dayChangePct;  // € variation du jour
+        const dayChange    = cp * h.quantity * dayChangePct;
         return {
           ...h, currentPrice: cp,
           pnl: (cp - h.avg_price) * h.quantity,
@@ -397,18 +400,30 @@ export default function PortfolioPage() {
           dayChange, dayChangePct,
         };
       })
-    ).then((results) => {
-      const ok = results
-        .filter((r): r is PromiseFulfilledResult<EnrichedHolding> => r.status === "fulfilled")
-        .map((r) => r.value);
-      setEnriched(ok);
-      setTotals({
-        value: ok.reduce((s, p) => s + p.marketValue, 0),
-        cost:  ok.reduce((s, p) => s + p.avg_price * p.quantity, 0),
-        pnl:   ok.reduce((s, p) => s + p.pnl, 0),
-      });
+    );
+    const ok = results
+      .filter((r): r is PromiseFulfilledResult<EnrichedHolding> => r.status === "fulfilled")
+      .map((r) => r.value);
+    setEnriched(ok);
+    setTotals({
+      value: ok.reduce((s, p) => s + p.marketValue, 0),
+      cost:  ok.reduce((s, p) => s + p.avg_price * p.quantity, 0),
+      pnl:   ok.reduce((s, p) => s + p.pnl, 0),
     });
-  }, [holdings]);
+    setPricesUpdatedAt(new Date());
+    setPricesRefreshing(false);
+  }, []);
+
+  useEffect(() => {
+    refreshPrices(holdings);
+  }, [holdings, refreshPrices]);
+
+  /* Auto-refresh des cours toutes les 3 minutes */
+  useEffect(() => {
+    if (!holdings.length) return;
+    const id = setInterval(() => refreshPrices(holdings, true), 3 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [holdings, refreshPrices]);
 
   /* Lire le profil de risque sauvegardé depuis /advisor */
   useEffect(() => {
@@ -678,9 +693,28 @@ export default function PortfolioPage() {
               Mon{" "}
               <em style={{ fontStyle: "italic", color: "var(--accent)" }}>portefeuille</em>.
             </h1>
-            <p style={{ fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)" }}>
-              {holdings.length} ligne{holdings.length !== 1 ? "s" : ""} — positions diversifiées
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <p style={{ fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-geist-mono, monospace)", margin: 0 }}>
+                {holdings.length} ligne{holdings.length !== 1 ? "s" : ""} — positions diversifiées
+              </p>
+              <button
+                onClick={() => refreshPrices(holdings)}
+                disabled={pricesRefreshing}
+                title="Actualiser les cours"
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  padding: "4px 10px", borderRadius: 20,
+                  border: "1px solid var(--line)", background: "var(--paper-2)",
+                  color: "var(--muted)", fontSize: 12, cursor: pricesRefreshing ? "wait" : "pointer",
+                  opacity: pricesRefreshing ? 0.6 : 1,
+                }}
+              >
+                <RefreshCw size={11} style={{ animation: pricesRefreshing ? "spin 1s linear infinite" : "none" }} />
+                {pricesUpdatedAt
+                  ? `Mis à jour ${pricesUpdatedAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
+                  : "Actualiser"}
+              </button>
+            </div>
           </div>
 
           {!isMobile && (
